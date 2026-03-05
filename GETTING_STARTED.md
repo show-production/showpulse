@@ -22,11 +22,13 @@ cd showpulse
 cargo run
 ```
 
-First build takes a few minutes to compile dependencies. Subsequent runs are near-instant.
+First build takes a few minutes to compile dependencies (including cpal for audio and midir for MIDI). Subsequent runs are near-instant.
 
 You'll see:
 
 ```
+LTC decoder initialized
+MTC decoder initialized
 ShowPulse starting on http://0.0.0.0:8080
 ```
 
@@ -120,6 +122,40 @@ For setting up your show.
 - **Theme customization:** Background, accent, and warning colors; timecode display size
 - **Export/Import:** Save or load your show as a JSON file
 
+## Using LTC (SMPTE Linear Timecode)
+
+LTC allows ShowPulse to sync to timecode from a DAW, timecode generator, or any professional audio source.
+
+1. Go to the **Settings** tab
+2. Select **LTC** as the timecode source
+3. An **Audio Input Device** dropdown appears
+4. Click the refresh button to list available audio inputs
+5. Select your audio interface input that receives the LTC signal
+6. The status line shows "Listening on: [device name]" when active
+7. Feed an LTC signal into that audio input — ShowPulse will decode it in real-time
+
+**Tips:**
+- LTC works at any standard sample rate (44.1kHz, 48kHz, 96kHz)
+- The signal should be a clean line-level LTC feed (not amplified mic signal)
+- The decoder handles 24/25/29.97df/30 fps LTC
+
+## Using MTC (MIDI Time Code)
+
+MTC allows ShowPulse to sync to timecode from MIDI-capable devices (DAWs, show controllers, etc.).
+
+1. Go to the **Settings** tab
+2. Select **MTC** as the timecode source
+3. A **MIDI Input Port** dropdown appears
+4. Click the refresh button to list available MIDI ports
+5. Select the MIDI port receiving MTC
+6. The status line shows "Listening on: [port name]" when active
+7. Start MTC playback from your source — ShowPulse receives both quarter-frame and full-frame messages
+
+**Tips:**
+- MTC quarter-frame messages have a 2-frame inherent latency (8 messages to transmit one full timecode)
+- Full-frame SysEx messages provide instant sync (used for locate/jump)
+- Ensure your MIDI routing sends MTC to ShowPulse's selected port
+
 ## Data Storage
 
 All data is saved to `showpulse-data.json` in the app directory. To reset to demo data, delete this file and restart.
@@ -133,3 +169,6 @@ All data is saved to `showpulse-data.json` in the app directory. To reset to dem
 | No cues showing on Show tab | Go to Manage tab and add departments + cues, or delete `showpulse-data.json` to reset demo data |
 | WebSocket dot is red | The real-time connection dropped. It auto-reconnects every 2 seconds. The app falls back to polling in the meantime |
 | Build fails on Windows | Ensure Visual Studio Build Tools are installed with the C++ workload |
+| No audio devices listed for LTC | Ensure a microphone/audio input is available and not exclusively held by another app |
+| No MIDI ports listed for MTC | Ensure a MIDI device or virtual MIDI port is available on the system |
+| LTC not decoding | Check that the audio input level is adequate (line level) and the correct input device is selected |

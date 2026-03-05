@@ -356,12 +356,17 @@ ShowPulse runs on a **local, trusted WiFi network** (production VLAN or dedicate
 
 ## Milestone Sequence
 
-| # | Milestone | Key Result |
-|---|-----------|-----------|
-| 1 | Timecode core | Server reads LTC/MTC, runs internal TC generator, exposes `/api/timecode` |
-| 2 | Cue management | CRUD API + JSON persistence working |
-| 3 | Countdown engine | WebSocket broadcasts live countdowns |
-| 4 | Crew frontend | Phones display countdowns from WebSocket |
-| 5 | Admin frontend | Browser-based cue/department management |
-| 6 | Security hardening | PIN auth, rate limiting, input validation |
-| 7 | Polish & packaging | Single-binary release, QR onboarding, generator presets |
+| # | Milestone | Key Result | Status |
+|---|-----------|-----------|--------|
+| 1 | Timecode core | Server reads LTC/MTC, runs internal TC generator, exposes `/api/timecode` | **Done** |
+| 2 | Cue management | CRUD API + JSON persistence working | **Done** |
+| 3 | Countdown engine | WebSocket broadcasts live countdowns | **Done** |
+| 4 | Crew frontend | Phones display countdowns from WebSocket | **Done** |
+| 5 | Admin frontend | Browser-based cue/department management | **Done** |
+| 6 | Security hardening | PIN auth, rate limiting, input validation | Planned |
+| 7 | Polish & packaging | Single-binary release, QR onboarding, generator presets | Planned |
+
+> **Note:** Milestones 1-5 are fully implemented. The actual implementation uses vanilla HTML/CSS/JS
+> (single `static/index.html`) instead of Vite/Preact/Solid as originally planned — this simplifies
+> deployment to a true single-binary with no build step. LTC uses `cpal` and MTC uses `midir` as
+> specified. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the current roadmap.
