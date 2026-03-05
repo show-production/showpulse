@@ -41,7 +41,7 @@ Single-page app served from `static/index.html` with three tabs:
 
 | Tab | Purpose |
 |-----|---------|
-| **Show** | Clean dashboard: passed cues count badge (click to expand dropdown), active cue strips (compact rows with dept color + checkmark), centered timer with 2-row transport controls (Prev/Play/Pause/Stop/Next + Goto), animated Ready/Go countdown zone (READY → 3 → 2 → 1 → GO! with traffic-light colors and pop/flash effects), scrollable coming cues with uniform-size cards (color-only tier differentiation, no layout shifts). Click any cue to load TC into Goto. Prev/Next cue navigation. Above-timer sections fade on scroll. Department filter chips, DOM-diffed cue cards, passed cues toggle |
+| **Show** | Clean dashboard: passed cues count badge (click to expand dropdown), active cue strips (compact rows with dept color + checkmark), centered timer with 2-row transport controls (Prev/Play/Pause/Stop/Next + Goto), animated Ready/Go countdown zone (READY stays visible while 3→2→1 digits appear alongside, then GO! with dept name — traffic-light colors, fixed-height layout, pop/flash effects), scrollable coming cues with uniform-size cards (color-only tier differentiation, no layout shifts). Click any cue to load TC into Goto. Prev/Next cue navigation. Above-timer sections collapse on scroll. Frame-accurate timecode display (10Hz). Department filter chips, DOM-diffed cue cards, passed cues toggle |
 | **Manage** | Department CRUD (left panel), cue list table (right panel) with # column, department dropdown filter, sortable column headers, CSV/JSON bulk import, add/edit/delete modals with cue number field |
 | **Settings** | Timecode source selector (Generator/LTC/MTC) with device selectors, frame rate, generator mode, speed, start TC, theme colors (live preview), TC size slider, show data export/import JSON |
 
@@ -69,10 +69,10 @@ Single-page app served from `static/index.html` with three tabs:
 | REST API - LTC | `src/api/ltc.rs` | Full: GET devices, PUT device (select + start), POST stop |
 | REST API - MTC | `src/api/mtc.rs` | Full: GET devices, PUT device (select + start), POST stop |
 | WebSocket hub | `src/ws/hub.rs` | Full: Broadcast with per-client department filtering, subscribe protocol |
-| Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick, per-department cue state tracking (active until replaced by next dept cue), second-boundary broadcast, 60s passed-cue cleanup |
+| Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick with frame-accurate broadcast, per-department cue state tracking (active until replaced by next dept cue), cached cue states with second-boundary recomputation, 60s passed-cue cleanup |
 | Config | `src/config.rs` | Basic: port (8080) + data file path (showpulse-data.json) |
 | Server entrypoint | `src/main.rs` | Full: Axum router with all routes, state wiring, seed on startup, static file fallback |
-| Web UI - Show view | `static/index.html` | Full: Clean dashboard with passed cues count badge (expandable dropdown), active cue strips (compact dept-colored rows), centered timer with 2-row transport + Prev/Next, animated Ready/Go zone with traffic-light 3-2-1-GO countdown, scrollable coming cues with uniform-size cards (color-only tier differentiation). Click-to-goto on cue cards/strips/passed items, Prev/Next cue navigation, scroll-fade for above-timer sections. DOM-diffed cards, department filters, passed cues toggle, disconnection banner |
+| Web UI - Show view | `static/index.html` | Full: Clean dashboard with passed cues count badge (expandable dropdown), active cue strips (compact dept-colored rows), centered timer with 2-row transport + Prev/Next, animated Ready/Go zone (READY + digit two-element layout, fixed height, traffic-light colors, GO! with dept name), scrollable coming cues with uniform-size cards (color-only tier differentiation). Click-to-goto on cue cards/strips/passed items, Prev/Next cue navigation, scroll-fold collapses above-timer sections. Frame-accurate 10Hz timecode. DOM-diffed cards, department filters, passed cues toggle, disconnection banner |
 | Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with # column + sortable headers + department filter, bulk CSV/JSON import, add/edit/delete modals with cue number field |
 | Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show data export/import |
 | Web UI - UX polish | `static/index.html` | Full: Toast notifications, confirm modals (replaces native confirm), loading spinner, responsive table scroll, 44px touch targets, favicon, DOM diffing for flicker-free cue updates |
@@ -151,7 +151,7 @@ midir = "0.10"       # MIDI input for MTC decoding
 1. **Single binary deployment** - No database, no runtime dependencies. JSON file for persistence.
 2. **Watch channels for timecode** - `tokio::sync::watch` provides latest-value semantics perfect for timecode (readers always get the most recent value, no backpressure).
 3. **Broadcast channel for WebSocket** - `tokio::sync::broadcast` for fan-out to all connected clients.
-4. **Second-boundary optimization** - The countdown engine only broadcasts when the timecode second changes, reducing WebSocket traffic.
+4. **Frame-accurate broadcast with caching** - The countdown engine broadcasts at 10Hz for frame-accurate timecode display. Cue states are cached and only recomputed on second boundaries (expensive operation), while timecode strings update every tick (cheap).
 5. **Department filtering** - Clients subscribe to specific departments, receiving only relevant cue data. Available in both Show view (filter chips) and Manage view (dropdown).
 6. **Drop-frame timecode** - Proper 29.97df frame math with correct drop compensation in both directions (to/from total frames).
 7. **Auto-seed on empty store** - First launch populates demo data so the app is immediately usable for testing.

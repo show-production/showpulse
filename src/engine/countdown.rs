@@ -15,6 +15,7 @@ pub async fn run(
 ) {
     let mut tick = interval(Duration::from_millis(100)); // 10Hz broadcast rate
     let mut last_second: Option<u8> = None;
+    let mut cached_cue_statuses: Vec<CueStatus> = Vec::new();
 
     loop {
         tick.tick().await;
@@ -23,11 +24,21 @@ pub async fn run(
         let current_tc = status.timecode;
         let frame_rate = status.frame_rate;
 
-        // Only broadcast when the second changes (avoid flooding)
-        if last_second == Some(current_tc.seconds) && status.running {
+        // Recompute cue states only when the second changes (expensive),
+        // but always broadcast the timecode so frames stay live on screen.
+        let second_changed = last_second != Some(current_tc.seconds);
+        last_second = Some(current_tc.seconds);
+
+        if !second_changed && !cached_cue_statuses.is_empty() {
+            let run_status = if status.running { "running" } else { "stopped" };
+            ws_hub.broadcast(BroadcastMessage {
+                timecode: current_tc.to_string(),
+                frame_rate: frame_rate.fps(),
+                status: run_status.to_string(),
+                cues: cached_cue_statuses.clone(),
+            });
             continue;
         }
-        last_second = Some(current_tc.seconds);
 
         let show = store.show_data().await;
         let current_secs = current_tc.to_seconds_f64(frame_rate);
@@ -103,6 +114,9 @@ pub async fn run(
                 trigger_tc: cue.trigger_tc,
             });
         }
+
+        // Cache for inter-second ticks
+        cached_cue_statuses = cue_statuses.clone();
 
         let run_status = if status.running { "running" } else { "stopped" };
 

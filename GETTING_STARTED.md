@@ -93,13 +93,13 @@ The main operational view for live shows. The dashboard is organized into clear 
 1. **Passed cues badge** (top) — small pill showing "N passed". Click to expand a dropdown listing all passed cues with department colors and timecodes.
 2. **Active cue strips** — compact single-line rows for currently triggered cues, one per department. Green dept-colored left border with checkmark and label.
 3. **Timer + Controls** (center) — large timecode display with meta info (state/fps/source) on the left, transport controls below: Prev/Play/Pause/Stop/Next + Goto timecode input.
-4. **Ready/Go zone** — dedicated animated countdown for the next imminent cue: READY → 3 → 2 → 1 → GO! with traffic-light colors (red→orange→green) and scale-pop animations.
+4. **Ready/Go zone** — dedicated countdown for the next imminent cue. "READY" stays visible in red while countdown digits (3, 2, 1) appear alongside with traffic-light colors (red-orange→orange→yellow-green). At zero: "GO! — Department" in green with flash effect. Fixed-height layout with no size jumps.
 5. **Coming cues** (bottom) — scrollable list of upcoming cues with countdown timers and progress bars. All cards are the same size — state is shown through color and opacity only (no layout shifts).
 
 **Interactions:**
 - **Click any cue card, active strip, or passed item** to load its timecode into the Goto field
 - **Prev/Next buttons** step through cues in timecode order, loading each into Goto
-- **Scroll down** in the coming cues section to auto-fade the above-timer sections
+- **Scroll down** in the coming cues section to auto-collapse the above-timer sections (space freed up)
 - **Department filter chips** (sidebar) to show/hide cues by department
 - **Show/Hide Passed** toggle (sidebar) to show or hide the passed cues badge
 
