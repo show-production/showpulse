@@ -191,13 +191,6 @@ body {
 }
 
 /* Cue cards */
-.cue-section-label {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text-dim);
-  margin: 1.25rem 0 0.5rem;
-}
 .cue-card {
   display: flex;
   align-items: center;
@@ -614,23 +607,9 @@ body {
 ::-webkit-scrollbar-track { background: var(--bg-primary); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* ── Warning pulse animation ── */
-@keyframes warn-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-.cue-card.state-warning { animation: warn-pulse 1.5s ease-in-out infinite; }
-
 /* Sortable table headers */
 .cue-table th.sortable { cursor: pointer; user-select: none; }
 .cue-table th.sortable:hover { color: var(--text-primary); }
-
-/* ── Active glow animation ── */
-@keyframes active-glow {
-  0%, 100% { box-shadow: 0 0 12px var(--active-glow); }
-  50% { box-shadow: 0 0 24px var(--active-glow); }
-}
-.cue-card.state-active { animation: active-glow 2s ease-in-out infinite; }
 
 /* ══════════════════════════════════════════
    DISCONNECTION BANNER (Item 1)
@@ -839,8 +818,7 @@ body {
 }
 .next-up-display.state-go {
   border-color: var(--accent);
-  box-shadow: 0 0 40px var(--active-glow);
-  background: rgba(0, 255, 136, 0.08);
+  box-shadow: 0 0 30px var(--active-glow);
 }
 .next-up-display .next-up-label {
   font-size: 0.75rem;
@@ -862,31 +840,21 @@ body {
 .next-up-display .next-up-status {
   font-family: var(--font-mono);
   font-weight: 800;
+  font-size: 3rem;
   line-height: 1;
+  min-height: 3rem;
+  transition: color 0.3s;
 }
 .next-up-display .next-up-status.ready {
-  font-size: 2.5rem;
   color: var(--warning);
 }
 .next-up-display .next-up-status.countdown-num {
-  font-size: 6rem;
   color: var(--warning);
-  text-shadow: 0 0 40px var(--warning-glow);
-  animation: countdown-pop 0.4s ease-out;
+  text-shadow: 0 0 30px var(--warning-glow);
 }
 .next-up-display .next-up-status.go {
-  font-size: 5rem;
   color: var(--accent);
-  text-shadow: 0 0 50px var(--active-glow);
-  animation: go-pop 0.5s ease-out;
-}
-@keyframes countdown-pop {
-  from { transform: scale(1.4); opacity: 0.6; }
-  to { transform: scale(1); opacity: 1; }
-}
-@keyframes go-pop {
-  from { transform: scale(1.5); opacity: 0.5; }
-  to { transform: scale(1); opacity: 1; }
+  text-shadow: 0 0 30px var(--active-glow);
 }
 
 /* Speed field suffix (Item 5) */
@@ -1349,30 +1317,14 @@ function renderCueCards(wsCues) {
     filtered = wsCues.filter(c => activeDeptFilters.has(c.department_id));
   }
 
-  // Group by state
-  const groups = { active: [], warning: [], upcoming: [], passed: [] };
-  filtered.forEach(c => {
-    if (groups[c.state]) groups[c.state].push(c);
-  });
+  // Hide passed cues if toggled off
+  if (!showPassedCues) {
+    filtered = filtered.filter(c => c.state !== 'passed');
+  }
 
+  // Render in timecode order (server already sorts) — no regrouping
   let html = '';
-
-  if (groups.active.length) {
-    html += '<div class="cue-section-label">Active</div>';
-    groups.active.forEach(c => html += cueCardHTML(c));
-  }
-  if (groups.warning.length) {
-    html += '<div class="cue-section-label">Warning</div>';
-    groups.warning.forEach(c => html += cueCardHTML(c));
-  }
-  if (groups.upcoming.length) {
-    html += '<div class="cue-section-label">Upcoming</div>';
-    groups.upcoming.forEach(c => html += cueCardHTML(c));
-  }
-  if (groups.passed.length && showPassedCues) {
-    html += '<div class="cue-section-label">Passed</div>';
-    groups.passed.forEach(c => html += cueCardHTML(c));
-  }
+  filtered.forEach(c => html += cueCardHTML(c));
 
   container.innerHTML = html || '<div class="no-cues">No matching cues.</div>';
 }
@@ -1483,7 +1435,7 @@ function renderNextUp(wsCues) {
     if (lastGoId !== nearest.id) {
       lastGoId = nearest.id;
       el.className = 'next-up-display visible state-go';
-      labelEl.textContent = '';
+      labelEl.textContent = 'STANDBY';
       statusEl.className = 'next-up-status go';
       statusEl.textContent = 'GO';
       if (goDisplayTimeout) clearTimeout(goDisplayTimeout);
@@ -1504,7 +1456,7 @@ function renderNextUp(wsCues) {
     el.className = 'next-up-display visible state-ready';
     labelEl.textContent = 'NEXT UP';
     statusEl.className = 'next-up-status ready';
-    statusEl.textContent = 'READY';
+    statusEl.textContent = fmtCountdown(nearest.countdown_sec);
   }
 }
 
