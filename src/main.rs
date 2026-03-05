@@ -15,6 +15,7 @@ use axum::{
     response::IntoResponse,
     routing::{get, post, put, delete},
 };
+use tower_http::services::ServeDir;
 use tracing::info;
 
 use cue::store::CueStore;
@@ -85,7 +86,9 @@ async fn main() {
         .route("/api/cues/{id}", delete(api::cues::delete))
         // WebSocket
         .route("/ws", get(ws_handler))
-        .with_state(state);
+        .with_state(state)
+        // Static files (UI)
+        .fallback_service(ServeDir::new("static"));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
     info!("ShowPulse starting on http://{}", addr);

@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShowPulse</title>
+<style>
+/* ── CSS Custom Properties (Theme) ── */
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-card: #14141f;
+  --bg-surface: #1e1e2e;
+  --bg-input: #22223a;
+  --text-primary: #e0e0e8;
+  --text-dim: #666680;
+  --text-label: #9999aa;
+  --accent: #00ff88;
+  --warning: #ffaa00;
+  --danger: #ff4444;
+  --active-glow: #00ff8840;
+  --warning-glow: #ffaa0040;
+  --border: #2a2a3e;
+  --tc-size: 5rem;
+  --font-mono: 'Courier New', 'Consolas', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Top Nav ── */
+.topnav {
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  height: 48px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  gap: 0;
+}
+.topnav .tabs { display: flex; gap: 0; flex: 1; }
+.topnav .tab {
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  color: var(--text-dim);
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+  font-family: var(--font-sans);
+}
+.topnav .tab:hover { color: var(--text-primary); }
+.topnav .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+.topnav .brand {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.topnav .brand .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  transition: background 0.3s;
+}
+.topnav .brand .dot.connected { background: var(--accent); }
+
+/* ── Views ── */
+.view { display: none; padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+.view.active { display: block; }
+
+/* ══════════════════════════════════════════
+   SHOW VIEW
+   ══════════════════════════════════════════ */
+
+.tc-display {
+  text-align: center;
+  padding: 2rem 0 1rem;
+}
+.tc-display .tc-value {
+  font-family: var(--font-mono);
+  font-size: var(--tc-size);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 30px var(--active-glow);
+  line-height: 1;
+}
+.tc-display .tc-meta {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.tc-display .tc-meta .running { color: var(--accent); }
+.tc-display .tc-meta .stopped { color: var(--danger); }
+
+/* Transport controls */
+.transport {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+.transport button {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.transport button:hover { background: var(--bg-input); border-color: var(--accent); }
+.transport button.play-btn:hover { border-color: var(--accent); color: var(--accent); }
+.transport button.stop-btn:hover { border-color: var(--danger); color: var(--danger); }
+.transport .goto-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 1rem;
+}
+.transport .goto-group input {
+  width: 130px;
+  padding: 0.45rem 0.6rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+/* Department filter chips */
+.dept-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.dept-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  transition: all 0.15s;
+}
+.dept-chip.active { border-color: var(--text-dim); color: var(--text-primary); }
+.dept-chip .chip-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+
+/* Cue cards */
+.cue-section-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  margin: 1.25rem 0 0.5rem;
+}
+.cue-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.cue-card .dept-bar {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.cue-card .cue-info { flex: 1; min-width: 0; }
+.cue-card .cue-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cue-card .cue-dept {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+.cue-card .cue-tc {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-label);
+  text-align: right;
+  flex-shrink: 0;
+}
+.cue-card .cue-countdown {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.1rem;
+  min-width: 100px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.cue-card .progress-bg {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--bg-surface);
+}
+.cue-card .progress-fill {
+  height: 100%;
+  transition: width 0.5s linear;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Cue states */
+.cue-card.state-upcoming .cue-countdown { color: var(--text-dim); }
+.cue-card.state-warning {
+  border-color: var(--warning);
+  box-shadow: 0 0 12px var(--warning-glow);
+}
+.cue-card.state-warning .cue-countdown { color: var(--warning); }
+.cue-card.state-warning .progress-fill { background: var(--warning); }
+
+.cue-card.state-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--active-glow);
+}
+.cue-card.state-active .cue-countdown { color: var(--accent); font-size: 1.3rem; }
+.cue-card.state-active .progress-fill { background: var(--accent); }
+
+.cue-card.state-passed {
+  opacity: 0.4;
+  border-color: transparent;
+}
+.cue-card.state-passed .cue-countdown { color: var(--text-dim); }
+.cue-card.state-passed .progress-fill { background: var(--text-dim); width: 100% !important; }
+
+.no-cues {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+/* ══════════════════════════════════════════
+   MANAGE VIEW
+   ══════════════════════════════════════════ */
+
+.manage-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .manage-layout { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+.panel-header h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-label);
+  font-weight: 600;
+}
+.panel-body { padding: 0.5rem; }
+
+/* Department list */
+.dept-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.5rem;
+  border-radius: 6px;
+  cursor: default;
+}
+.dept-item:hover { background: var(--bg-surface); }
+.dept-item .dept-color {
+  width: 14px; height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.dept-item .dept-name { flex: 1; font-size: 0.9rem; }
+.dept-item .dept-actions {
+  display: flex;
+  gap: 0.3rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.dept-item:hover .dept-actions { opacity: 1; }
+
+/* Small icon buttons */
+.icon-btn {
+  width: 28px; height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-dim);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: var(--font-sans);
+}
+.icon-btn:hover { background: var(--bg-input); border-color: var(--border); color: var(--text-primary); }
+.icon-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+
+/* Add button */
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-label);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  transition: all 0.15s;
+}
+.add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Cue table */
+.cue-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.cue-table th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.cue-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.cue-table tr:hover { background: var(--bg-surface); }
+.cue-table .tc-cell {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-label);
+}
+.cue-table .dept-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.cue-table .dept-cell .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cue-table .actions-cell {
+  display: flex;
+  gap: 0.3rem;
+  justify-content: flex-end;
+}
+
+/* ══════════════════════════════════════════
+   SETTINGS VIEW
+   ══════════════════════════════════════════ */
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+@media (max-width: 768px) {
+  .settings-grid { grid-template-columns: 1fr; }
+}
+
+.setting-group { margin-bottom: 1rem; }
+.setting-group label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+.setting-group select,
+.setting-group input[type="text"],
+.setting-group input[type="number"],
+.setting-group input[type="range"] {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+}
+.setting-group select { cursor: pointer; }
+.setting-group input[type="color"] {
+  width: 40px; height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-input);
+  cursor: pointer;
+  padding: 2px;
+}
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.color-row input[type="text"] { flex: 1; }
+
+.radio-group {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.radio-group label {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  background: var(--bg-input);
+  border-right: 1px solid var(--border);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  margin: 0;
+  transition: all 0.15s;
+}
+.radio-group label:last-child { border-right: none; }
+.radio-group input { display: none; }
+.radio-group input:checked + label,
+.radio-group label.selected {
+  background: var(--accent);
+  color: var(--bg-primary);
+  font-weight: 700;
+}
+
+.data-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.data-actions button {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+}
+.data-actions button:hover { border-color: var(--accent); }
+
+/* ══════════════════════════════════════════
+   MODAL
+   ══════════════════════════════════════════ */
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 420px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { font-size: 1rem; }
+.modal-body { padding: 1.25rem; }
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.modal-footer button {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+}
+.modal-footer .btn-cancel {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+.modal-footer .btn-save {
+  background: var(--accent);
+  color: var(--bg-primary);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.modal-footer .btn-save:hover { opacity: 0.9; }
+.modal-footer .btn-cancel:hover { background: var(--bg-input); }
+
+.form-group { margin-bottom: 1rem; }
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+}
+.form-group textarea { resize: vertical; min-height: 60px; font-family: var(--font-sans); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Warning pulse animation ── */
+@keyframes warn-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.cue-card.state-warning { animation: warn-pulse 1.5s ease-in-out infinite; }
+
+/* ── Active glow animation ── */
+@keyframes active-glow {
+  0%, 100% { box-shadow: 0 0 12px var(--active-glow); }
+  50% { box-shadow: 0 0 24px var(--active-glow); }
+}
+.cue-card.state-active { animation: active-glow 2s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<!-- ═══ Top Navigation ═══ -->
+<nav class="topnav">
+  <div class="tabs">
+    <button class="tab active" data-view="show">Show</button>
+    <button class="tab" data-view="manage">Manage</button>
+    <button class="tab" data-view="settings">Settings</button>
+  </div>
+  <div class="brand">
+    ShowPulse <span class="dot" id="ws-dot"></span>
+  </div>
+</nav>
+
+<!-- ═══ SHOW VIEW ═══ -->
+<div class="view active" id="view-show">
+  <div class="tc-display">
+    <div class="tc-value" id="tc-value">00:00:00:00</div>
+    <div class="tc-meta">
+      <span id="tc-state" class="stopped">STOPPED</span>
+      <span id="tc-fps">30 fps</span>
+      <span id="tc-source">Generator</span>
+    </div>
+  </div>
+
+  <div class="transport">
+    <button class="play-btn" onclick="genCmd('play')">&#9654; Play</button>
+    <button onclick="genCmd('pause')">&#9646;&#9646; Pause</button>
+    <button class="stop-btn" onclick="genCmd('stop')">&#9632; Stop</button>
+    <div class="goto-group">
+      <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF">
+      <button onclick="gotoTC()">Go</button>
+    </div>
+  </div>
+
+  <div class="dept-filters" id="dept-filters"></div>
+
+  <div id="cue-list"></div>
+</div>
+
+<!-- ═══ MANAGE VIEW ═══ -->
+<div class="view" id="view-manage">
+  <div class="manage-layout">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Departments</h3>
+        <button class="add-btn" onclick="openDeptModal()">+ Add</button>
+      </div>
+      <div class="panel-body" id="dept-list"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Cue List</h3>
+        <button class="add-btn" onclick="openCueModal()">+ Add</button>
+      </div>
+      <div class="panel-body" style="padding:0;">
+        <table class="cue-table">
+          <thead>
+            <tr>
+              <th>Timecode</th>
+              <th>Label</th>
+              <th>Department</th>
+              <th>Warn</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cue-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS VIEW ═══ -->
+<div class="view" id="view-settings">
+  <div class="settings-grid">
+    <div class="panel">
+      <div class="panel-header"><h3>Timecode</h3></div>
+      <div class="panel-body" style="padding:1rem;">
+        <div class="setting-group">
+          <label>Source</label>
+          <div class="radio-group" id="source-radio">
+            <input type="radio" name="source" value="generator" id="src-gen" checked>
+            <label for="src-gen" class="selected" onclick="setSource('generator')">Generator</label>
+            <input type="radio" name="source" value="ltc" id="src-ltc">
+            <label for="src-ltc" onclick="setSource('ltc')">LTC</label>
+            <input type="radio" name="source" value="mtc" id="src-mtc">
+            <label for="src-mtc" onclick="setSource('mtc')">MTC</label>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label>Frame Rate</label>
+          <select id="set-fps" onchange="updateGenConfig()">
+            <option value="24">24 fps</option>
+            <option value="25">25 fps</option>
+            <option value="29.97df">29.97 df</option>
+            <option value="30" selected>30 fps</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label>Generator Mode</label>
+          <select id="set-mode" onchange="updateGenConfig()">
+            <option value="freerun">Freerun</option>
+            <option value="countdown">Countdown</option>
+            <option value="clock">Clock</option>
+            <option value="loop">Loop</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label>Start Timecode</label>
+          <input type="text" id="set-start-tc" value="00:00:00:00" placeholder="HH:MM:SS:FF" onchange="updateGenConfig()">
+        </div>
+        <div class="setting-group">
+          <label>Speed</label>
+          <input type="number" id="set-speed" value="1.0" step="0.1" min="0.1" max="10" onchange="updateGenConfig()">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><h3>Appearance</h3></div>
+      <div class="panel-body" style="padding:1rem;">
+        <div class="setting-group">
+          <label>Background</label>
+          <div class="color-row">
+            <input type="color" value="#0a0a0f" onchange="setThemeColor('--bg-primary', this.value)">
+            <input type="text" value="#0a0a0f" onchange="setThemeColor('--bg-primary', this.value)" data-var="--bg-primary">
+          </div>
+        </div>
+        <div class="setting-group">
+          <label>Accent Color</label>
+          <div class="color-row">
+            <input type="color" value="#00ff88" onchange="setThemeColor('--accent', this.value); setThemeColor('--active-glow', this.value+'40')">
+            <input type="text" value="#00ff88" onchange="setThemeColor('--accent', this.value)" data-var="--accent">
+          </div>
+        </div>
+        <div class="setting-group">
+          <label>Warning Color</label>
+          <div class="color-row">
+            <input type="color" value="#ffaa00" onchange="setThemeColor('--warning', this.value); setThemeColor('--warning-glow', this.value+'40')">
+            <input type="text" value="#ffaa00" onchange="setThemeColor('--warning', this.value)" data-var="--warning">
+          </div>
+        </div>
+        <div class="setting-group">
+          <label>Timecode Size</label>
+          <input type="range" min="2" max="12" step="0.5" value="5" oninput="setThemeColor('--tc-size', this.value+'rem')">
+        </div>
+
+        <div class="data-actions">
+          <button onclick="exportShow()">Export Show JSON</button>
+          <button onclick="document.getElementById('import-file').click()">Import Show JSON</button>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importShow(event)">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Department Modal ═══ -->
+<div class="modal-overlay" id="dept-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="dept-modal-title">Add Department</h3>
+      <button class="icon-btn" onclick="closeModal('dept-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dept-edit-id">
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="dept-name" placeholder="e.g. Lighting">
+      </div>
+      <div class="form-group">
+        <label>Color</label>
+        <div class="color-row">
+          <input type="color" id="dept-color" value="#ffcc00">
+          <input type="text" id="dept-color-text" value="#ffcc00">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('dept-modal')">Cancel</button>
+      <button class="btn-save" onclick="saveDept()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Cue Modal ═══ -->
+<div class="modal-overlay" id="cue-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="cue-modal-title">Add Cue</h3>
+      <button class="icon-btn" onclick="closeModal('cue-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cue-edit-id">
+      <div class="form-group">
+        <label>Label</label>
+        <input type="text" id="cue-label" placeholder="e.g. House lights down">
+      </div>
+      <div class="form-group">
+        <label>Department</label>
+        <select id="cue-dept"></select>
+      </div>
+      <div class="form-group">
+        <label>Trigger Timecode</label>
+        <input type="text" id="cue-trigger-tc" placeholder="HH:MM:SS:FF" value="00:00:00:00">
+      </div>
+      <div class="form-group">
+        <label>Warning Time (seconds)</label>
+        <input type="number" id="cue-warn" value="10" min="0">
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="cue-notes" placeholder="Optional notes..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('cue-modal')">Cancel</button>
+      <button class="btn-save" onclick="saveCue()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════
+let departments = [];
+let cues = [];
+let activeDeptFilters = new Set(); // empty = show all
+let ws = null;
+let wsConnected = false;
+
+// ═══════════════════════════════════════════
+// View switching
+// ═══════════════════════════════════════════
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-' + tab.dataset.view).classList.add('active');
+    if (tab.dataset.view === 'manage') refreshManageView();
+  });
+});
+
+// ═══════════════════════════════════════════
+// API helpers
+// ═══════════════════════════════════════════
+const api = (path, opts = {}) => {
+  if (opts.body && typeof opts.body === 'object') {
+    opts.body = JSON.stringify(opts.body);
+    opts.headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  }
+  return fetch('/api' + path, opts).then(r => {
+    if (r.status === 204) return null;
+    return r.json();
+  });
+};
+
+function parseTC(str) {
+  const p = (str || '00:00:00:00').split(':').map(Number);
+  return { hours: p[0]||0, minutes: p[1]||0, seconds: p[2]||0, frames: p[3]||0 };
+}
+
+function fmtTC(tc) {
+  if (!tc) return '00:00:00:00';
+  return [tc.hours, tc.minutes, tc.seconds, tc.frames]
+    .map(v => String(v).padStart(2, '0')).join(':');
+}
+
+function fmtCountdown(sec) {
+  if (sec <= 0) return 'NOW';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  if (m > 0) return `T-${m}m ${String(s).padStart(2,'0')}s`;
+  return `T-${s}s`;
+}
+
+// ═══════════════════════════════════════════
+// WebSocket
+// ═══════════════════════════════════════════
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/ws');
+
+  ws.onopen = () => {
+    wsConnected = true;
+    document.getElementById('ws-dot').classList.add('connected');
+  };
+
+  ws.onclose = () => {
+    wsConnected = false;
+    document.getElementById('ws-dot').classList.remove('connected');
+    setTimeout(connectWS, 2000);
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    document.getElementById('tc-value').textContent = data.timecode;
+    const stateEl = document.getElementById('tc-state');
+    stateEl.textContent = data.status.toUpperCase();
+    stateEl.className = data.status;
+    document.getElementById('tc-fps').textContent = data.frame_rate + ' fps';
+    renderCueCards(data.cues);
+  };
+}
+
+// ═══════════════════════════════════════════
+// Transport controls
+// ═══════════════════════════════════════════
+function genCmd(cmd) {
+  api('/generator/' + cmd, { method: 'POST' });
+}
+
+function gotoTC() {
+  const val = document.getElementById('goto-tc').value;
+  const tc = parseTC(val);
+  api('/generator/goto', { method: 'POST', body: { timecode: tc } });
+}
+
+// ═══════════════════════════════════════════
+// Show View — Cue cards
+// ═══════════════════════════════════════════
+function renderCueCards(wsCues) {
+  const container = document.getElementById('cue-list');
+  if (!wsCues || wsCues.length === 0) {
+    container.innerHTML = '<div class="no-cues">No cues yet. Go to Manage to add some.</div>';
+    return;
+  }
+
+  // Filter by active department filters
+  let filtered = wsCues;
+  if (activeDeptFilters.size > 0) {
+    filtered = wsCues.filter(c => activeDeptFilters.has(c.department_id));
+  }
+
+  // Group by state
+  const groups = { active: [], warning: [], upcoming: [], passed: [] };
+  filtered.forEach(c => {
+    if (groups[c.state]) groups[c.state].push(c);
+  });
+
+  let html = '';
+
+  if (groups.active.length) {
+    html += '<div class="cue-section-label">Active</div>';
+    groups.active.forEach(c => html += cueCardHTML(c));
+  }
+  if (groups.warning.length) {
+    html += '<div class="cue-section-label">Warning</div>';
+    groups.warning.forEach(c => html += cueCardHTML(c));
+  }
+  if (groups.upcoming.length) {
+    html += '<div class="cue-section-label">Upcoming</div>';
+    groups.upcoming.forEach(c => html += cueCardHTML(c));
+  }
+  if (groups.passed.length) {
+    html += '<div class="cue-section-label">Passed</div>';
+    groups.passed.forEach(c => html += cueCardHTML(c));
+  }
+
+  container.innerHTML = html || '<div class="no-cues">No matching cues.</div>';
+}
+
+function cueCardHTML(c) {
+  const deptColor = getDeptColor(c.department_id);
+  const warnMax = getCueWarnMax(c.department_id, c.id);
+  const progress = c.state === 'passed' ? 100 :
+    c.state === 'active' ? 100 :
+    warnMax > 0 ? Math.max(0, Math.min(100, ((warnMax - c.countdown_sec) / warnMax) * 100)) : 0;
+
+  return `<div class="cue-card state-${c.state}">
+    <div class="dept-bar" style="background:${deptColor}"></div>
+    <div class="cue-info">
+      <div class="cue-label">${esc(c.label)}</div>
+      <div class="cue-dept">${esc(c.department)}</div>
+    </div>
+    <div class="cue-tc">${fmtTC(c.trigger_tc)}</div>
+    <div class="cue-countdown">${c.state === 'passed' ? '&#10003;' : fmtCountdown(c.countdown_sec)}</div>
+    <div class="progress-bg"><div class="progress-fill" style="width:${progress}%;background:${c.state === 'warning' ? 'var(--warning)' : 'var(--accent)'}"></div></div>
+  </div>`;
+}
+
+function getDeptColor(id) {
+  const d = departments.find(d => d.id === id);
+  return d ? d.color : '#888';
+}
+
+function getCueWarnMax(deptId, cueId) {
+  const c = cues.find(c => c.id === cueId);
+  return c ? c.warn_seconds : 10;
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ═══════════════════════════════════════════
+// Department filters (Show view)
+// ═══════════════════════════════════════════
+function renderDeptFilters() {
+  const container = document.getElementById('dept-filters');
+  let html = `<span class="dept-chip ${activeDeptFilters.size === 0 ? 'active' : ''}" onclick="clearDeptFilters()">All</span>`;
+  departments.forEach(d => {
+    const active = activeDeptFilters.has(d.id) ? 'active' : '';
+    html += `<span class="dept-chip ${active}" onclick="toggleDeptFilter('${d.id}')">
+      <span class="chip-dot" style="background:${d.color}"></span>${esc(d.name)}</span>`;
+  });
+  container.innerHTML = html;
+}
+
+function toggleDeptFilter(id) {
+  if (activeDeptFilters.has(id)) activeDeptFilters.delete(id);
+  else activeDeptFilters.add(id);
+  renderDeptFilters();
+}
+
+function clearDeptFilters() {
+  activeDeptFilters.clear();
+  renderDeptFilters();
+}
+
+// ═══════════════════════════════════════════
+// Manage View
+// ═══════════════════════════════════════════
+async function refreshManageView() {
+  await Promise.all([loadDepartments(), loadCues()]);
+  renderDeptList();
+  renderCueTable();
+  renderDeptFilters();
+}
+
+async function loadDepartments() {
+  departments = await api('/departments');
+}
+
+async function loadCues() {
+  cues = await api('/cues');
+}
+
+function renderDeptList() {
+  const container = document.getElementById('dept-list');
+  if (departments.length === 0) {
+    container.innerHTML = '<div style="padding:1rem;color:var(--text-dim);font-size:0.85rem">No departments yet.</div>';
+    return;
+  }
+  container.innerHTML = departments.map(d => `
+    <div class="dept-item">
+      <div class="dept-color" style="background:${d.color}"></div>
+      <div class="dept-name">${esc(d.name)}</div>
+      <div class="dept-actions">
+        <button class="icon-btn" onclick="openDeptModal('${d.id}')" title="Edit">&#9998;</button>
+        <button class="icon-btn danger" onclick="deleteDept('${d.id}')" title="Delete">&times;</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCueTable() {
+  const tbody = document.getElementById('cue-table-body');
+  if (cues.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="padding:1.5rem;text-align:center;color:var(--text-dim)">No cues yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = cues.map(c => {
+    const dept = departments.find(d => d.id === c.department_id);
+    return `<tr>
+      <td class="tc-cell">${fmtTC(c.trigger_tc)}</td>
+      <td>${esc(c.label)}</td>
+      <td><div class="dept-cell"><span class="dot" style="background:${dept ? dept.color : '#888'}"></span>${dept ? esc(dept.name) : '?'}</div></td>
+      <td>${c.warn_seconds}s</td>
+      <td><div class="actions-cell">
+        <button class="icon-btn" onclick="openCueModal('${c.id}')" title="Edit">&#9998;</button>
+        <button class="icon-btn danger" onclick="deleteCue('${c.id}')" title="Delete">&times;</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// Department CRUD
+// ═══════════════════════════════════════════
+function openDeptModal(editId) {
+  const modal = document.getElementById('dept-modal');
+  document.getElementById('dept-edit-id').value = editId || '';
+  if (editId) {
+    const d = departments.find(d => d.id === editId);
+    document.getElementById('dept-modal-title').textContent = 'Edit Department';
+    document.getElementById('dept-name').value = d.name;
+    document.getElementById('dept-color').value = d.color;
+    document.getElementById('dept-color-text').value = d.color;
+  } else {
+    document.getElementById('dept-modal-title').textContent = 'Add Department';
+    document.getElementById('dept-name').value = '';
+    document.getElementById('dept-color').value = '#ffcc00';
+    document.getElementById('dept-color-text').value = '#ffcc00';
+  }
+  modal.classList.add('open');
+  document.getElementById('dept-name').focus();
+}
+
+async function saveDept() {
+  const id = document.getElementById('dept-edit-id').value;
+  const body = {
+    id: id || '00000000-0000-0000-0000-000000000000',
+    name: document.getElementById('dept-name').value,
+    color: document.getElementById('dept-color').value,
+  };
+  if (id) {
+    await api('/departments/' + id, { method: 'PUT', body });
+  } else {
+    await api('/departments', { method: 'POST', body });
+  }
+  closeModal('dept-modal');
+  refreshManageView();
+}
+
+async function deleteDept(id) {
+  if (!confirm('Delete this department and all its cues?')) return;
+  await api('/departments/' + id, { method: 'DELETE' });
+  refreshManageView();
+}
+
+// ═══════════════════════════════════════════
+// Cue CRUD
+// ═══════════════════════════════════════════
+function openCueModal(editId) {
+  const modal = document.getElementById('cue-modal');
+  // Populate department dropdown
+  const sel = document.getElementById('cue-dept');
+  sel.innerHTML = departments.map(d =>
+    `<option value="${d.id}">${esc(d.name)}</option>`
+  ).join('');
+
+  document.getElementById('cue-edit-id').value = editId || '';
+  if (editId) {
+    const c = cues.find(c => c.id === editId);
+    document.getElementById('cue-modal-title').textContent = 'Edit Cue';
+    document.getElementById('cue-label').value = c.label;
+    sel.value = c.department_id;
+    document.getElementById('cue-trigger-tc').value = fmtTC(c.trigger_tc);
+    document.getElementById('cue-warn').value = c.warn_seconds;
+    document.getElementById('cue-notes').value = c.notes;
+  } else {
+    document.getElementById('cue-modal-title').textContent = 'Add Cue';
+    document.getElementById('cue-label').value = '';
+    document.getElementById('cue-trigger-tc').value = '00:00:00:00';
+    document.getElementById('cue-warn').value = '10';
+    document.getElementById('cue-notes').value = '';
+  }
+  modal.classList.add('open');
+  document.getElementById('cue-label').focus();
+}
+
+async function saveCue() {
+  const id = document.getElementById('cue-edit-id').value;
+  const body = {
+    id: id || '00000000-0000-0000-0000-000000000000',
+    department_id: document.getElementById('cue-dept').value,
+    label: document.getElementById('cue-label').value,
+    trigger_tc: parseTC(document.getElementById('cue-trigger-tc').value),
+    warn_seconds: parseInt(document.getElementById('cue-warn').value) || 10,
+    notes: document.getElementById('cue-notes').value,
+  };
+  if (id) {
+    await api('/cues/' + id, { method: 'PUT', body });
+  } else {
+    await api('/cues', { method: 'POST', body });
+  }
+  closeModal('cue-modal');
+  refreshManageView();
+}
+
+async function deleteCue(id) {
+  if (!confirm('Delete this cue?')) return;
+  await api('/cues/' + id, { method: 'DELETE' });
+  refreshManageView();
+}
+
+// ═══════════════════════════════════════════
+// Settings
+// ═══════════════════════════════════════════
+function setSource(source) {
+  api('/timecode/source', { method: 'PUT', body: { source } });
+  document.getElementById('tc-source').textContent = source.charAt(0).toUpperCase() + source.slice(1);
+  // Update radio visual
+  document.querySelectorAll('#source-radio label').forEach(l => l.classList.remove('selected'));
+  event.target.classList.add('selected');
+}
+
+function updateGenConfig() {
+  const fps = document.getElementById('set-fps').value;
+  const mode = document.getElementById('set-mode').value;
+  const startTC = parseTC(document.getElementById('set-start-tc').value);
+  const speed = parseFloat(document.getElementById('set-speed').value) || 1.0;
+
+  api('/generator', {
+    method: 'PUT',
+    body: {
+      mode,
+      frame_rate: fps,
+      start_tc: startTC,
+      loop_in: null,
+      loop_out: null,
+      speed,
+    }
+  });
+}
+
+function setThemeColor(varName, value) {
+  document.documentElement.style.setProperty(varName, value);
+  // Save to localStorage
+  const theme = JSON.parse(localStorage.getItem('showpulse-theme') || '{}');
+  theme[varName] = value;
+  localStorage.setItem('showpulse-theme', JSON.stringify(theme));
+}
+
+function loadTheme() {
+  const theme = JSON.parse(localStorage.getItem('showpulse-theme') || '{}');
+  for (const [k, v] of Object.entries(theme)) {
+    document.documentElement.style.setProperty(k, v);
+  }
+}
+
+// ═══════════════════════════════════════════
+// Export / Import
+// ═══════════════════════════════════════════
+function exportShow() {
+  const data = JSON.stringify({ departments, cues }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'showpulse-export.json';
+  a.click();
+}
+
+function importShow(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.departments) {
+        for (const d of data.departments) {
+          await api('/departments', { method: 'POST', body: d });
+        }
+      }
+      if (data.cues) {
+        // Need to map old dept IDs to new ones — for now, import as-is
+        for (const c of data.cues) {
+          await api('/cues', { method: 'POST', body: c });
+        }
+      }
+      refreshManageView();
+      alert('Import complete!');
+    } catch (err) {
+      alert('Invalid JSON file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ═══════════════════════════════════════════
+// Modal helpers
+// ═══════════════════════════════════════════
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// Sync color picker with text input
+document.getElementById('dept-color').addEventListener('input', (e) => {
+  document.getElementById('dept-color-text').value = e.target.value;
+});
+document.getElementById('dept-color-text').addEventListener('input', (e) => {
+  document.getElementById('dept-color').value = e.target.value;
+});
+
+// ═══════════════════════════════════════════
+// Keyboard shortcuts
+// ═══════════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  // Don't trigger when typing in an input
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+  if (e.code === 'Space') { e.preventDefault(); genCmd('play'); }
+  else if (e.code === 'Escape') { genCmd('stop'); }
+  else if (e.code === 'KeyP') { genCmd('pause'); }
+  else if (e.code === 'KeyG') {
+    e.preventDefault();
+    document.getElementById('goto-tc').focus();
+  }
+});
+
+// ═══════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════
+loadTheme();
+loadDepartments().then(() => {
+  loadCues().then(() => {
+    renderDeptFilters();
+  });
+});
+connectWS();
+
+// Poll timecode status when WS is not delivering (fallback)
+setInterval(async () => {
+  if (wsConnected) return;
+  const status = await api('/timecode');
+  if (status) {
+    document.getElementById('tc-value').textContent = fmtTC(status.timecode);
+    const stateEl = document.getElementById('tc-state');
+    stateEl.textContent = status.running ? 'RUNNING' : 'STOPPED';
+    stateEl.className = status.running ? 'running' : 'stopped';
+    document.getElementById('tc-fps').textContent = status.frame_rate + ' fps';
+  }
+}, 1000);
+</script>
+</body>
+</html>
