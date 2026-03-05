@@ -97,6 +97,12 @@ impl CueStore {
 
     pub async fn create_cue(&self, mut cue: Cue) -> Cue {
         cue.id = Uuid::new_v4();
+        if cue.cue_number.is_empty() {
+            let data = self.data.read().await;
+            let next = data.cues.len() + 1;
+            drop(data);
+            cue.cue_number = format!("Q{next}");
+        }
         self.data.write().await.cues.push(cue.clone());
         self.persist().await;
         cue
@@ -144,6 +150,7 @@ impl CueStore {
         let mut data = self.data.write().await;
         if let Some(cue) = data.cues.iter_mut().find(|c| c.id == id) {
             cue.department_id = update.department_id;
+            cue.cue_number = update.cue_number;
             cue.label = update.label;
             cue.trigger_tc = update.trigger_tc;
             cue.warn_seconds = update.warn_seconds;
@@ -234,6 +241,7 @@ impl CueStore {
             self.create_cue(Cue {
                 id: Uuid::nil(),
                 department_id: dept_ids[dept_idx],
+                cue_number: String::new(),
                 label: label.to_string(),
                 trigger_tc: tc,
                 warn_seconds: warn,

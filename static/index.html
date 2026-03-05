@@ -1007,6 +1007,7 @@ body {
         <table class="cue-table">
           <thead>
             <tr>
+              <th class="sortable" onclick="sortCueTable('cue_number')" id="sort-cue_number">#</th>
               <th class="sortable" onclick="sortCueTable('trigger_tc')" id="sort-trigger_tc">Timecode ▲</th>
               <th class="sortable" onclick="sortCueTable('label')" id="sort-label">Label</th>
               <th class="sortable" onclick="sortCueTable('department')" id="sort-department">Department</th>
@@ -1175,6 +1176,10 @@ body {
     </div>
     <div class="modal-body">
       <input type="hidden" id="cue-edit-id">
+      <div class="form-group">
+        <label>Cue Number</label>
+        <input type="text" id="cue-number" placeholder="e.g. Q1 (auto-generated if empty)">
+      </div>
       <div class="form-group">
         <label>Label</label>
         <input type="text" id="cue-label" placeholder="e.g. House lights down">
@@ -1385,7 +1390,7 @@ function cueCardHTML(c) {
   return `<div class="cue-card state-${c.state}">
     <div class="dept-bar" style="background:${deptColor}"></div>
     <div class="cue-info">
-      <div class="cue-label">${esc(c.label)}</div>
+      <div class="cue-label">${c.cue_number ? '<span style="color:var(--text-dim);margin-right:0.4rem">' + esc(c.cue_number) + '</span>' : ''}${esc(c.label)}</div>
       <div class="cue-dept">${esc(c.department)}</div>
     </div>
     <div class="cue-tc">${fmtTC(c.trigger_tc)}</div>
@@ -1474,7 +1479,7 @@ function renderNextUp(wsCues) {
 
   el.classList.add('visible');
   deptEl.innerHTML = `<span style="color:${deptColor}">${esc(nearest.department)}</span>`;
-  cueEl.textContent = nearest.label;
+  cueEl.textContent = (nearest.cue_number ? nearest.cue_number + ' — ' : '') + nearest.label;
 
   if (secs <= 0) {
     // Cue is about to trigger — show GO
@@ -1563,6 +1568,7 @@ function renderCueTable() {
     return d ? d.name.toLowerCase() : '';
   };
   const sortFns = {
+    cue_number: (a, b) => (a.cue_number || '').localeCompare(b.cue_number || '', undefined, { numeric: true }),
     trigger_tc: (a, b) => fmtTC(a.trigger_tc).localeCompare(fmtTC(b.trigger_tc)),
     label: (a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()),
     department: (a, b) => getDeptName(a).localeCompare(getDeptName(b)),
@@ -1572,20 +1578,21 @@ function renderCueTable() {
   filtered = [...filtered].sort((a, b) => cueTableSort.asc ? fn(a, b) : fn(b, a));
 
   // Update sort indicators
-  ['trigger_tc', 'label', 'department', 'warn_seconds'].forEach(k => {
+  ['cue_number', 'trigger_tc', 'label', 'department', 'warn_seconds'].forEach(k => {
     const th = document.getElementById('sort-' + k);
     if (!th) return;
-    const base = { trigger_tc: 'Timecode', label: 'Label', department: 'Department', warn_seconds: 'Lead Time' }[k];
+    const base = { cue_number: '#', trigger_tc: 'Timecode', label: 'Label', department: 'Department', warn_seconds: 'Lead Time' }[k];
     th.textContent = k === cueTableSort.key ? base + (cueTableSort.asc ? ' ▲' : ' ▼') : base;
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="padding:1.5rem;text-align:center;color:var(--text-dim)">No cues yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:var(--text-dim)">No cues yet.</td></tr>';
     return;
   }
   tbody.innerHTML = filtered.map(c => {
     const dept = departments.find(d => d.id === c.department_id);
     return `<tr>
+      <td style="color:var(--text-dim);font-size:0.8rem">${esc(c.cue_number || '')}</td>
       <td class="tc-cell">${fmtTC(c.trigger_tc)}</td>
       <td>${esc(c.label)}</td>
       <td><div class="dept-cell"><span class="dot" style="background:${dept ? dept.color : '#888'}"></span>${dept ? esc(dept.name) : '?'}</div></td>
@@ -1678,6 +1685,7 @@ function openCueModal(editId) {
   if (editId) {
     const c = cues.find(c => c.id === editId);
     document.getElementById('cue-modal-title').textContent = 'Edit Cue';
+    document.getElementById('cue-number').value = c.cue_number || '';
     document.getElementById('cue-label').value = c.label;
     sel.value = c.department_id;
     document.getElementById('cue-trigger-tc').value = fmtTC(c.trigger_tc);
@@ -1685,6 +1693,7 @@ function openCueModal(editId) {
     document.getElementById('cue-notes').value = c.notes;
   } else {
     document.getElementById('cue-modal-title').textContent = 'Add Cue';
+    document.getElementById('cue-number').value = '';
     document.getElementById('cue-label').value = '';
     document.getElementById('cue-trigger-tc').value = '00:00:00:00';
     document.getElementById('cue-warn').value = '10';
@@ -1699,6 +1708,7 @@ async function saveCue() {
   const body = {
     id: id || '00000000-0000-0000-0000-000000000000',
     department_id: document.getElementById('cue-dept').value,
+    cue_number: document.getElementById('cue-number').value,
     label: document.getElementById('cue-label').value,
     trigger_tc: parseTC(document.getElementById('cue-trigger-tc').value),
     warn_seconds: parseInt(document.getElementById('cue-warn').value) || 10,
