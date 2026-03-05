@@ -90,11 +90,14 @@ http://<your-ip>:8080
 
 The main operational view for live shows.
 
-- **Timecode display** at the top shows current time
+- **Sticky timecode display** at the top (stays visible when scrolling)
 - **Transport controls:** Play, Pause, Stop, and Goto timecode
+- **Ready / 3-2-1 / Go display:** Shows the next imminent cue with a large countdown
 - **Department filter chips** let you show/hide cues by department
-- **Cue cards** grouped by state: Active (green glow), Warning (amber pulse), Upcoming, Passed
+- **Cue cards** with cue numbers, grouped by state: Active (green glow), Warning (amber pulse), Upcoming, Passed
 - Each card shows a countdown timer and progress bar
+- Cues stay **active until replaced** by the next cue in the same department
+- **Show/Hide Passed** toggle to declutter the view during a show
 
 **Keyboard shortcuts:**
 - `Space` - Play
@@ -108,10 +111,24 @@ For setting up your show.
 
 - **Left panel:** Create, edit, and delete departments (name + color)
 - **Right panel:** Cue list table with:
+  - **#** column showing cue numbers (auto-generated Q1, Q2, Q3... or custom)
   - Department dropdown filter
-  - Clickable column headers to sort (Timecode, Label, Department, Warn)
+  - Clickable column headers to sort (# , Timecode, Label, Department, Lead Time)
   - Edit and delete buttons per cue
 - Click **+ Add** to create new departments or cues
+- Click **Import** to bulk-import cues from CSV or JSON files
+
+### Importing Cues
+
+ShowPulse supports bulk cue import via the **Import** button in the Manage tab.
+
+**CSV format:** Header row with columns like `timecode`, `label`, `department`, `warn`, `notes`. The parser recognizes common aliases (e.g., "dept" for "department", "tc" for "timecode"). Department names are automatically matched to existing departments.
+
+**JSON format:** Either a bare array `[{...}, {...}]` or wrapped `{ "cues": [{...}, {...}] }`. Each cue needs at minimum a `department_id` (UUID).
+
+Test files are included in the repository:
+- `test-import-show.json` — Full show with 8 departments + 72 cues
+- `test-import-cues.csv` — 74 cues in CSV format with department names
 
 ### Settings Tab
 
@@ -119,8 +136,8 @@ For setting up your show.
 - **Frame rate:** 24, 25, 29.97df, 30 fps
 - **Generator mode:** Freerun, Countdown, Clock, Loop
 - **Start timecode** and **speed** controls
-- **Theme customization:** Background, accent, and warning colors; timecode display size
-- **Export/Import:** Save or load your show as a JSON file
+- **Theme customization:** Background, accent, and warning colors (live preview); timecode display size
+- **Export/Import:** Save or load your entire show (departments + cues) as a JSON file
 
 ## Using LTC (SMPTE Linear Timecode)
 
