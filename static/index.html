@@ -818,6 +818,80 @@ body {
   text-align: right;
 }
 
+/* ══════════════════════════════════════════
+   READY / GO COUNTDOWN DISPLAY
+   ══════════════════════════════════════════ */
+.next-up-display {
+  display: none;
+  text-align: center;
+  padding: 1.5rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  transition: all 0.3s;
+}
+.next-up-display.visible { display: block; }
+.next-up-display.state-ready {
+  border-color: var(--warning);
+  box-shadow: 0 0 20px var(--warning-glow);
+}
+.next-up-display.state-countdown {
+  border-color: var(--warning);
+  box-shadow: 0 0 30px var(--warning-glow);
+}
+.next-up-display.state-go {
+  border-color: var(--accent);
+  box-shadow: 0 0 40px var(--active-glow);
+  background: rgba(0, 255, 136, 0.08);
+}
+.next-up-display .next-up-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  margin-bottom: 0.4rem;
+}
+.next-up-display .next-up-dept {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+.next-up-display .next-up-cue {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+.next-up-display .next-up-status {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  line-height: 1;
+}
+.next-up-display .next-up-status.ready {
+  font-size: 2.5rem;
+  color: var(--warning);
+}
+.next-up-display .next-up-status.countdown-num {
+  font-size: 6rem;
+  color: var(--warning);
+  text-shadow: 0 0 40px var(--warning-glow);
+  animation: countdown-pop 0.4s ease-out;
+}
+.next-up-display .next-up-status.go {
+  font-size: 5rem;
+  color: var(--accent);
+  text-shadow: 0 0 50px var(--active-glow);
+  animation: go-pop 0.5s ease-out;
+}
+@keyframes countdown-pop {
+  from { transform: scale(1.4); opacity: 0.6; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes go-pop {
+  from { transform: scale(1.5); opacity: 0.5; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 /* Speed field suffix (Item 5) */
 .speed-row {
   display: flex;
@@ -890,6 +964,14 @@ body {
   </div>
 
   <div class="dept-filters" id="dept-filters"></div>
+
+  <!-- Ready / Go Countdown Display -->
+  <div class="next-up-display" id="next-up-display">
+    <div class="next-up-label" id="next-up-label">NEXT UP</div>
+    <div class="next-up-dept" id="next-up-dept"></div>
+    <div class="next-up-cue" id="next-up-cue"></div>
+    <div class="next-up-status" id="next-up-status"></div>
+  </div>
 
   <div class="cue-controls">
     <button class="toggle-btn active" id="toggle-passed" onclick="togglePassedCues()">Show Passed</button>
@@ -1150,6 +1232,8 @@ let wsConnected = false;
 let cueTableSort = { key: 'trigger_tc', asc: true };
 let showPassedCues = true;
 let confirmResolve = null; // for confirm modal promise
+let goDisplayTimeout = null; // tracks the GO display timer
+let lastGoId = null; // prevents re-triggering GO for same cue
 
 // ═══════════════════════════════════════════
 // View switching
@@ -1230,6 +1314,7 @@ function connectWS() {
     stateEl.className = data.status;
     document.getElementById('tc-fps').textContent = data.frame_rate + ' fps';
     renderCueCards(data.cues);
+    renderNextUp(data.cues);
   };
 }
 
@@ -1348,6 +1433,77 @@ function toggleDeptFilter(id) {
 function clearDeptFilters() {
   activeDeptFilters.clear();
   renderDeptFilters();
+}
+
+// ═══════════════════════════════════════════
+// Ready / Go Countdown Display
+// ═══════════════════════════════════════════
+function renderNextUp(wsCues) {
+  const el = document.getElementById('next-up-display');
+  const labelEl = document.getElementById('next-up-label');
+  const deptEl = document.getElementById('next-up-dept');
+  const cueEl = document.getElementById('next-up-cue');
+  const statusEl = document.getElementById('next-up-status');
+
+  if (!wsCues || wsCues.length === 0) {
+    el.classList.remove('visible');
+    return;
+  }
+
+  // Apply department filter
+  let filtered = wsCues;
+  if (activeDeptFilters.size > 0) {
+    filtered = wsCues.filter(c => activeDeptFilters.has(c.department_id));
+  }
+
+  // Find warning cues — pick the one closest to triggering (lowest countdown_sec)
+  const warningCues = filtered.filter(c => c.state === 'warning');
+  if (warningCues.length === 0) {
+    // No warning cues — check if we should show GO
+    if (!goDisplayTimeout) {
+      el.classList.remove('visible');
+      el.className = 'next-up-display';
+    }
+    return;
+  }
+
+  warningCues.sort((a, b) => a.countdown_sec - b.countdown_sec);
+  const nearest = warningCues[0];
+  const deptColor = getDeptColor(nearest.department_id);
+  const secs = Math.ceil(nearest.countdown_sec);
+
+  el.classList.add('visible');
+  deptEl.innerHTML = `<span style="color:${deptColor}">${esc(nearest.department)}</span>`;
+  cueEl.textContent = nearest.label;
+
+  if (secs <= 0) {
+    // Cue is about to trigger — show GO
+    if (lastGoId !== nearest.id) {
+      lastGoId = nearest.id;
+      el.className = 'next-up-display visible state-go';
+      labelEl.textContent = '';
+      statusEl.className = 'next-up-status go';
+      statusEl.textContent = 'GO';
+      if (goDisplayTimeout) clearTimeout(goDisplayTimeout);
+      goDisplayTimeout = setTimeout(() => {
+        el.classList.remove('visible');
+        el.className = 'next-up-display';
+        goDisplayTimeout = null;
+      }, 3000);
+    }
+  } else if (secs <= 3) {
+    // Show 3, 2, 1 countdown
+    el.className = 'next-up-display visible state-countdown';
+    labelEl.textContent = 'STANDBY';
+    statusEl.className = 'next-up-status countdown-num';
+    statusEl.textContent = secs;
+  } else {
+    // Show READY
+    el.className = 'next-up-display visible state-ready';
+    labelEl.textContent = 'NEXT UP';
+    statusEl.className = 'next-up-status ready';
+    statusEl.textContent = 'READY';
+  }
 }
 
 // ═══════════════════════════════════════════
