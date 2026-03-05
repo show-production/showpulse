@@ -50,9 +50,16 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 4. Cue numbering: auto-generated (Q1, Q2...), displayed in cue cards, manage table, Ready/Go, editable in modal
 5. Stable cue ordering: cues stay in timecode order, state changes expressed through color/border only (no position shifts)
 
+**Phase 6 — Display Overhaul (Operator Focus):**
+1. Dominant timecode: 8rem default, reduced padding, readable across the room
+2. Transport hidden behind toggle: Show view is a read-only cue monitor by default
+3. Countdown dominant on cue cards: 1.4rem bold countdown, dimmed 0.7rem trigger TC
+4. DOM diffing: cue cards updated in place by ID, no innerHTML replacement, smooth CSS transitions
+5. Keyboard hints removed from sticky header to reclaim vertical space
+
 ---
 
-## Phase 6: Unit & Integration Tests (HIGH PRIORITY)
+## Phase 7: Unit & Integration Tests (HIGH PRIORITY)
 **Goal:** Establish test coverage for critical logic.
 
 **Files to modify:** `Cargo.toml` (dev-deps), `src/timecode/types.rs`, `src/cue/store.rs`, `src/engine/countdown.rs`, new `tests/api.rs`
@@ -80,7 +87,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 7: Authentication (MEDIUM PRIORITY)
+## Phase 8: Authentication (MEDIUM PRIORITY)
 **Goal:** PIN-based auth to protect admin operations while keeping crew view open.
 
 **Files to modify:** new `src/auth.rs`, `src/main.rs`, `src/config.rs`, `static/index.html`
@@ -93,7 +100,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 8: Security Hardening (MEDIUM PRIORITY)
+## Phase 9: Security Hardening (MEDIUM PRIORITY)
 **Goal:** Production-ready security posture for LAN deployment.
 
 **Files to modify:** `src/main.rs`
@@ -104,7 +111,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 9: Nice-to-haves (LOW PRIORITY)
+## Phase 10: Nice-to-haves (LOW PRIORITY)
 
 | Feature | Description |
 |---------|-------------|
@@ -120,7 +127,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 ## Verification Checklist
 
 - [x] `cargo build` — compiles without errors
-- [ ] `cargo test` — all tests pass (after Phase 6)
+- [ ] `cargo test` — all tests pass (after Phase 7)
 - [x] Manual test: `cargo run` → browser at `http://localhost:8080`
 - [x] LTC: test with LTC audio from a generator app or DAW
 - [x] MTC: test with MIDI loopback or DAW sending MTC

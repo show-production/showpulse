@@ -90,16 +90,16 @@ http://<your-ip>:8080
 
 The main operational view for live shows.
 
-- **Sticky timecode display** at the top (stays visible when scrolling)
-- **Transport controls:** Play, Pause, Stop, and Goto timecode
+- **Dominant timecode display** (8rem default, sticky at the top, readable across the room)
+- **Transport controls** hidden behind a toggle — the Show view is a read-only cue monitor; transport opens on click
 - **Ready / 3-2-1 / Go display:** Shows the next imminent cue with countdown, consistent layout across all states
 - **Department filter chips** let you show/hide cues by department
 - **Cue cards** in stable timecode order with cue numbers — state changes only affect color and border, cues never shift position
-- Each card shows a countdown timer and progress bar
+- Each card shows a **large countdown** (the live, urgent number) and a dimmer trigger timecode (reference info)
 - Cues stay **active until replaced** by the next cue in the same department
 - **Show/Hide Passed** toggle to declutter the view during a show
 
-**Keyboard shortcuts:**
+**Keyboard shortcuts** (work even with transport hidden):
 - `Space` - Play
 - `P` - Pause
 - `Escape` - Stop

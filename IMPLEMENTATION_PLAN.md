@@ -365,11 +365,12 @@ ShowPulse runs on a **local, trusted WiFi network** (production VLAN or dedicate
 | 5 | Admin frontend | Browser-based cue/department management | **Done** |
 | 6 | UI/UX polish | 15 UX fixes + 5 user feedback items (sticky TC, Ready/Go, cue numbers, per-dept state) | **Done** |
 | 7 | Cue import | Bulk JSON/CSV import with validation, column aliases, dept name resolution | **Done** |
-| 8 | Testing | Unit & integration tests for timecode, store, countdown engine, API | Planned |
-| 9 | Security hardening | PIN auth, rate limiting, input validation, security headers | Planned |
-| 10 | Polish & packaging | Multi-show, QR onboarding, generator presets, print view | Planned |
+| 8 | Display overhaul | Dominant TC, collapsible transport, DOM diffing, countdown-focused cards | **Done** |
+| 9 | Testing | Unit & integration tests for timecode, store, countdown engine, API | Planned |
+| 10 | Security hardening | PIN auth, rate limiting, input validation, security headers | Planned |
+| 11 | Polish & packaging | Multi-show, QR onboarding, generator presets, print view | Planned |
 
-> **Note:** Milestones 1-7 are fully implemented. The actual implementation uses vanilla HTML/CSS/JS
+> **Note:** Milestones 1-8 are fully implemented. The actual implementation uses vanilla HTML/CSS/JS
 > (single `static/index.html`) instead of Vite/Preact/Solid as originally planned — this simplifies
 > deployment to a true single-binary with no build step. LTC uses `cpal` and MTC uses `midir` as
 > specified. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the current roadmap.

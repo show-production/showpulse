@@ -41,7 +41,7 @@ Single-page app served from `static/index.html` with three tabs:
 
 | Tab | Purpose |
 |-----|---------|
-| **Show** | Sticky timecode + transport header, Ready/3-2-1/Go countdown visualization, department filter chips, cue cards in timecode order with state coloring (no position shifts), passed cues toggle |
+| **Show** | Dominant sticky timecode (8rem default), collapsible transport, Ready/Go countdown, department filter chips, cue cards in stable timecode order (DOM-diffed, no position shifts), passed cues toggle |
 | **Manage** | Department CRUD (left panel), cue list table (right panel) with # column, department dropdown filter, sortable column headers, CSV/JSON bulk import, add/edit/delete modals with cue number field |
 | **Settings** | Timecode source selector (Generator/LTC/MTC) with device selectors, frame rate, generator mode, speed, start TC, theme colors (live preview), TC size slider, show data export/import JSON |
 
@@ -72,10 +72,10 @@ Single-page app served from `static/index.html` with three tabs:
 | Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick, per-department cue state tracking (active until replaced by next dept cue), second-boundary broadcast, 60s passed-cue cleanup |
 | Config | `src/config.rs` | Basic: port (8080) + data file path (showpulse-data.json) |
 | Server entrypoint | `src/main.rs` | Full: Axum router with all routes, state wiring, seed on startup, static file fallback |
-| Web UI - Show view | `static/index.html` | Full: Sticky timecode + transport header, cue cards in stable timecode order (no regrouping on state change), cue numbers, Ready/Go countdown, department filters, passed cues toggle, disconnection banner |
+| Web UI - Show view | `static/index.html` | Full: Dominant sticky timecode (8rem), collapsible transport, DOM-diffed cue cards in stable timecode order, cue numbers, Ready/Go countdown, department filters, passed cues toggle, disconnection banner |
 | Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with # column + sortable headers + department filter, bulk CSV/JSON import, add/edit/delete modals with cue number field |
 | Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show data export/import |
-| Web UI - UX polish | `static/index.html` | Full: Toast notifications, confirm modals (replaces native confirm), keyboard shortcut hints, loading spinner, responsive table scroll, 44px touch targets, favicon |
+| Web UI - UX polish | `static/index.html` | Full: Toast notifications, confirm modals (replaces native confirm), loading spinner, responsive table scroll, 44px touch targets, favicon, DOM diffing for flicker-free cue updates |
 | Demo seed data | `src/cue/store.rs` | 6 departments (Lighting, Sound, Video, Pyro, Automation, Stage Mgmt) + 22 cues from 00:00:10 to 00:08:00 |
 
 ### Cue Data Model
