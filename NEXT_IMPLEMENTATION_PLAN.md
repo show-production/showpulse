@@ -43,12 +43,12 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 **Phase 4 — CSV/JSON Cue Import:** `POST /api/cues/import` bulk endpoint with department validation, single persist, frontend CSV parser with column aliases, JSON array/wrapper support, import button in Manage view, updated `importShow()` to use bulk endpoint.
 
-**Phase 5 — User Feedback Items (5 items):**
+**Phase 5 — User Feedback Items:**
 1. Sticky timecode display + transport at top of Show view
 2. Per-department cue state: active until replaced by next same-department cue (rewrote countdown engine)
-3. Ready → 3 → 2 → 1 → Go countdown visualization for next warning cue
+3. Ready/Go countdown visualization with consistent layout (no size jumps between states)
 4. Cue numbering: auto-generated (Q1, Q2...), displayed in cue cards, manage table, Ready/Go, editable in modal
-5. Active cue glow animation
+5. Stable cue ordering: cues stay in timecode order, state changes expressed through color/border only (no position shifts)
 
 ---
 
