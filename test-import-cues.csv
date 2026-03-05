@@ -1,74 +1,31 @@
 timecode,label,department,warn,notes
-00:00:30:00,FOH call — 30 min to show,Stage Mgmt,15,Announce to all departments
-00:01:00:00,Comms check — all channels,Comms,10,
-00:01:30:00,Pre-show wash — warm white,Lighting,10,House preset
-00:02:00:00,BGM — cocktail mix start,Sound,8,Low volume build over 10 min
-00:02:15:00,Lobby screens — welcome loop,Video,10,Sponsor carousel
-00:03:00:00,LED wall — countdown clock,Graphics,10,30-min countdown to show start
-00:05:00:00,FOH call — 15 min to show,Stage Mgmt,10,
-00:07:00:00,House lights flicker — 5 min warning,Lighting,8,3x slow flicker
-00:08:00:00,BGM fade to 50%,Sound,8,
-00:09:00:00,Places call — all departments,Stage Mgmt,15,Final standby
-00:09:30:00,Lock comms — show channel only,Comms,8,
-00:09:45:00,BGM out — silence,Sound,5,
-00:10:00:00,House lights out — 5s fade,Lighting,10,Show start
-00:10:05:00,LED wall — opening title card,Graphics,5,Client A branding
-00:10:05:00,Opening stinger — play,Sound,5,Big impact hit
-00:10:07:00,CO2 jets — stage edge burst,Pyro,12,3-second burst all 6 jets
-00:10:08:00,Stage wash — deep blue + haze,Lighting,5,
-00:10:10:00,IMAG — camera 1 wide,Video,5,Full stage reveal
-00:10:12:00,Raise main curtain,Automation,10,Slow reveal — 8s travel
-00:10:15:00,Opening music bed — start,Sound,5,Under presenter walk-on
-00:10:20:00,Spotlight — center stage podium,Lighting,8,Follow spot operator standby
-00:10:25:00,Cue presenter — stage right entrance,Stage Mgmt,10,
-00:10:30:00,IMAG — camera 2 tight on presenter,Video,5,
-00:11:00:00,Music bed fade out,Sound,8,Presenter begins talking
-00:12:00:00,LED wall — Client A sizzle reel,Graphics,10,2-min video package
-00:12:00:00,Switch to VT playback — Client A reel,Video,10,
-00:12:02:00,Stage dims for VT playback,Lighting,5,
-00:14:00:00,End VT — return to IMAG,Video,10,
-00:14:02:00,Stage up — warm wash,Lighting,5,
-00:14:30:00,Cue Client A CEO — stage left,Stage Mgmt,12,Award presentation
-00:14:30:00,Walk-on music — Client A,Sound,8,
-00:14:40:00,Lower third — CEO name + title,Graphics,5,
-00:16:00:00,Confetti burst — gold,Pyro,12,Award moment
-00:16:00:00,Applause stinger,Sound,5,
-00:16:01:00,Celebration look — flash + color,Lighting,5,
-00:17:00:00,Transition music — play,Sound,8,Between segments
-00:17:30:00,LED wall — Client B branding,Graphics,10,Segment 2 start
-00:17:30:00,Stage wash — cool teal,Lighting,8,Client B color theme
-00:18:00:00,IMAG — camera 3 stage right,Video,5,
-00:18:00:00,Cue Client B speaker — stage right,Stage Mgmt,10,
-00:18:10:00,Mic open — lapel 3,Sound,5,
-00:19:30:00,Client B VT package — roll,Video,10,90-second video
-00:19:32:00,Dim stage for VT,Lighting,5,
-00:21:00:00,End VT — return to live,Video,10,
-00:22:00:00,Flame bars — 5s burst,Pyro,15,Client B award moment
-00:22:02:00,Confetti — silver,Pyro,10,
-00:22:03:00,Full stage — strobe accent,Lighting,5,
-00:23:00:00,Transition music — segment 3,Sound,8,
-00:23:30:00,Lower mid-stage scrim,Automation,10,For Client C projection
-00:24:00:00,LED wall — Client C branding,Graphics,10,
-00:24:00:00,Stage wash — magenta + purple,Lighting,8,Client C color theme
-00:24:30:00,Cue Client C panel — 3 guests,Stage Mgmt,12,Enter from both wings
-00:24:45:00,Panel mics open — lapels 4 5 6,Sound,5,
-00:25:00:00,IMAG — 3-way split screen,Video,8,Panel discussion layout
-00:25:05:00,Lower thirds — all 3 panelists,Graphics,5,
-00:28:00:00,Client C highlight reel — roll,Video,10,2-min package
-00:30:00:00,Sparkle fountains — 8 units,Pyro,15,Client C award
-00:30:01:00,Award look — gold wash + gobo,Lighting,5,
-00:31:00:00,Raise scrim,Automation,10,
-00:32:00:00,Transition music — finale buildup,Sound,10,Energy ramp
-00:33:00:00,LED wall — finale montage,Graphics,10,All client highlights
-00:33:00:00,Full rig — rainbow chase,Lighting,8,High energy
-00:33:30:00,All speakers to stage,Stage Mgmt,12,Finale group photo
-00:34:00:00,IMAG — wide group shot,Video,8,
-00:35:00:00,Full pyro finale — all effects,Pyro,20,CO2 + confetti + flames
-00:35:00:00,Strobe + flash — 10s burst,Lighting,10,
-00:35:00:00,Finale track — peak,Sound,8,
-00:36:00:00,Music fade — 10s out,Sound,10,
-00:36:30:00,Presenter — closing remarks,Stage Mgmt,10,
-00:37:00:00,Fade to warm wash,Lighting,8,
-00:38:00:00,Lower main curtain,Automation,10,
-00:38:05:00,House lights up — 50%,Lighting,8,
-00:38:10:00,Exit music — start,Sound,5,Post-show playlist
+00:00:30:00,Places call,Stage Mgmt,15,All departments standby
+00:01:00:00,House lights to 50%,Lighting,10,
+00:01:30:00,Play opening music,Sound,10,
+00:02:00:00,House lights out,Lighting,8,Show start
+00:02:05:00,Roll intro video,Video,5,
+00:02:30:00,Stage wash — blue,Lighting,8,
+00:02:35:00,Raise main curtain,Automation,10,
+00:03:00:00,CO2 jets — stage edge,Pyro,12,3-second burst
+00:03:05:00,Music bed — start,Sound,5,
+00:03:30:00,Spotlight — center stage,Lighting,8,
+00:03:30:00,IMAG — camera 1 wide,Video,5,
+00:04:00:00,Cue presenter — stage right,Stage Mgmt,10,
+00:04:30:00,Music bed fade out,Sound,8,
+00:05:00:00,Roll VT package,Video,10,
+00:05:02:00,Stage dims for VT,Lighting,5,
+00:07:00:00,End VT — return to IMAG,Video,10,
+00:07:02:00,Stage up — warm wash,Lighting,5,
+00:08:00:00,Confetti burst — gold,Pyro,12,Award moment
+00:08:00:00,Applause stinger,Sound,5,
+00:08:01:00,Celebration look,Lighting,5,
+00:09:00:00,Transition music,Sound,8,
+00:09:30:00,All speakers to stage,Stage Mgmt,12,Finale
+00:10:00:00,Full pyro finale,Pyro,15,CO2 + confetti
+00:10:00:00,Full rig — rainbow chase,Lighting,8,
+00:10:00:00,Finale track — peak,Sound,8,
+00:11:00:00,Music fade out,Sound,10,
+00:11:30:00,Fade to warm wash,Lighting,8,
+00:12:00:00,Lower main curtain,Automation,10,
+00:12:05:00,House lights up,Lighting,8,
+00:12:10:00,Exit music — start,Sound,5,

@@ -127,8 +127,8 @@ ShowPulse supports bulk cue import via the **Import** button in the Manage tab.
 **JSON format:** Either a bare array `[{...}, {...}]` or wrapped `{ "cues": [{...}, {...}] }`. Each cue needs at minimum a `department_id` (UUID).
 
 Test files are included in the repository:
-- `test-import-show.json` — Full show with 8 departments + 72 cues
-- `test-import-cues.csv` — 74 cues in CSV format with department names
+- `test-import-show.json` — Full show with 6 departments + 30 cues
+- `test-import-cues.csv` — 30 cues in CSV format with department names
 
 ### Settings Tab
 
