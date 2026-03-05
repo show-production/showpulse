@@ -611,6 +611,10 @@ body {
 }
 .cue-card.state-warning { animation: warn-pulse 1.5s ease-in-out infinite; }
 
+/* Sortable table headers */
+.cue-table th.sortable { cursor: pointer; user-select: none; }
+.cue-table th.sortable:hover { color: var(--text-primary); }
+
 /* ── Active glow animation ── */
 @keyframes active-glow {
   0%, 100% { box-shadow: 0 0 12px var(--active-glow); }
@@ -672,16 +676,21 @@ body {
     <div class="panel">
       <div class="panel-header">
         <h3>Cue List</h3>
-        <button class="add-btn" onclick="openCueModal()">+ Add</button>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <select id="manage-dept-filter" onchange="renderCueTable()" style="padding:0.3rem 0.5rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.75rem;">
+            <option value="">All Departments</option>
+          </select>
+          <button class="add-btn" onclick="openCueModal()">+ Add</button>
+        </div>
       </div>
       <div class="panel-body" style="padding:0;">
         <table class="cue-table">
           <thead>
             <tr>
-              <th>Timecode</th>
-              <th>Label</th>
-              <th>Department</th>
-              <th>Warn</th>
+              <th class="sortable" onclick="sortCueTable('trigger_tc')" id="sort-trigger_tc">Timecode ▲</th>
+              <th class="sortable" onclick="sortCueTable('label')" id="sort-label">Label</th>
+              <th class="sortable" onclick="sortCueTable('department')" id="sort-department">Department</th>
+              <th class="sortable" onclick="sortCueTable('warn_seconds')" id="sort-warn_seconds">Warn</th>
               <th></th>
             </tr>
           </thead>
@@ -851,6 +860,7 @@ let cues = [];
 let activeDeptFilters = new Set(); // empty = show all
 let ws = null;
 let wsConnected = false;
+let cueTableSort = { key: 'trigger_tc', asc: true };
 
 // ═══════════════════════════════════════════
 // View switching
@@ -1082,11 +1092,46 @@ function renderDeptList() {
 
 function renderCueTable() {
   const tbody = document.getElementById('cue-table-body');
-  if (cues.length === 0) {
+
+  // Populate department filter dropdown
+  const filterSel = document.getElementById('manage-dept-filter');
+  const curFilter = filterSel.value;
+  filterSel.innerHTML = '<option value="">All Departments</option>' +
+    departments.map(d => `<option value="${d.id}"${d.id === curFilter ? ' selected' : ''}>${esc(d.name)}</option>`).join('');
+
+  // Filter
+  let filtered = cues;
+  if (curFilter) {
+    filtered = cues.filter(c => c.department_id === curFilter);
+  }
+
+  // Sort
+  const getDeptName = (c) => {
+    const d = departments.find(d => d.id === c.department_id);
+    return d ? d.name.toLowerCase() : '';
+  };
+  const sortFns = {
+    trigger_tc: (a, b) => fmtTC(a.trigger_tc).localeCompare(fmtTC(b.trigger_tc)),
+    label: (a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()),
+    department: (a, b) => getDeptName(a).localeCompare(getDeptName(b)),
+    warn_seconds: (a, b) => a.warn_seconds - b.warn_seconds,
+  };
+  const fn = sortFns[cueTableSort.key] || sortFns.trigger_tc;
+  filtered = [...filtered].sort((a, b) => cueTableSort.asc ? fn(a, b) : fn(b, a));
+
+  // Update sort indicators
+  ['trigger_tc', 'label', 'department', 'warn_seconds'].forEach(k => {
+    const th = document.getElementById('sort-' + k);
+    if (!th) return;
+    const base = { trigger_tc: 'Timecode', label: 'Label', department: 'Department', warn_seconds: 'Warn' }[k];
+    th.textContent = k === cueTableSort.key ? base + (cueTableSort.asc ? ' ▲' : ' ▼') : base;
+  });
+
+  if (filtered.length === 0) {
     tbody.innerHTML = '<tr><td colspan="5" style="padding:1.5rem;text-align:center;color:var(--text-dim)">No cues yet.</td></tr>';
     return;
   }
-  tbody.innerHTML = cues.map(c => {
+  tbody.innerHTML = filtered.map(c => {
     const dept = departments.find(d => d.id === c.department_id);
     return `<tr>
       <td class="tc-cell">${fmtTC(c.trigger_tc)}</td>
@@ -1099,6 +1144,16 @@ function renderCueTable() {
       </div></td>
     </tr>`;
   }).join('');
+}
+
+function sortCueTable(key) {
+  if (cueTableSort.key === key) {
+    cueTableSort.asc = !cueTableSort.asc;
+  } else {
+    cueTableSort.key = key;
+    cueTableSort.asc = true;
+  }
+  renderCueTable();
 }
 
 // ═══════════════════════════════════════════
