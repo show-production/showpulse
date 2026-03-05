@@ -13,6 +13,10 @@
 │  ┌──────────┐   │              │   │  backend    │  │
 │  │ MIDI MTC │──>│  WebSocket   │   └─────┬──────┘  │
 │  │ (MIDI In)│   │  Server      │         │         │
+│  └──────────┘   │              │         │         │
+│  ┌──────────┐   │  Internal TC │         │         │
+│  │ TC Gen / │──>│  Generator   │         │         │
+│  │ Emulator │   │              │         │         │
 │  └──────────┘   └──────┬───────┘         │         │
 │                        │                 │         │
 │                   WebSocket            HTTP         │
@@ -44,7 +48,8 @@
   │   │   ├── mod.rs
   │   │   ├── types.rs         # Timecode struct (HH:MM:SS:FF), frame rates
   │   │   ├── ltc.rs           # SMPTE LTC decoder (audio input)
-  │   │   └── mtc.rs           # MIDI MTC decoder (MIDI input)
+  │   │   ├── mtc.rs           # MIDI MTC decoder (MIDI input)
+  │   │   └── generator.rs     # Internal timecode generator/emulator
   │   ├── cue/
   │   │   ├── mod.rs
   │   │   ├── types.rs         # Cue, CueList, Department models
@@ -68,11 +73,86 @@
 ### 1.2 Timecode input
 - **SMPTE LTC:** Use `cpal` crate for audio capture. Implement LTC bit decoding from the audio stream (80-bit LTC frame). Parse hours, minutes, seconds, frames.
 - **MIDI MTC:** Use `midir` crate for MIDI input. Parse MTC Quarter Frame messages (F1 xx) and Full Frame messages (F0 7F ... F7). Reconstruct full timecode from quarter-frame nibbles.
-- **Shared timecode state:** An `Arc<AtomicTimecode>` or `tokio::watch::channel` that both decoders write to and the engine reads from. Single source of truth for "current show time."
+- **Shared timecode state:** An `Arc<AtomicTimecode>` or `tokio::watch::channel` that all timecode sources write to and the engine reads from. Single source of truth for "current show time."
 
-### 1.3 Deliverable
+### 1.3 Timecode Generator / Emulator
+A built-in software timecode source that eliminates the need for external LTC/MTC hardware. Essential for rehearsals, programming, testing, and venues without timecode infrastructure.
+
+#### Modes
+| Mode | Description |
+|------|-------------|
+| **Freerun** | Starts from a configurable start time (default `00:00:00:00`), counts up in real-time at the selected frame rate. Behaves like a stopwatch synced to wall clock. |
+| **Countdown** | Counts down from a specified duration to `00:00:00:00`, then optionally stops or loops. Useful for intermission timers. |
+| **Cue-to-cue jump** | Operator jumps directly to a timecode position (e.g., 5 seconds before a specific cue) for rehearsing individual cues without playing through the entire show. |
+| **Clock (time-of-day)** | Uses the system clock as timecode — maps wall-clock HH:MM:SS to timecode HH:MM:SS:00. For shows triggered by real time rather than a timeline. |
+| **Loop** | Plays a configurable timecode range on repeat (e.g., `01:00:00:00` to `01:05:00:00`). For rehearsing a specific section. |
+
+#### Generator internals
+```rust
+struct TimecodeGenerator {
+    mode: GeneratorMode,
+    frame_rate: FrameRate,       // 24, 25, 29.97df, 30
+    state: GeneratorState,       // stopped, running, paused
+    start_tc: Timecode,          // starting position
+    current_tc: Timecode,        // current position
+    loop_in: Option<Timecode>,   // loop start point
+    loop_out: Option<Timecode>,  // loop end point
+    speed: f64,                  // playback rate (1.0 = realtime, 0.5 = half, 2.0 = double)
+}
+
+enum GeneratorMode {
+    Freerun,
+    Countdown { duration: Timecode },
+    ClockSync,
+    Loop { start: Timecode, end: Timecode },
+}
+
+enum GeneratorState {
+    Stopped,
+    Running,
+    Paused,
+}
+```
+
+- Runs as a Tokio task, advancing `current_tc` based on elapsed wall-clock time (using `tokio::time::Instant` for drift-free timing).
+- Writes to the same shared timecode state as LTC/MTC decoders.
+- Frame-accurate: advances exactly one frame per frame period (e.g., 33.33ms at 30fps).
+- Variable speed playback for fast-forwarding through a show timeline.
+
+#### Timecode source selection
+Only one timecode source is active at a time. Selectable via API and admin UI:
+```
+Active source: [ LTC ] [ MTC ] [ Generator ]  (radio-button style)
+```
+When switching sources, the engine seamlessly reads from the new source on the next tick. No restart required.
+
+#### REST API additions
+| Method | Endpoint                          | Purpose                              |
+|--------|-----------------------------------|--------------------------------------|
+| GET    | `/api/generator`                  | Get generator state and config       |
+| PUT    | `/api/generator`                  | Update generator config (mode, frame rate, speed, loop points) |
+| POST   | `/api/generator/play`             | Start / resume playback              |
+| POST   | `/api/generator/pause`            | Pause (hold current TC position)     |
+| POST   | `/api/generator/stop`             | Stop and reset to start position     |
+| POST   | `/api/generator/goto`             | Jump to a specific timecode position |
+| PUT    | `/api/timecode/source`            | Switch active source (ltc / mtc / generator) |
+
+#### Admin UI — Generator Controls
+Transport-style controls on the admin page:
+- **Play / Pause / Stop** buttons.
+- **Timecode position display** — click to edit and jump to a position.
+- **Frame rate selector** — dropdown for 24/25/29.97df/30.
+- **Speed slider** — 0.25x to 4x, with a "1x" snap detent.
+- **Mode selector** — freerun / countdown / clock / loop.
+- **Loop in/out** — set range visually or by entering timecode values.
+- **Jump-to-cue** — dropdown of all cues; selecting one seeks to `cue.trigger_tc - warn_seconds`.
+- **Source selector** — switch between LTC, MTC, and Generator.
+
+### 1.4 Deliverable
 - Server starts, opens audio/MIDI device, decodes timecode, logs it to console.
-- `GET /api/timecode` returns current timecode as JSON.
+- Internal timecode generator runs independently of hardware.
+- `GET /api/timecode` returns current timecode as JSON regardless of source.
+- `GET /api/generator` returns generator state.
 
 ---
 
@@ -204,7 +284,7 @@ struct CueList {
 - **Multi-show support:** Save/load different show files.
 - **Cue list print view:** Printable cue sheet for paper backup.
 - **QR code on admin page:** For easy crew onboarding — scan QR to open crew view URL.
-- **Manual timecode mode:** For rehearsals without timecode hardware, allow manual timecode entry or a built-in clock.
+- **Generator presets:** Save/load named generator configurations (e.g., "Act 1 rehearsal loop", "Intermission countdown") for quick recall during tech rehearsals.
 
 ### 5.2 Deliverable
 - Production-ready admin interface.
@@ -278,10 +358,10 @@ ShowPulse runs on a **local, trusted WiFi network** (production VLAN or dedicate
 
 | # | Milestone | Key Result |
 |---|-----------|-----------|
-| 1 | Timecode core | Server reads LTC/MTC, exposes `/api/timecode` |
+| 1 | Timecode core | Server reads LTC/MTC, runs internal TC generator, exposes `/api/timecode` |
 | 2 | Cue management | CRUD API + JSON persistence working |
 | 3 | Countdown engine | WebSocket broadcasts live countdowns |
 | 4 | Crew frontend | Phones display countdowns from WebSocket |
 | 5 | Admin frontend | Browser-based cue/department management |
 | 6 | Security hardening | PIN auth, rate limiting, input validation |
-| 7 | Polish & packaging | Single-binary release, QR onboarding, manual TC mode |
+| 7 | Polish & packaging | Single-binary release, QR onboarding, generator presets |
