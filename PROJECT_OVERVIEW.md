@@ -41,7 +41,7 @@ Single-page app served from `static/index.html` with three tabs:
 
 | Tab | Purpose |
 |-----|---------|
-| **Show** | 5-section dashboard: stacked passed cues deck, stacked triggered (NOW) cues deck, centered timer with 2-row transport controls (Prev/Play/Pause/Stop/Next + Goto), animated Ready/Go countdown zone (READY → 3 → 2 → 1 → GO! with pop/flash effects), scrollable coming cues. Click any cue to load TC into Goto. Prev/Next cue navigation. Above-timer sections fold on scroll. Department filter chips, DOM-diffed cue cards, passed cues toggle |
+| **Show** | Clean dashboard: passed cues count badge (click to expand dropdown), active cue strips (compact rows with dept color + checkmark), centered timer with 2-row transport controls (Prev/Play/Pause/Stop/Next + Goto), animated Ready/Go countdown zone (READY → 3 → 2 → 1 → GO! with traffic-light colors and pop/flash effects), scrollable coming cues with uniform-size cards (color-only tier differentiation, no layout shifts). Click any cue to load TC into Goto. Prev/Next cue navigation. Above-timer sections fade on scroll. Department filter chips, DOM-diffed cue cards, passed cues toggle |
 | **Manage** | Department CRUD (left panel), cue list table (right panel) with # column, department dropdown filter, sortable column headers, CSV/JSON bulk import, add/edit/delete modals with cue number field |
 | **Settings** | Timecode source selector (Generator/LTC/MTC) with device selectors, frame rate, generator mode, speed, start TC, theme colors (live preview), TC size slider, show data export/import JSON |
 
@@ -72,7 +72,7 @@ Single-page app served from `static/index.html` with three tabs:
 | Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick, per-department cue state tracking (active until replaced by next dept cue), second-boundary broadcast, 60s passed-cue cleanup |
 | Config | `src/config.rs` | Basic: port (8080) + data file path (showpulse-data.json) |
 | Server entrypoint | `src/main.rs` | Full: Axum router with all routes, state wiring, seed on startup, static file fallback |
-| Web UI - Show view | `static/index.html` | Full: 5-section dashboard (stacked passed deck, stacked triggered deck, centered timer with 2-row transport + Prev/Next, animated Ready/Go zone with 3-2-1-GO pop effects, scrollable coming cues). Click-to-goto on cue cards, Prev/Next cue navigation, scroll-fold for above-timer sections. DOM-diffed cards, department filters, passed cues toggle, disconnection banner |
+| Web UI - Show view | `static/index.html` | Full: Clean dashboard with passed cues count badge (expandable dropdown), active cue strips (compact dept-colored rows), centered timer with 2-row transport + Prev/Next, animated Ready/Go zone with traffic-light 3-2-1-GO countdown, scrollable coming cues with uniform-size cards (color-only tier differentiation). Click-to-goto on cue cards/strips/passed items, Prev/Next cue navigation, scroll-fade for above-timer sections. DOM-diffed cards, department filters, passed cues toggle, disconnection banner |
 | Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with # column + sortable headers + department filter, bulk CSV/JSON import, add/edit/delete modals with cue number field |
 | Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show data export/import |
 | Web UI - UX polish | `static/index.html` | Full: Toast notifications, confirm modals (replaces native confirm), loading spinner, responsive table scroll, 44px touch targets, favicon, DOM diffing for flicker-free cue updates |
@@ -160,6 +160,7 @@ midir = "0.10"       # MIDI input for MTC decoding
 10. **Per-department cue state tracking** - A cue stays "active" until the next cue in the same department triggers, reflecting real show operations where each department works independently.
 11. **Bulk import replaces existing data** - `POST /api/cues/import` clears all existing cues and replaces with the imported set. `importShow()` deletes all departments (cascading to cues) before creating new ones. This ensures a clean slate on every import.
 12. **Auto-generated cue numbers** - Cues receive Q1, Q2, Q3... numbers automatically on creation if no custom number is provided, editable afterward.
+13. **Uniform card sizing** - All cue cards use identical padding and font sizes regardless of tier/state. Differentiation is color/opacity only (border color, text color, glow). This eliminates layout shifts when cues change state during a live show.
 
 ## Build Warnings
 

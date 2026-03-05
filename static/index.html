@@ -22,6 +22,11 @@
   --warning-glow: #ffaa0040;
   --border: #2a2a3e;
   --tc-size: 6rem;
+  --card-pad: 0.6rem 0.85rem;
+  --card-label-size: 0.9rem;
+  --card-cd-size: 1rem;
+  --card-tc-size: 0.7rem;
+  --card-cd-width: 100px;
   --font-mono: 'Courier New', 'Consolas', monospace;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -688,94 +693,175 @@ body {
   padding: 0 1rem;
 }
 
-/* ── Stacked deck containers (passed + triggered) ── */
-.flow-passed, .flow-triggered {
+/* ── Passed cues: count badge + expandable dropdown ── */
+.flow-passed-badge {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  overflow: hidden;
+  align-items: center;
   flex-shrink: 0;
-  transition: max-height 0.35s ease, opacity 0.3s;
-}
-.flow-passed {
-  max-height: 120px;
-  padding-bottom: 0.25rem;
-}
-.flow-triggered {
-  max-height: 100px;
-  padding-bottom: 0.25rem;
-}
-/* Cards overlap — only ~8px edge visible */
-.flow-passed .flow-card,
-.flow-triggered .flow-card {
-  margin-bottom: -28px;
+  padding: 0.25rem 0;
   position: relative;
-  flex-shrink: 0;
-  transition: margin-bottom 0.3s ease;
+  transition: opacity 0.25s ease;
+}
+.flow-passed-badge:empty { display: none; }
+.passed-count-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  border-radius: 14px;
   cursor: pointer;
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  transition: all 0.15s;
+  user-select: none;
 }
-.flow-passed .flow-card:last-child,
-.flow-triggered .flow-card:last-child {
-  margin-bottom: 0;
+.passed-count-btn:hover { border-color: var(--text-dim); color: var(--text-primary); }
+.passed-count-btn .passed-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text-dim);
 }
-/* Expand on hover */
-.flow-passed:hover .flow-card,
-.flow-triggered:hover .flow-card {
-  margin-bottom: 0.35rem;
-}
-.flow-passed:hover,
-.flow-triggered:hover {
+.passed-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 15;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.35rem;
   max-height: 40vh;
   overflow-y: auto;
+  min-width: 300px;
+  max-width: 100%;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
-/* Folded state (on scroll) */
-.flow-passed.folded, .flow-triggered.folded {
-  max-height: 18px;
-  opacity: 0.4;
-  pointer-events: none;
+.passed-dropdown.open { display: block; }
+.passed-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  transition: background 0.1s;
 }
-.flow-passed:empty, .flow-triggered:empty {
-  max-height: 0;
-  padding: 0;
+.passed-item:hover { background: var(--bg-surface); color: var(--text-primary); }
+.passed-item .passed-bar {
+  width: 3px; height: 16px;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+.passed-item .passed-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.passed-item .passed-tc {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+/* ── Active cues: compact strips ── */
+.flow-active-strips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  padding-bottom: 0.25rem;
+  transition: opacity 0.25s ease;
+}
+.flow-active-strips:empty { display: none; }
+.active-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 28px;
+  padding: 0 0.6rem;
+  background: var(--bg-card);
+  border-radius: 4px;
+  border-left: 3px solid var(--accent);
+  cursor: pointer;
+  transition: background 0.15s;
+  overflow: hidden;
+}
+.active-strip:hover { background: var(--bg-surface); }
+.active-strip .strip-check {
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.active-strip .strip-label {
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.active-strip .strip-dept {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
 }
 
 .flow-timecode {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0;
+  flex-shrink: 0;
+  gap: 0.25rem;
+}
+.flow-timecode .tc-row {
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 0;
-  flex-shrink: 0;
   gap: 1.5rem;
+  width: 100%;
 }
 .flow-timecode .tc-left {
-  flex: 1;
+  flex: 0 0 auto;
   text-align: right;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-dim);
-  line-height: 1.6;
+  line-height: 1.5;
 }
 .flow-timecode .tc-left .running { color: var(--accent); }
 .flow-timecode .tc-left .stopped { color: var(--danger); }
 .flow-timecode .tc-value {
   flex: 0 0 auto;
   font-family: var(--font-mono);
-  font-size: var(--tc-size);
+  font-size: min(var(--tc-size), 14vw);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 0.1em;
   text-shadow: 0 0 30px var(--active-glow);
   line-height: 1;
+  white-space: nowrap;
 }
-.flow-timecode .tc-right {
-  flex: 1;
+.flow-timecode .tc-controls {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 .tc-transport {
   display: flex;
@@ -798,7 +884,6 @@ body {
 .tc-goto-group {
   display: flex;
   gap: 0.3rem;
-  margin-left: 0.3rem;
 }
 .tc-goto-group input {
   width: 110px;
@@ -811,22 +896,6 @@ body {
   font-size: 0.8rem;
 }
 @media (max-width: 640px) {
-  .flow-timecode {
-    flex-wrap: wrap;
-  }
-  .flow-timecode .tc-value {
-    flex: 1 1 100%;
-    text-align: center;
-    order: -1;
-  }
-  .flow-timecode .tc-left {
-    text-align: left;
-    flex: 0 0 auto;
-  }
-  .flow-timecode .tc-right {
-    flex: 0 0 auto;
-    align-items: flex-end;
-  }
   .tc-btn { padding: 0.3rem 0.5rem; font-size: 0.75rem; }
   .tc-goto-group input { width: 90px; }
 }
@@ -838,25 +907,20 @@ body {
 }
 @keyframes blink { 50% { opacity: 0.1; } }
 
-/* ── Ready/Go Zone ── */
+/* ── Ready/Go Zone (fixed height to prevent layout shift) ── */
 .flow-readygo {
   flex-shrink: 0;
   text-align: center;
-  min-height: 0;
+  min-height: 70px;
   overflow: hidden;
-  transition: min-height 0.4s ease, padding 0.4s ease, opacity 0.4s ease;
-  padding: 0;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
-}
-.flow-readygo:empty {
-  min-height: 0;
-  padding: 0;
+  border: 1px solid transparent;
+  transition: border-color 0.3s ease, background 0.3s ease;
 }
 .flow-readygo.visible {
-  min-height: 70px;
-  padding: 0.75rem 1rem;
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border-color: var(--border);
 }
 .readygo-countdown {
   font-family: var(--font-mono);
@@ -865,10 +929,10 @@ body {
   line-height: 1;
   animation: readygo-pop 0.35s ease-out;
 }
-.readygo-countdown.state-ready { color: var(--text-dim); font-size: 1.4rem; }
-.readygo-countdown.state-3 { color: var(--warning); }
+.readygo-countdown.state-ready { color: var(--danger); font-size: 1.4rem; }
+.readygo-countdown.state-3 { color: #e05500; }
 .readygo-countdown.state-2 { color: var(--warning); }
-.readygo-countdown.state-1 { color: var(--danger); animation: readygo-pop 0.35s ease-out, readygo-shake 0.4s ease-in-out; }
+.readygo-countdown.state-1 { color: #88cc00; animation: readygo-pop 0.35s ease-out, readygo-shake 0.4s ease-in-out; }
 .readygo-countdown.state-go {
   color: var(--accent);
   font-size: 3.2rem;
@@ -927,19 +991,20 @@ body {
 }
 
 /* ══════════════════════════════════════════
-   FLOW CARDS + TIERS
+   FLOW CARDS + TIERS (unified sizing)
    ══════════════════════════════════════════ */
 .flow-card {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  padding: var(--card-pad);
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 8px;
   margin-bottom: 0.4rem;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s;
 }
 .flow-card .dept-bar {
   width: 4px;
@@ -949,6 +1014,7 @@ body {
 }
 .flow-card .card-info { flex: 1; min-width: 0; }
 .flow-card .card-label {
+  font-size: var(--card-label-size);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -960,15 +1026,18 @@ body {
 }
 .flow-card .card-tc {
   font-family: var(--font-mono);
+  font-size: var(--card-tc-size);
   color: var(--text-dim);
   text-align: right;
   flex-shrink: 0;
 }
 .flow-card .card-countdown {
   font-family: var(--font-mono);
+  font-size: var(--card-cd-size);
   font-weight: 700;
   text-align: right;
   flex-shrink: 0;
+  min-width: var(--card-cd-width);
 }
 .flow-card .progress-bg {
   position: absolute;
@@ -982,66 +1051,39 @@ body {
   border-radius: 0 2px 2px 0;
 }
 
-/* ── Tier: Active ── */
+/* ── Tier: Active (color only) ── */
 .flow-card.tier-active {
-  padding: 1.2rem 1rem;
   border-color: var(--accent);
   box-shadow: 0 0 16px var(--active-glow);
   animation: active-glow 2s ease-in-out infinite;
 }
-.flow-card.tier-active .card-label { font-size: 1.05rem; }
-.flow-card.tier-active .card-countdown { font-size: 1.8rem; color: var(--accent); min-width: 120px; }
-.flow-card.tier-active .card-tc { font-size: 0.7rem; }
+.flow-card.tier-active .card-countdown { color: var(--accent); }
 .flow-card.tier-active .progress-fill { background: var(--accent); }
 
-/* ── Tier: Warning ── */
+/* ── Tier: Warning (color only) ── */
 .flow-card.tier-warning {
-  padding: 1rem;
   border-color: var(--warning);
   box-shadow: 0 0 12px var(--warning-glow);
   animation: warn-pulse 1.5s ease-in-out infinite;
 }
-.flow-card.tier-warning .card-label { font-size: 1rem; }
-.flow-card.tier-warning .card-countdown { font-size: 1.4rem; color: var(--warning); min-width: 110px; }
-.flow-card.tier-warning .card-tc { font-size: 0.7rem; }
+.flow-card.tier-warning .card-countdown { color: var(--warning); }
 .flow-card.tier-warning .progress-fill { background: var(--warning); }
 
-/* ── Tier: Near (≤120s) ── */
-.flow-card.tier-near {
-  padding: 0.75rem 1rem;
-}
-.flow-card.tier-near .card-label { font-size: 0.95rem; }
-.flow-card.tier-near .card-countdown { font-size: 1.1rem; color: var(--text-primary); min-width: 100px; }
-.flow-card.tier-near .card-tc { font-size: 0.7rem; }
+/* ── Tier: Near (color only) ── */
+.flow-card.tier-near .card-countdown { color: var(--text-primary); }
 
-/* ── Tier: Far (≤600s) ── */
-.flow-card.tier-far {
-  padding: 0.5rem 0.8rem;
-  opacity: 0.7;
-}
-.flow-card.tier-far .card-label { font-size: 0.88rem; }
-.flow-card.tier-far .card-countdown { font-size: 0.9rem; color: var(--text-dim); min-width: 90px; }
-.flow-card.tier-far .card-tc { font-size: 0.65rem; }
+/* ── Tier: Far (opacity only) ── */
+.flow-card.tier-far { opacity: 0.7; }
+.flow-card.tier-far .card-countdown { color: var(--text-dim); }
 
-/* ── Tier: Distant (>600s) ── */
-.flow-card.tier-distant {
-  padding: 0.35rem 0.7rem;
-  opacity: 0.45;
-}
-.flow-card.tier-distant .card-label { font-size: 0.82rem; }
-.flow-card.tier-distant .card-countdown { font-size: 0.8rem; color: var(--text-dim); min-width: 80px; }
-.flow-card.tier-distant .card-tc { font-size: 0.6rem; }
+/* ── Tier: Distant (opacity only) ── */
+.flow-card.tier-distant { opacity: 0.45; }
+.flow-card.tier-distant .card-countdown { color: var(--text-dim); }
 .flow-card.tier-distant .card-dept { display: none; }
 
-/* ── Tier: Passed ── */
-.flow-card.tier-passed {
-  padding: 0.3rem 0.7rem;
-  opacity: 0.3;
-  border-color: transparent;
-}
-.flow-card.tier-passed .card-label { font-size: 0.82rem; }
-.flow-card.tier-passed .card-countdown { font-size: 0.8rem; color: var(--text-dim); min-width: 80px; }
-.flow-card.tier-passed .card-tc { font-size: 0.6rem; }
+/* ── Tier: Passed (opacity only) ── */
+.flow-card.tier-passed { opacity: 0.3; border-color: transparent; }
+.flow-card.tier-passed .card-countdown { color: var(--text-dim); }
 .flow-card.tier-passed .progress-fill { background: var(--text-dim); width: 100% !important; }
 
 /* ── Animations ── */
@@ -1107,16 +1149,18 @@ body {
   </aside>
 
   <div class="flow-area">
-    <div class="flow-passed" id="flow-passed"></div>
-    <div class="flow-triggered" id="flow-triggered"></div>
+    <div class="flow-passed-badge" id="flow-passed"></div>
+    <div class="flow-active-strips" id="flow-triggered"></div>
     <div class="flow-timecode" id="flow-timecode">
-      <div class="tc-left">
-        <div id="tc-state" class="stopped">STOPPED</div>
-        <div id="tc-fps">30 fps</div>
-        <div id="tc-source">Generator</div>
+      <div class="tc-row">
+        <div class="tc-left">
+          <div id="tc-state" class="stopped">STOPPED</div>
+          <div id="tc-fps">30 fps</div>
+          <div id="tc-source">Generator</div>
+        </div>
+        <div class="tc-value" id="tc-value">00:00:00:00</div>
       </div>
-      <div class="tc-value" id="tc-value">00:00:00:00</div>
-      <div class="tc-right">
+      <div class="tc-controls">
         <div class="tc-transport">
           <button class="tc-btn" onclick="prevCue()" title="Previous cue (B)">&#9198;</button>
           <button class="tc-btn" onclick="genCmd('play')" title="Play (Space)">&#9654;</button>
@@ -1569,8 +1613,8 @@ function renderFlowCues(wsCues) {
   const upcomingContainer = document.getElementById('flow-upcoming');
 
   if (!wsCues || wsCues.length === 0) {
-    passedContainer.innerHTML = '';
-    triggeredContainer.innerHTML = '';
+    renderPassedBadge(passedContainer, []);
+    renderActiveStrips(triggeredContainer, []);
     renderReadyGo(readygoContainer, null);
     upcomingContainer.innerHTML = '<div class="flow-no-cues">No cues yet. Go to Manage to add some.</div>';
     return;
@@ -1600,17 +1644,119 @@ function renderFlowCues(wsCues) {
   );
 
   // Render
-  diffCueList(passedContainer, passed);
-  diffCueList(triggeredContainer, triggered);
+  renderPassedBadge(passedContainer, passed);
+  renderActiveStrips(triggeredContainer, triggered);
   renderReadyGo(readygoContainer, readygoCue);
   diffCueList(upcomingContainer, coming);
 
   if (coming.length === 0 && passed.length === 0 && triggered.length === 0 && !readygoCue) {
     upcomingContainer.innerHTML = '<div class="flow-no-cues">No matching cues.</div>';
   }
+}
 
-  // Auto-scroll passed container to show latest
-  passedContainer.scrollTop = passedContainer.scrollHeight;
+/* ── Passed cues: count badge with expandable dropdown ── */
+let passedDropdownOpen = false;
+
+function renderPassedBadge(container, passedCues) {
+  if (passedCues.length === 0) {
+    container.innerHTML = '';
+    passedDropdownOpen = false;
+    return;
+  }
+
+  // Only rebuild when count changes (avoid flicker on every WS tick)
+  const existingBtn = container.querySelector('.passed-count-btn');
+  const existingCount = existingBtn ? parseInt(existingBtn.dataset.count) : -1;
+
+  if (existingCount !== passedCues.length) {
+    const dropdownHtml = passedCues.map(c => {
+      const deptColor = getDeptColor(c.department_id);
+      const label = (c.cue_number ? c.cue_number + ' \u00b7 ' : '') + c.label;
+      return '<div class="passed-item" data-tc="' + fmtTC(c.trigger_tc) + '" onclick="document.getElementById(\'goto-tc\').value=this.dataset.tc">' +
+        '<span class="passed-bar" style="background:' + deptColor + '"></span>' +
+        '<span class="passed-label">' + esc(label) + '</span>' +
+        '<span class="passed-tc">' + fmtTC(c.trigger_tc) + '</span>' +
+        '</div>';
+    }).join('');
+
+    container.innerHTML = '<button class="passed-count-btn" data-count="' + passedCues.length + '" onclick="togglePassedDropdown(event)">' +
+      '<span class="passed-dot"></span>' + passedCues.length + ' passed' +
+      '</button>' +
+      '<div class="passed-dropdown' + (passedDropdownOpen ? ' open' : '') + '" id="passed-dropdown">' + dropdownHtml + '</div>';
+  }
+}
+
+function togglePassedDropdown(e) {
+  e.stopPropagation();
+  passedDropdownOpen = !passedDropdownOpen;
+  const dd = document.getElementById('passed-dropdown');
+  if (dd) dd.classList.toggle('open', passedDropdownOpen);
+}
+
+// Close passed dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  if (passedDropdownOpen && !e.target.closest('.flow-passed-badge')) {
+    passedDropdownOpen = false;
+    const dd = document.getElementById('passed-dropdown');
+    if (dd) dd.classList.remove('open');
+  }
+});
+
+/* ── Active cues: compact strips ── */
+function renderActiveStrips(container, activeCues) {
+  if (activeCues.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  // DOM-diff by cue ID
+  const existing = {};
+  container.querySelectorAll('.active-strip').forEach(function(el) {
+    existing[el.dataset.cueId] = el;
+  });
+
+  const wantedIds = new Set(activeCues.map(function(c) { return c.id; }));
+
+  // Remove strips no longer active
+  Object.keys(existing).forEach(function(id) {
+    if (!wantedIds.has(id)) existing[id].remove();
+  });
+
+  // Update or create each strip in order
+  let prevNode = null;
+  activeCues.forEach(function(c) {
+    let strip = existing[c.id];
+    if (!strip) {
+      strip = document.createElement('div');
+      strip.className = 'active-strip';
+      strip.dataset.cueId = c.id;
+      strip.dataset.triggerTc = fmtTC(c.trigger_tc);
+      strip.addEventListener('click', function() {
+        document.getElementById('goto-tc').value = strip.dataset.triggerTc;
+      });
+
+      const deptColor = getDeptColor(c.department_id);
+      strip.style.borderLeftColor = deptColor;
+
+      const labelText = (c.cue_number ? c.cue_number + ' \u00b7 ' : '') + c.label;
+      strip.innerHTML = '<span class="strip-check">\u2713</span>' +
+        '<span class="strip-label">' + esc(labelText) + '</span>' +
+        '<span class="strip-dept">\u2014 ' + esc(c.department) + '</span>';
+    } else {
+      // Update label in case it changed
+      const labelText = (c.cue_number ? c.cue_number + ' \u00b7 ' : '') + c.label;
+      const labelEl = strip.querySelector('.strip-label');
+      if (labelEl && labelEl.textContent !== labelText) labelEl.textContent = labelText;
+    }
+
+    // Ensure correct ordering
+    if (prevNode) {
+      if (prevNode.nextElementSibling !== strip) prevNode.after(strip);
+    } else if (container.firstElementChild !== strip) {
+      container.prepend(strip);
+    }
+    prevNode = strip;
+  });
 }
 
 function renderReadyGo(container, cue) {
@@ -1630,11 +1776,11 @@ function renderReadyGo(container, cue) {
   if (cd > 3) {
     displayValue = 'READY';
     stateClass = 'state-ready';
-    displayColor = 'var(--warning)';
+    displayColor = 'var(--danger)';
   } else if (cd === 3) {
     displayValue = '3';
     stateClass = 'state-3';
-    displayColor = 'var(--warning)';
+    displayColor = '#e05500';
   } else if (cd === 2) {
     displayValue = '2';
     stateClass = 'state-2';
@@ -1642,7 +1788,7 @@ function renderReadyGo(container, cue) {
   } else if (cd === 1) {
     displayValue = '1';
     stateClass = 'state-1';
-    displayColor = 'var(--danger)';
+    displayColor = '#88cc00';
   } else {
     displayValue = 'GO!';
     stateClass = 'state-go';
@@ -1778,7 +1924,7 @@ function updateFlowCard(card, c) {
 
   // Countdown
   const cdEl = card.querySelector('.card-countdown');
-  const cdText = c.state === 'passed' ? '\u2713' : (c.state === 'active' ? 'NOW' : fmtCountdown(c.countdown_sec));
+  const cdText = c.state === 'passed' ? '\u2713' : (c.state === 'active' ? '\u2713' : fmtCountdown(c.countdown_sec));
   if (cdEl.textContent !== cdText) cdEl.textContent = cdText;
 
   // Progress bar
@@ -2436,12 +2582,16 @@ loadTheme();
   }
   // Restore sidebar state
   if (sidebarOpen) toggleSidebar(true);
-  // Scroll fold: collapse above-timer sections when scrolling down in upcoming
+  // Scroll fold: fade out above-timer sections when scrolling down in upcoming
   const upEl = document.getElementById('flow-upcoming');
   upEl.addEventListener('scroll', () => {
     const folded = upEl.scrollTop > 30;
-    document.getElementById('flow-passed').classList.toggle('folded', folded);
-    document.getElementById('flow-triggered').classList.toggle('folded', folded);
+    const passedEl = document.getElementById('flow-passed');
+    const triggeredEl = document.getElementById('flow-triggered');
+    passedEl.style.opacity = folded ? '0' : '1';
+    passedEl.style.pointerEvents = folded ? 'none' : '';
+    triggeredEl.style.opacity = folded ? '0' : '1';
+    triggeredEl.style.pointerEvents = folded ? 'none' : '';
   });
   // Hide loading overlay
   const overlay = document.getElementById('loading-overlay');
