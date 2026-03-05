@@ -32,6 +32,9 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 | Ready / 3-2-1 / Go countdown visualization | Done |
 | Bulk cue import (JSON + CSV, replaces existing, dept name resolution) | Done |
 | Documentation (README, GETTING_STARTED, PROJECT_OVERVIEW, plans) | Done |
+| Show view clarity: passed count badge, active strips, uniform cards | Done |
+| Traffic-light Ready/Go colors (red→orange→green) | Done |
+| Timer vertical layout (meta+timer row, controls row below) | Done |
 
 ### Completed Phases
 
@@ -67,9 +70,19 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 7. Scroll-fold: above-timer sections collapse to thin bars when scrolling down in upcoming cues
 8. New keyboard shortcuts: N (next cue), B (previous cue)
 
+**Phase 8 — Show View Clarity Redesign:**
+1. Replaced stacked passed cue deck with count badge ("N passed") + expandable dropdown
+2. Replaced stacked triggered cue deck with compact active strips (28px rows with dept-color border + checkmark)
+3. Unified all cue card sizing: same padding and font sizes for all tiers (active/warning/near/far/distant/passed)
+4. Tier differentiation is color-only: border color, text color, box-shadow glow, opacity — no size changes
+5. Eliminates all layout shifts when cues change state during live show
+6. Traffic-light Ready/Go countdown colors: red (READY) → red-orange (3) → orange (2) → yellow-green (1) → green (GO!)
+7. Timer controls moved below timer in centered row (meta+timer on top, controls below)
+8. Scroll-fade replaces scroll-fold for above-timer sections (opacity transition instead of max-height collapse)
+
 ---
 
-## Phase 8: Unit & Integration Tests (HIGH PRIORITY)
+## Phase 9: Unit & Integration Tests (HIGH PRIORITY)
 **Goal:** Establish test coverage for critical logic.
 
 **Files to modify:** `Cargo.toml` (dev-deps), `src/timecode/types.rs`, `src/cue/store.rs`, `src/engine/countdown.rs`, new `tests/api.rs`
@@ -97,7 +110,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 9: Authentication (MEDIUM PRIORITY)
+## Phase 10: Authentication (MEDIUM PRIORITY)
 **Goal:** PIN-based auth to protect admin operations while keeping crew view open.
 
 **Files to modify:** new `src/auth.rs`, `src/main.rs`, `src/config.rs`, `static/index.html`
@@ -110,7 +123,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 10: Security Hardening (MEDIUM PRIORITY)
+## Phase 11: Security Hardening (MEDIUM PRIORITY)
 **Goal:** Production-ready security posture for LAN deployment.
 
 **Files to modify:** `src/main.rs`
@@ -121,7 +134,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 11: Nice-to-haves (LOW PRIORITY)
+## Phase 12: Nice-to-haves (LOW PRIORITY)
 
 | Feature | Description |
 |---------|-------------|
@@ -137,7 +150,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 ## Verification Checklist
 
 - [x] `cargo build` — compiles without errors
-- [ ] `cargo test` — all tests pass (after Phase 7)
+- [ ] `cargo test` — all tests pass (after Phase 9)
 - [x] Manual test: `cargo run` → browser at `http://localhost:8080`
 - [x] LTC: test with LTC audio from a generator app or DAW
 - [x] MTC: test with MIDI loopback or DAW sending MTC
