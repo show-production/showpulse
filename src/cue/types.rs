@@ -15,6 +15,8 @@ pub struct Cue {
     #[serde(default)]
     pub id: Uuid,
     pub department_id: Uuid,
+    #[serde(default)]
+    pub cue_number: String,
     #[serde(default = "default_cue_label")]
     pub label: String,
     #[serde(default)]
@@ -75,6 +77,7 @@ pub enum CueState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CueStatus {
     pub id: Uuid,
+    pub cue_number: String,
     pub department: String,
     pub department_id: Uuid,
     pub label: String,

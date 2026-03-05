@@ -94,6 +94,7 @@ pub async fn run(
 
             cue_statuses.push(CueStatus {
                 id: cue.id,
+                cue_number: cue.cue_number.clone(),
                 department: dept_name,
                 department_id: cue.department_id,
                 label: cue.label.clone(),
