@@ -1,7 +1,7 @@
 # ShowPulse — Remaining Implementation Plan
 
 ## Context
-ShowPulse is a self-hosted Rust/Axum live show management platform. The core pipeline works end-to-end (generator → cue engine → WebSocket → browser). What's missing are hardware timecode inputs (LTC/MTC), tests, import, auth, and polish features.
+ShowPulse is a self-hosted Rust/Axum live show management platform. The full pipeline works end-to-end: timecode sources (Generator/LTC/MTC) → countdown engine → WebSocket → crew browsers. All core features, UI/UX polish, and cue import are complete. Remaining work focuses on testing, authentication, security hardening, and nice-to-have features.
 
 **Repository:** https://github.com/DGProject2030/showpulse
 
@@ -14,56 +14,45 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The core pip
 | Timecode types (24/25/29.97df/30 fps, drop-frame math) | Done |
 | Built-in timecode generator (Freerun/Countdown/Clock/Loop) | Done |
 | Timecode manager (source switching) | Done |
+| LTC Audio Decoding (cpal, bi-phase detection, BCD parsing) | Done |
+| MTC MIDI Decoding (midir, quarter-frame, full-frame SysEx) | Done |
 | Cue & Department data models + JSON persistence | Done |
-| 18 REST API endpoints (full CRUD) | Done |
+| Cue numbering (auto-generated Q1/Q2/Q3, editable) | Done |
+| 19 REST API endpoints (full CRUD + bulk import) | Done |
 | WebSocket hub with per-department filtering | Done |
-| 10Hz countdown engine with cue state computation | Done |
-| Frontend: Show view (live countdown cards) | Done |
-| Frontend: Manage view (dept + cue CRUD, sorting, filtering) | Done |
-| Frontend: Settings (source, frame rate, theme, export/import) | Done |
-| Keyboard shortcuts, responsive design, theme persistence | Done |
-| Documentation (README, GETTING_STARTED, PROJECT_OVERVIEW) | Done |
-| **LTC Audio Decoding** (Phase 1) | **Done** |
-| **MTC MIDI Decoding** (Phase 2) | **Done** |
+| 10Hz countdown engine with per-department cue state tracking | Done |
+| Frontend: Show view (sticky TC, Ready/Go countdown, cue cards) | Done |
+| Frontend: Manage view (dept + cue CRUD, sorting, filtering, CSV/JSON import) | Done |
+| Frontend: Settings (source, frame rate, theme, LTC/MTC devices, export/import) | Done |
+| UI/UX: Disconnection banner, keyboard hints, confirm modals | Done |
+| UI/UX: Toast notifications, loading spinner, passed cues toggle | Done |
+| UI/UX: Responsive table scroll, 44px touch targets, favicon | Done |
+| UI/UX: Speed suffix, live color preview, TC size slider label | Done |
+| Cue state: active until replaced by next same-department cue | Done |
+| Ready / 3-2-1 / Go countdown visualization | Done |
+| Bulk cue import (JSON + CSV with column aliases, dept name resolution) | Done |
+| Documentation (README, GETTING_STARTED, PROJECT_OVERVIEW, plans) | Done |
 
-Phase 1 delivered: cpal-based LTC decoder with bi-phase zero-crossing detection,
-80-bit frame extraction, BCD parsing, sync word (0x3FFD) detection. Dedicated OS thread
-for cpal Stream. API: `GET /api/ltc/devices`, `PUT /api/ltc/device`, `POST /api/ltc/stop`.
-Audio device dropdown in Settings UI.
+### Completed Phases
 
-Phase 2 delivered: midir-based MTC decoder with quarter-frame accumulation (8 messages
-→ full TC), full-frame SysEx parsing. Dedicated OS thread for midir connection.
-API: `GET /api/mtc/devices`, `PUT /api/mtc/device`, `POST /api/mtc/stop`.
-MIDI port selector dropdown in Settings UI.
+**Phase 1 — LTC Audio Decoding:** cpal-based decoder with bi-phase zero-crossing detection, 80-bit frame extraction, BCD parsing, sync word (0x3FFD). Dedicated OS thread. API: `GET /api/ltc/devices`, `PUT /api/ltc/device`, `POST /api/ltc/stop`.
 
----
+**Phase 2 — MTC MIDI Decoding:** midir-based decoder with quarter-frame accumulation (8 messages → full TC), full-frame SysEx parsing. Dedicated OS thread. API: `GET /api/mtc/devices`, `PUT /api/mtc/device`, `POST /api/mtc/stop`.
 
-## Phase 2: MTC MIDI Decoding (HIGH PRIORITY)
-**Goal:** Receive MIDI Time Code from a MIDI input port.
+**Phase 3 — UI/UX Improvements (15 items):** Disconnection banner, keyboard hints, confirm modals replacing native `confirm()`, "Lead Time" column rename, speed suffix, data panel separation, `setSource()` fix, table scroll, touch targets, loading spinner, toast notifications, passed cues toggle, TC size label, live color preview, favicon.
 
-**Files to modify:** `Cargo.toml`, `src/timecode/mtc.rs`, `src/timecode/mod.rs`, `src/api/timecode.rs`, `static/index.html`
+**Phase 4 — CSV/JSON Cue Import:** `POST /api/cues/import` bulk endpoint with department validation, single persist, frontend CSV parser with column aliases, JSON array/wrapper support, import button in Manage view, updated `importShow()` to use bulk endpoint.
 
-1. Add `midir = "0.10"` dependency to Cargo.toml
-2. Implement `MtcDecoder` in `src/timecode/mtc.rs`:
-   - List available MIDI input ports via `midir::MidiInput`
-   - Open selected MIDI port, register callback
-   - Parse quarter-frame messages (0xF1): accumulate 8 messages → full TC
-   - Parse full-frame SysEx messages for immediate sync
-   - Send decoded `Timecode` via the existing `watch::Sender`
-3. Add API endpoints:
-   - `GET /api/mtc/devices` — list available MIDI inputs
-   - `PUT /api/mtc/device` — select active MIDI port
-4. Update frontend settings panel with MIDI port selector dropdown
-
-**Technical notes:**
-- Quarter-frame messages: 8 messages carry 4 bits each → reconstruct full timecode
-- Full-frame SysEx (F0 7F 7F 01 01 hh mm ss ff F7) provides instant sync
-- Frame rate encoded in high nibble of hours byte
-- Two-frame latency inherent in quarter-frame protocol
+**Phase 5 — User Feedback Items (5 items):**
+1. Sticky timecode display + transport at top of Show view
+2. Per-department cue state: active until replaced by next same-department cue (rewrote countdown engine)
+3. Ready → 3 → 2 → 1 → Go countdown visualization for next warning cue
+4. Cue numbering: auto-generated (Q1, Q2...), displayed in cue cards, manage table, Ready/Go, editable in modal
+5. Active cue glow animation
 
 ---
 
-## Phase 3: Unit & Integration Tests (HIGH PRIORITY)
+## Phase 6: Unit & Integration Tests (HIGH PRIORITY)
 **Goal:** Establish test coverage for critical logic.
 
 **Files to modify:** `Cargo.toml` (dev-deps), `src/timecode/types.rs`, `src/cue/store.rs`, `src/engine/countdown.rs`, new `tests/api.rs`
@@ -80,89 +69,18 @@ MIDI port selector dropdown in Settings UI.
    - Department cascading delete removes associated cues
    - Cue list sorting by trigger_tc
    - Department filter on list_cues
+   - Bulk import: valid cues, invalid dept_id, mixed, empty
+   - Auto-generated cue numbers (Q1, Q2...)
    - JSON persistence round-trip (write + reload)
 4. Integration tests in `tests/api.rs`:
    - Build test app with `Router` + test `AppState`
    - HTTP endpoint tests for departments and cues CRUD
+   - Bulk import endpoint tests
    - Status code assertions (201 Created, 404 Not Found, 204 No Content)
 
 ---
 
-## Phase 4: UI/UX Improvements (HIGH PRIORITY)
-**Goal:** Address usability, clarity, and safety issues identified in UX review.
-
-**Files to modify:** `static/index.html`
-
-### 4a. Critical UX Fixes
-
-1. **Disconnection banner (safety-critical):**
-   - Add a prominent overlay/banner ("Connection Lost — Reconnecting...") when `wsConnected` is false
-   - Pulse the timecode display red or dim the Show view when disconnected
-   - The current 8px status dot is insufficient for live show use
-
-2. **Keyboard shortcut discoverability:**
-   - Add a `?` button or footer hint on the Show tab: `Space: Play | P: Pause | Esc: Stop | G: Goto`
-   - First-time users currently have no way to learn shortcuts
-
-3. **Replace native `confirm()` dialogs:**
-   - Use the existing modal component for delete confirmations
-   - Native `confirm()` is visually jarring on the dark theme and blocks the main thread
-
-### 4b. Clarity Fixes
-
-4. **Rename "Warn" column** to "Lead Time" (or add a tooltip explaining it's the warning lead time in seconds)
-
-5. **Speed field labeling:**
-   - Add a suffix label like "1.0x" or convert to a labeled range slider
-   - Currently ambiguous — "speed of what?"
-
-6. **Move Export/Import out of Appearance panel:**
-   - Create a separate "Data" panel, or place Export/Import below the Timecode panel
-   - Show data management is unrelated to theme colors and hard to discover under Appearance
-
-7. ~~**Disable stub-only source options:**~~ — RESOLVED. Both LTC and MTC are now fully implemented with device selection UI.
-
-### 4c. Code Quality
-
-8. **Fix `setSource()` implicit event reference:**
-   - Pass `event` explicitly instead of relying on implicit `event.target` (line ~1267)
-   - Current approach is fragile and may break in strict mode
-
-### 4d. Mobile / Responsive
-
-9. **Cue table horizontal scroll:**
-   - Add `overflow-x: auto` on the table container
-   - Or switch to a card-based layout on mobile
-   - Currently columns compress awkwardly on narrow screens
-
-10. **Increase transport button touch targets:**
-    - Minimum 44x44px tap targets on mobile
-    - Current 0.85rem / 0.5rem padding is too small for live show use (gloves, low light)
-
-### 4e. Minor Polish
-
-11. **Add loading state:** Show a spinner or skeleton on initial data load
-12. **API error handling:** Add toast or inline error feedback when save/delete fails
-13. **Passed cues toggle:** Add a "Show passed" toggle to collapse/hide passed cues at 0.4 opacity
-14. **Timecode size slider value label:** Show current value (e.g., "5rem") next to the slider
-15. **Color picker live preview:** Change `onchange` to `oninput` for live preview while dragging
-16. **Add favicon:** Help crew identify ShowPulse among browser tabs
-
----
-
-## Phase 5: CSV/JSON Cue Import (MEDIUM PRIORITY)
-**Goal:** Bulk-import cues from external files.
-
-**Files to modify:** `src/api/cues.rs`, `src/cue/store.rs`, `src/main.rs`, `static/index.html`
-
-1. Add `POST /api/cues/import` endpoint accepting JSON array of cues
-2. Validate each cue's `department_id` exists
-3. Return `{ imported: N, errors: [...] }` response
-4. Add import button in Manage view (file picker for .json)
-
----
-
-## Phase 6: Authentication (MEDIUM PRIORITY)
+## Phase 7: Authentication (MEDIUM PRIORITY)
 **Goal:** PIN-based auth to protect admin operations while keeping crew view open.
 
 **Files to modify:** new `src/auth.rs`, `src/main.rs`, `src/config.rs`, `static/index.html`
@@ -175,7 +93,7 @@ MIDI port selector dropdown in Settings UI.
 
 ---
 
-## Phase 7: Security Hardening (MEDIUM PRIORITY)
+## Phase 8: Security Hardening (MEDIUM PRIORITY)
 **Goal:** Production-ready security posture for LAN deployment.
 
 **Files to modify:** `src/main.rs`
@@ -186,7 +104,7 @@ MIDI port selector dropdown in Settings UI.
 
 ---
 
-## Phase 8: Nice-to-haves (LOW PRIORITY)
+## Phase 9: Nice-to-haves (LOW PRIORITY)
 
 | Feature | Description |
 |---------|-------------|
@@ -194,17 +112,21 @@ MIDI port selector dropdown in Settings UI.
 | **QR code** | Generate QR with server URL for crew onboarding |
 | **Generator presets** | Save/load named configs in data file |
 | **Print view** | CSS print stylesheet for cue list |
+| **Wake lock** | Prevent screen sleep on crew devices during show |
+| **Audio/vibration alerts** | Warning threshold alerts on crew devices |
 
 ---
 
 ## Verification Checklist
 
-- [ ] `cargo build` — compiles without errors after each phase
-- [ ] `cargo test` — all tests pass after Phase 3
-- [ ] Manual test: `cargo run` → browser at `http://localhost:8080`
-- [ ] LTC: test with LTC audio from a generator app or DAW
-- [ ] MTC: test with MIDI loopback or DAW sending MTC
-- [ ] Each phase committed and pushed to GitHub
+- [x] `cargo build` — compiles without errors
+- [ ] `cargo test` — all tests pass (after Phase 6)
+- [x] Manual test: `cargo run` → browser at `http://localhost:8080`
+- [x] LTC: test with LTC audio from a generator app or DAW
+- [x] MTC: test with MIDI loopback or DAW sending MTC
+- [x] CSV import: test with 72-cue awards show file (`test-import-cues.csv`)
+- [x] JSON import: test with 72-cue show file (`test-import-show.json`)
+- [x] Each phase committed and pushed to GitHub
 
 ## Commit Strategy
-One commit per completed phase, pushed to GitHub after each.
+One commit per completed feature or phase, pushed to GitHub after each.

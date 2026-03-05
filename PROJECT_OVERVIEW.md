@@ -41,9 +41,9 @@ Single-page app served from `static/index.html` with three tabs:
 
 | Tab | Purpose |
 |-----|---------|
-| **Show** | Live timecode display, transport controls (Play/Pause/Stop/Goto), department filter chips, cue countdown cards grouped by state (Active > Warning > Upcoming > Passed) |
-| **Manage** | Department CRUD (left panel), cue list table (right panel) with department dropdown filter, sortable column headers (Timecode, Label, Department, Warn), add/edit/delete modals |
-| **Settings** | Timecode source selector (Generator/LTC/MTC) with device selectors, frame rate, generator mode, speed, start TC, theme colors, timecode display size, show export/import JSON |
+| **Show** | Sticky timecode + transport header, Ready/3-2-1/Go countdown visualization, department filter chips, cue cards with cue numbers grouped by state (Active > Warning > Upcoming > Passed), passed cues toggle |
+| **Manage** | Department CRUD (left panel), cue list table (right panel) with # column, department dropdown filter, sortable column headers, CSV/JSON bulk import, add/edit/delete modals with cue number field |
+| **Settings** | Timecode source selector (Generator/LTC/MTC) with device selectors, frame rate, generator mode, speed, start TC, theme colors (live preview), TC size slider, show data export/import JSON |
 
 **Keyboard shortcuts (Show tab):** Space = Play, P = Pause, Escape = Stop, G = Focus goto input
 
@@ -60,21 +60,22 @@ Single-page app served from `static/index.html` with three tabs:
 | Timecode manager | `src/timecode/mod.rs` | Full: Source switching (LTC/MTC/Generator), unified status API, device management access |
 | LTC decoder | `src/timecode/ltc.rs` | Full: cpal audio capture, bi-phase zero-crossing detection, 80-bit LTC frame extraction, BCD timecode parsing, sync word (0x3FFD). Dedicated OS thread. Device listing and selection API |
 | MTC decoder | `src/timecode/mtc.rs` | Full: midir MIDI input, quarter-frame accumulation (8 messages → full TC), full-frame SysEx parsing, frame rate detection. Dedicated OS thread. Port listing and selection API |
-| Cue/Department models | `src/cue/types.rs` | Full: Department, Cue (with serde defaults), ShowData, CueState, CueStatus |
-| Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments and cues, auto-seed on empty store |
+| Cue/Department models | `src/cue/types.rs` | Full: Department, Cue (with serde defaults + cue_number), ShowData, CueState, CueStatus, CueImportError, CueImportResult |
+| Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments and cues, bulk import with validation, auto-generated cue numbers (Q1, Q2...), auto-seed on empty store |
 | REST API - Timecode | `src/api/timecode.rs` | Full: GET status, PUT source |
 | REST API - Generator | `src/api/generator.rs` | Full: GET status, PUT config, POST play/pause/stop/goto |
 | REST API - Departments | `src/api/departments.rs` | Full: CRUD (list, create, update, delete) |
-| REST API - Cues | `src/api/cues.rs` | Full: CRUD + department filter query param |
+| REST API - Cues | `src/api/cues.rs` | Full: CRUD + department filter + bulk import (`POST /api/cues/import`) |
 | REST API - LTC | `src/api/ltc.rs` | Full: GET devices, PUT device (select + start), POST stop |
 | REST API - MTC | `src/api/mtc.rs` | Full: GET devices, PUT device (select + start), POST stop |
 | WebSocket hub | `src/ws/hub.rs` | Full: Broadcast with per-client department filtering, subscribe protocol |
-| Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick, cue state computation, second-boundary broadcast optimization |
+| Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick, per-department cue state tracking (active until replaced by next dept cue), second-boundary broadcast, 60s passed-cue cleanup |
 | Config | `src/config.rs` | Basic: port (8080) + data file path (showpulse-data.json) |
 | Server entrypoint | `src/main.rs` | Full: Axum router with all routes, state wiring, seed on startup, static file fallback |
-| Web UI - Show view | `static/index.html` | Full: Live timecode, transport controls, department filter chips, cue countdown cards with state animations |
-| Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with sortable columns and department filter dropdown, add/edit/delete modals |
-| Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC audio device selector, MTC MIDI port selector, theme customization, export/import |
+| Web UI - Show view | `static/index.html` | Full: Sticky timecode + transport header, live cue cards with cue numbers, Ready/3-2-1/Go countdown visualization, department filters, passed cues toggle, disconnection banner |
+| Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with # column + sortable headers + department filter, bulk CSV/JSON import, add/edit/delete modals with cue number field |
+| Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show data export/import |
+| Web UI - UX polish | `static/index.html` | Full: Toast notifications, confirm modals (replaces native confirm), keyboard shortcut hints, loading spinner, responsive table scroll, 44px touch targets, favicon |
 | Demo seed data | `src/cue/store.rs` | 6 departments (Lighting, Sound, Video, Pyro, Automation, Stage Mgmt) + 22 cues from 00:00:10 to 00:08:00 |
 
 ### Cue Data Model
@@ -83,6 +84,7 @@ Single-page app served from `static/index.html` with three tabs:
 |-------|------|----------|---------|
 | `id` | UUID | No | Auto-generated |
 | `department_id` | UUID | **Yes** | -- |
+| `cue_number` | String | No | Auto-generated (Q1, Q2, Q3...) |
 | `label` | String | No | "Untitled Cue" |
 | `trigger_tc` | Timecode (HH:MM:SS:FF) | No | 00:00:00:00 |
 | `warn_seconds` | u32 | No | 10 |
@@ -93,9 +95,7 @@ Single-page app served from `static/index.html` with three tabs:
 | Feature | Notes |
 |---------|-------|
 | Unit & integration tests | No test coverage yet |
-| UI/UX improvements | Disconnection banner, keyboard hints, mobile touch targets, etc. |
 | Authentication | PIN-based auth, session tokens, rate limiting |
-| CSV/JSON cue import endpoint | `POST /api/cues/import` |
 | Multi-show support | Show switching/archiving |
 | Security headers/CORS hardening | Production hardening |
 | QR code onboarding | For quick crew device setup |
@@ -124,7 +124,8 @@ Single-page app served from `static/index.html` with three tabs:
 | DELETE | `/api/departments/{id}` | Delete department + its cues |
 | GET | `/api/cues` | List cues (optional `?department_id=` filter), sorted by trigger_tc |
 | GET | `/api/cues/{id}` | Get single cue |
-| POST | `/api/cues` | Create cue (only `department_id` required) |
+| POST | `/api/cues` | Create cue (only `department_id` required; `cue_number` auto-generated if empty) |
+| POST | `/api/cues/import` | Bulk import cues (validates department_id, returns `{imported, errors}`) |
 | PUT | `/api/cues/{id}` | Update cue |
 | DELETE | `/api/cues/{id}` | Delete cue |
 | GET | `/ws` | WebSocket endpoint for live countdown data |
@@ -156,6 +157,9 @@ midir = "0.10"       # MIDI input for MTC decoding
 7. **Auto-seed on empty store** - First launch populates demo data so the app is immediately usable for testing.
 8. **Serde defaults on Cue** - Only `department_id` is mandatory; all other fields have sensible defaults for quick cue creation.
 9. **Dedicated OS threads for audio/MIDI** - cpal's `Stream` and midir's connection are `!Send`, so they run on their own OS threads with command channels for control.
+10. **Per-department cue state tracking** - A cue stays "active" until the next cue in the same department triggers, reflecting real show operations where each department works independently.
+11. **Bulk import with single persist** - `POST /api/cues/import` validates and inserts all cues in one write + one `persist()` call, far more efficient than N individual API calls.
+12. **Auto-generated cue numbers** - Cues receive Q1, Q2, Q3... numbers automatically on creation if no custom number is provided, editable afterward.
 
 ## Build Warnings
 

@@ -8,10 +8,13 @@ Self-hosted, local-WiFi show management platform for live productions. Reads SMP
 
 - **Three timecode sources:** Built-in generator (Freerun/Countdown/Clock/Loop), SMPTE LTC audio input, MIDI MTC input
 - **Real-time countdowns:** 10Hz engine broadcasts cue states to all connected browsers via WebSocket
+- **Per-department cue state:** Each cue stays active until the next cue in the same department triggers
+- **Ready / 3-2-1 / Go visualization:** Large countdown display for the next imminent cue
 - **Multi-department support:** Lighting, Sound, Video, Pyro, Automation, Stage Management — each with color coding and per-department filtering
-- **Full cue management:** CRUD for departments and cues, sortable table, department filtering, JSON export/import
+- **Cue numbering:** Auto-generated (Q1, Q2, Q3...) or custom, displayed throughout the UI
+- **Full cue management:** CRUD for departments and cues, sortable table, department filtering, bulk CSV/JSON import
 - **Zero dependencies at runtime:** Single Rust binary, JSON file persistence, no database
-- **Responsive UI:** Works on desktop, tablet, and phone — dark theme for backstage use
+- **Responsive UI:** Works on desktop, tablet, and phone — dark theme for backstage use with sticky timecode header, toast notifications, and 44px touch targets
 
 ## Quick Start
 
@@ -45,4 +48,4 @@ For other devices on the same WiFi: `http://<your-ip>:8080`
 
 ## Current Status
 
-Phases 1-2 (LTC + MTC decoding) are complete. The core pipeline works end-to-end: timecode source → countdown engine → WebSocket → crew browsers. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for remaining work.
+All core features are complete: LTC/MTC decoding, timecode generator, cue management with bulk import, per-department countdown engine, full UI/UX polish (15 items + 5 user feedback items), and Ready/Go visualization. Remaining work: unit tests, authentication, and security hardening. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the roadmap.
