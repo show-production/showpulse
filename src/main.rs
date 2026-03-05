@@ -89,6 +89,10 @@ async fn main() {
         .route("/api/ltc/devices", get(api::ltc::list_devices))
         .route("/api/ltc/device", put(api::ltc::set_device))
         .route("/api/ltc/stop", post(api::ltc::stop))
+        // MTC
+        .route("/api/mtc/devices", get(api::mtc::list_devices))
+        .route("/api/mtc/device", put(api::mtc::set_device))
+        .route("/api/mtc/stop", post(api::mtc::stop))
         // WebSocket
         .route("/ws", get(ws_handler))
         .with_state(state)

@@ -728,6 +728,16 @@ body {
           </div>
           <div id="ltc-status" style="font-size:0.8rem;margin-top:0.3rem;color:var(--text-dim);"></div>
         </div>
+        <div class="setting-group" id="mtc-device-group" style="display:none;">
+          <label>MIDI Input Port</label>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <select id="mtc-device-select" style="flex:1;" onchange="selectMtcDevice()">
+              <option value="">-- Select MIDI port --</option>
+            </select>
+            <button onclick="refreshMtcDevices()" title="Refresh port list" style="padding:0.4rem 0.6rem;">&#x21bb;</button>
+          </div>
+          <div id="mtc-status" style="font-size:0.8rem;margin-top:0.3rem;color:var(--text-dim);"></div>
+        </div>
         <div class="setting-group">
           <label>Frame Rate</label>
           <select id="set-fps" onchange="updateGenConfig()">
@@ -1275,14 +1285,13 @@ function setSource(source) {
   // Update radio visual
   document.querySelectorAll('#source-radio label').forEach(l => l.classList.remove('selected'));
   event.target.classList.add('selected');
-  // Show/hide LTC device selector
+  // Show/hide device selectors
   const ltcGroup = document.getElementById('ltc-device-group');
-  if (source === 'ltc') {
-    ltcGroup.style.display = '';
-    refreshLtcDevices();
-  } else {
-    ltcGroup.style.display = 'none';
-  }
+  const mtcGroup = document.getElementById('mtc-device-group');
+  ltcGroup.style.display = source === 'ltc' ? '' : 'none';
+  mtcGroup.style.display = source === 'mtc' ? '' : 'none';
+  if (source === 'ltc') refreshLtcDevices();
+  if (source === 'mtc') refreshMtcDevices();
 }
 
 async function refreshLtcDevices() {
@@ -1323,6 +1332,47 @@ async function selectLtcDevice() {
     statusEl.style.color = 'var(--accent)';
   } catch (e) {
     statusEl.textContent = 'Failed to open device';
+    statusEl.style.color = 'var(--danger, #ff4444)';
+  }
+}
+
+async function refreshMtcDevices() {
+  const select = document.getElementById('mtc-device-select');
+  const statusEl = document.getElementById('mtc-status');
+  try {
+    const ports = await api('/mtc/devices');
+    select.innerHTML = '<option value="">-- Select MIDI port --</option>';
+    if (ports && ports.length > 0) {
+      ports.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.index;
+        opt.textContent = p.name;
+        select.appendChild(opt);
+      });
+      statusEl.textContent = ports.length + ' port(s) found';
+    } else {
+      statusEl.textContent = 'No MIDI input ports found';
+    }
+  } catch (e) {
+    statusEl.textContent = 'Error loading MIDI ports';
+  }
+}
+
+async function selectMtcDevice() {
+  const select = document.getElementById('mtc-device-select');
+  const statusEl = document.getElementById('mtc-status');
+  const idx = select.value;
+  if (idx === '') {
+    await api('/mtc/stop', { method: 'POST' });
+    statusEl.textContent = 'MTC stopped';
+    return;
+  }
+  try {
+    await api('/mtc/device', { method: 'PUT', body: { port_index: parseInt(idx) } });
+    statusEl.textContent = 'Listening on: ' + select.options[select.selectedIndex].text;
+    statusEl.style.color = 'var(--accent)';
+  } catch (e) {
+    statusEl.textContent = 'Failed to open MIDI port';
     statusEl.style.color = 'var(--danger, #ff4444)';
   }
 }
