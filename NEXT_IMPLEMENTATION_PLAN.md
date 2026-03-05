@@ -24,11 +24,17 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The core pip
 | Keyboard shortcuts, responsive design, theme persistence | Done |
 | Documentation (README, GETTING_STARTED, PROJECT_OVERVIEW) | Done |
 | **LTC Audio Decoding** (Phase 1) | **Done** |
+| **MTC MIDI Decoding** (Phase 2) | **Done** |
 
 Phase 1 delivered: cpal-based LTC decoder with bi-phase zero-crossing detection,
 80-bit frame extraction, BCD parsing, sync word (0x3FFD) detection. Dedicated OS thread
 for cpal Stream. API: `GET /api/ltc/devices`, `PUT /api/ltc/device`, `POST /api/ltc/stop`.
 Audio device dropdown in Settings UI.
+
+Phase 2 delivered: midir-based MTC decoder with quarter-frame accumulation (8 messages
+→ full TC), full-frame SysEx parsing. Dedicated OS thread for midir connection.
+API: `GET /api/mtc/devices`, `PUT /api/mtc/device`, `POST /api/mtc/stop`.
+MIDI port selector dropdown in Settings UI.
 
 ---
 
@@ -114,9 +120,7 @@ Audio device dropdown in Settings UI.
    - Create a separate "Data" panel, or place Export/Import below the Timecode panel
    - Show data management is unrelated to theme colors and hard to discover under Appearance
 
-7. **Disable MTC source option (stub only):**
-   - Disable the MTC radio button with a "(coming soon)" label until Phase 2 is complete
-   - LTC is now fully implemented with device selection
+7. ~~**Disable stub-only source options:**~~ — RESOLVED. Both LTC and MTC are now fully implemented with device selection UI.
 
 ### 4c. Code Quality
 
