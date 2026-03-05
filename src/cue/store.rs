@@ -134,4 +134,73 @@ impl CueStore {
     pub async fn show_data(&self) -> ShowData {
         self.data.read().await.clone()
     }
+
+    /// Populate store with demo departments and cues if it is empty.
+    pub async fn seed_if_empty(&self) {
+        let data = self.data.read().await;
+        if !data.departments.is_empty() || !data.cues.is_empty() {
+            return;
+        }
+        drop(data);
+
+        use crate::timecode::types::Timecode;
+
+        // 6 departments
+        let departments = vec![
+            ("Lighting",  "#ffcc00"),
+            ("Sound",     "#00aaff"),
+            ("Video",     "#ff44aa"),
+            ("Pyro",      "#ff4400"),
+            ("Automation","#88ff44"),
+            ("Stage Mgmt","#aa66ff"),
+        ];
+
+        let mut dept_ids = Vec::new();
+        for (name, color) in &departments {
+            let dept = self.create_department(Department {
+                id: Uuid::nil(),
+                name: name.to_string(),
+                color: color.to_string(),
+            }).await;
+            dept_ids.push(dept.id);
+        }
+
+        // Mock cues spread across the show timeline
+        let cues: Vec<(usize, &str, Timecode, u32)> = vec![
+            // (dept_index, label, trigger_tc, warn_seconds)
+            (5, "Standby — Places",            Timecode::new(0, 0, 10, 0),  15),
+            (0, "House lights to 50%",          Timecode::new(0, 0, 30, 0),  10),
+            (1, "Play opening music",           Timecode::new(0, 0, 45, 0),  10),
+            (0, "House lights out",             Timecode::new(0, 1,  0, 0),   8),
+            (2, "Roll intro video",             Timecode::new(0, 1,  5, 0),   5),
+            (0, "Stage wash — blue",            Timecode::new(0, 1, 30, 0),  10),
+            (4, "Raise main curtain",           Timecode::new(0, 1, 35, 0),   8),
+            (1, "Mic check — lead vocal",       Timecode::new(0, 2,  0, 0),  12),
+            (3, "Pyro — stage left fountain",   Timecode::new(0, 2, 30, 0),  15),
+            (0, "Spotlight — center stage",     Timecode::new(0, 3,  0, 0),  10),
+            (2, "IMAG camera 1 — wide",         Timecode::new(0, 3, 15, 0),   5),
+            (1, "Band track — verse 1",         Timecode::new(0, 3, 30, 0),   8),
+            (3, "Pyro — confetti burst",        Timecode::new(0, 4,  0, 0),  12),
+            (0, "Full stage — warm white",      Timecode::new(0, 4, 30, 0),  10),
+            (4, "Lower mid-stage scrim",        Timecode::new(0, 5,  0, 0),  10),
+            (2, "Roll VT package — interview",  Timecode::new(0, 5, 30, 0),   8),
+            (1, "Fade music out",               Timecode::new(0, 6,  0, 0),  10),
+            (5, "Cue presenter — stage right",  Timecode::new(0, 6, 15, 0),   8),
+            (0, "Blackout",                     Timecode::new(0, 7,  0, 0),  10),
+            (4, "Lower main curtain",           Timecode::new(0, 7,  5, 0),   5),
+            (0, "House lights up",              Timecode::new(0, 7, 30, 0),  10),
+            (5, "All clear",                    Timecode::new(0, 8,  0, 0),  10),
+        ];
+
+        for (dept_idx, label, tc, warn) in cues {
+            self.create_cue(Cue {
+                id: Uuid::nil(),
+                department_id: dept_ids[dept_idx],
+                label: label.to_string(),
+                trigger_tc: tc,
+                warn_seconds: warn,
+                notes: String::new(),
+            }).await;
+        }
+    }
 }

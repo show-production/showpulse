@@ -45,6 +45,7 @@ async fn main() {
     let config = config::Config::default();
 
     let store = Arc::new(CueStore::new(PathBuf::from(&config.data_file)));
+    store.seed_if_empty().await;
     let tc_manager = Arc::new(TimecodeManager::new());
     let ws_hub = Arc::new(WsHub::new());
 
