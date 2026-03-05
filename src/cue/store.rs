@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use super::types::{Cue, Department, ShowData};
+use super::types::{Cue, CueImportError, CueImportResult, Department, ShowData};
 
 /// In-memory store with JSON file persistence.
 pub struct CueStore {
@@ -100,6 +100,44 @@ impl CueStore {
         self.data.write().await.cues.push(cue.clone());
         self.persist().await;
         cue
+    }
+
+    pub async fn import_cues(&self, cues: Vec<Cue>) -> CueImportResult {
+        let dept_ids: std::collections::HashSet<Uuid> = self
+            .data
+            .read()
+            .await
+            .departments
+            .iter()
+            .map(|d| d.id)
+            .collect();
+
+        let mut imported = 0;
+        let mut errors = Vec::new();
+
+        let mut data = self.data.write().await;
+        for (index, mut cue) in cues.into_iter().enumerate() {
+            if !dept_ids.contains(&cue.department_id) {
+                errors.push(CueImportError {
+                    index,
+                    message: format!(
+                        "department_id {} does not match any existing department",
+                        cue.department_id
+                    ),
+                });
+                continue;
+            }
+            cue.id = Uuid::new_v4();
+            data.cues.push(cue);
+            imported += 1;
+        }
+        drop(data);
+
+        if imported > 0 {
+            self.persist().await;
+        }
+
+        CueImportResult { imported, errors }
     }
 
     pub async fn update_cue(&self, id: Uuid, update: Cue) -> Option<Cue> {

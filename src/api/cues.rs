@@ -6,7 +6,7 @@ use axum::{
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::cue::types::Cue;
+use crate::cue::types::{Cue, CueImportResult};
 use crate::AppState;
 
 #[derive(Deserialize)]
@@ -39,6 +39,13 @@ pub async fn create(
 ) -> (StatusCode, Json<Cue>) {
     let created = state.store.create_cue(cue).await;
     (StatusCode::CREATED, Json(created))
+}
+
+pub async fn import(
+    State(state): State<AppState>,
+    Json(cues): Json<Vec<Cue>>,
+) -> Json<CueImportResult> {
+    Json(state.store.import_cues(cues).await)
 }
 
 pub async fn update(
