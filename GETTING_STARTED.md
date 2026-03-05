@@ -92,9 +92,9 @@ The main operational view for live shows.
 
 - **Sticky timecode display** at the top (stays visible when scrolling)
 - **Transport controls:** Play, Pause, Stop, and Goto timecode
-- **Ready / 3-2-1 / Go display:** Shows the next imminent cue with a large countdown
+- **Ready / 3-2-1 / Go display:** Shows the next imminent cue with countdown, consistent layout across all states
 - **Department filter chips** let you show/hide cues by department
-- **Cue cards** with cue numbers, grouped by state: Active (green glow), Warning (amber pulse), Upcoming, Passed
+- **Cue cards** in stable timecode order with cue numbers — state changes only affect color and border, cues never shift position
 - Each card shows a countdown timer and progress bar
 - Cues stay **active until replaced** by the next cue in the same department
 - **Show/Hide Passed** toggle to declutter the view during a show
