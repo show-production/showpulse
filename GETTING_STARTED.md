@@ -120,7 +120,7 @@ For setting up your show.
 
 ### Importing Cues
 
-ShowPulse supports bulk cue import via the **Import** button in the Manage tab.
+ShowPulse supports bulk cue import via the **Import** button in the Manage tab. Importing **replaces** all existing cues (not appends). Full show import from Settings replaces both departments and cues.
 
 **CSV format:** Header row with columns like `timecode`, `label`, `department`, `warn`, `notes`. The parser recognizes common aliases (e.g., "dept" for "department", "tc" for "timecode"). Department names are automatically matched to existing departments.
 
