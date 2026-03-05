@@ -23,31 +23,12 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The core pip
 | Frontend: Settings (source, frame rate, theme, export/import) | Done |
 | Keyboard shortcuts, responsive design, theme persistence | Done |
 | Documentation (README, GETTING_STARTED, PROJECT_OVERVIEW) | Done |
+| **LTC Audio Decoding** (Phase 1) | **Done** |
 
----
-
-## Phase 1: LTC Audio Decoding (HIGH PRIORITY)
-**Goal:** Receive SMPTE LTC timecode from an audio input device.
-
-**Files to modify:** `Cargo.toml`, `src/timecode/ltc.rs`, `src/timecode/mod.rs`, `src/api/timecode.rs`, `static/index.html`
-
-1. Add `cpal = "0.15"` dependency to Cargo.toml
-2. Implement `LtcDecoder` in `src/timecode/ltc.rs`:
-   - List available audio input devices via `cpal::default_host()`
-   - Spawn audio capture task using cpal's input stream
-   - Decode LTC bi-phase signal: detect zero-crossings, extract 80-bit LTC frames
-   - Parse timecode from LTC bits (hours/minutes/seconds/frames)
-   - Send decoded `Timecode` via the existing `watch::Sender`
-3. Add API endpoints for device management:
-   - `GET /api/ltc/devices` — list available audio inputs
-   - `PUT /api/ltc/device` — select active audio device
-4. Update frontend settings panel with audio device selector dropdown
-
-**Technical notes:**
-- LTC is a bi-phase modulated audio signal carrying 80-bit frames
-- Each frame contains sync word (0x3FFD) + timecode data + user bits
-- Must handle varying sample rates (44.1kHz, 48kHz, 96kHz)
-- Must handle varying LTC speeds (0.5x–2x playback)
+Phase 1 delivered: cpal-based LTC decoder with bi-phase zero-crossing detection,
+80-bit frame extraction, BCD parsing, sync word (0x3FFD) detection. Dedicated OS thread
+for cpal Stream. API: `GET /api/ltc/devices`, `PUT /api/ltc/device`, `POST /api/ltc/stop`.
+Audio device dropdown in Settings UI.
 
 ---
 
@@ -101,7 +82,71 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The core pip
 
 ---
 
-## Phase 4: CSV/JSON Cue Import (MEDIUM PRIORITY)
+## Phase 4: UI/UX Improvements (HIGH PRIORITY)
+**Goal:** Address usability, clarity, and safety issues identified in UX review.
+
+**Files to modify:** `static/index.html`
+
+### 4a. Critical UX Fixes
+
+1. **Disconnection banner (safety-critical):**
+   - Add a prominent overlay/banner ("Connection Lost — Reconnecting...") when `wsConnected` is false
+   - Pulse the timecode display red or dim the Show view when disconnected
+   - The current 8px status dot is insufficient for live show use
+
+2. **Keyboard shortcut discoverability:**
+   - Add a `?` button or footer hint on the Show tab: `Space: Play | P: Pause | Esc: Stop | G: Goto`
+   - First-time users currently have no way to learn shortcuts
+
+3. **Replace native `confirm()` dialogs:**
+   - Use the existing modal component for delete confirmations
+   - Native `confirm()` is visually jarring on the dark theme and blocks the main thread
+
+### 4b. Clarity Fixes
+
+4. **Rename "Warn" column** to "Lead Time" (or add a tooltip explaining it's the warning lead time in seconds)
+
+5. **Speed field labeling:**
+   - Add a suffix label like "1.0x" or convert to a labeled range slider
+   - Currently ambiguous — "speed of what?"
+
+6. **Move Export/Import out of Appearance panel:**
+   - Create a separate "Data" panel, or place Export/Import below the Timecode panel
+   - Show data management is unrelated to theme colors and hard to discover under Appearance
+
+7. **Disable MTC source option (stub only):**
+   - Disable the MTC radio button with a "(coming soon)" label until Phase 2 is complete
+   - LTC is now fully implemented with device selection
+
+### 4c. Code Quality
+
+8. **Fix `setSource()` implicit event reference:**
+   - Pass `event` explicitly instead of relying on implicit `event.target` (line ~1267)
+   - Current approach is fragile and may break in strict mode
+
+### 4d. Mobile / Responsive
+
+9. **Cue table horizontal scroll:**
+   - Add `overflow-x: auto` on the table container
+   - Or switch to a card-based layout on mobile
+   - Currently columns compress awkwardly on narrow screens
+
+10. **Increase transport button touch targets:**
+    - Minimum 44x44px tap targets on mobile
+    - Current 0.85rem / 0.5rem padding is too small for live show use (gloves, low light)
+
+### 4e. Minor Polish
+
+11. **Add loading state:** Show a spinner or skeleton on initial data load
+12. **API error handling:** Add toast or inline error feedback when save/delete fails
+13. **Passed cues toggle:** Add a "Show passed" toggle to collapse/hide passed cues at 0.4 opacity
+14. **Timecode size slider value label:** Show current value (e.g., "5rem") next to the slider
+15. **Color picker live preview:** Change `onchange` to `oninput` for live preview while dragging
+16. **Add favicon:** Help crew identify ShowPulse among browser tabs
+
+---
+
+## Phase 5: CSV/JSON Cue Import (MEDIUM PRIORITY)
 **Goal:** Bulk-import cues from external files.
 
 **Files to modify:** `src/api/cues.rs`, `src/cue/store.rs`, `src/main.rs`, `static/index.html`
@@ -113,7 +158,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The core pip
 
 ---
 
-## Phase 5: Authentication (MEDIUM PRIORITY)
+## Phase 6: Authentication (MEDIUM PRIORITY)
 **Goal:** PIN-based auth to protect admin operations while keeping crew view open.
 
 **Files to modify:** new `src/auth.rs`, `src/main.rs`, `src/config.rs`, `static/index.html`
@@ -126,7 +171,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The core pip
 
 ---
 
-## Phase 6: Security Hardening (MEDIUM PRIORITY)
+## Phase 7: Security Hardening (MEDIUM PRIORITY)
 **Goal:** Production-ready security posture for LAN deployment.
 
 **Files to modify:** `src/main.rs`
@@ -137,7 +182,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The core pip
 
 ---
 
-## Phase 7: Nice-to-haves (LOW PRIORITY)
+## Phase 8: Nice-to-haves (LOW PRIORITY)
 
 | Feature | Description |
 |---------|-------------|
