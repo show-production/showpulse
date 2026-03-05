@@ -35,6 +35,9 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 | Show view clarity: passed count badge, active strips, uniform cards | Done |
 | Traffic-light Ready/Go colors (red→orange→green) | Done |
 | Timer vertical layout (meta+timer row, controls row below) | Done |
+| Ready/Go two-element layout (READY + digit, fixed height, GO! with dept name) | Done |
+| Frame-accurate timecode broadcast (10Hz with cached cue states) | Done |
+| Scroll-fold collapses space (max-height:0 transition, not just opacity) | Done |
 
 ### Completed Phases
 
@@ -78,11 +81,19 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 5. Eliminates all layout shifts when cues change state during live show
 6. Traffic-light Ready/Go countdown colors: red (READY) → red-orange (3) → orange (2) → yellow-green (1) → green (GO!)
 7. Timer controls moved below timer in centered row (meta+timer on top, controls below)
-8. Scroll-fade replaces scroll-fold for above-timer sections (opacity transition instead of max-height collapse)
+8. Scroll-fold collapses above-timer sections (max-height:0 + opacity transition, freeing space)
+
+**Phase 9 — Ready/Go & Broadcast Polish:**
+1. Ready/Go two-element countdown: READY label stays visible while 3→2→1 digits appear alongside (both 1.4rem, fixed 2.2rem row height)
+2. GO! shows department name: "GO! — Sound" in green, replaces READY label at zero
+3. Traffic-light digit colors: red-orange (3) → orange (2) → yellow-green (1) → green (GO!)
+4. Fixed-height countdown row prevents layout shifts during state transitions
+5. Frame-accurate timecode: countdown engine broadcasts every 100ms tick (was second-boundary only), cue states cached and recomputed on second change
+6. Scroll-fold space collapse: above-timer sections now use max-height:0 + overflow:hidden transition (was opacity-only, leaving dead space)
 
 ---
 
-## Phase 9: Unit & Integration Tests (HIGH PRIORITY)
+## Phase 10: Unit & Integration Tests (HIGH PRIORITY)
 **Goal:** Establish test coverage for critical logic.
 
 **Files to modify:** `Cargo.toml` (dev-deps), `src/timecode/types.rs`, `src/cue/store.rs`, `src/engine/countdown.rs`, new `tests/api.rs`
@@ -110,7 +121,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 10: Authentication (MEDIUM PRIORITY)
+## Phase 11: Authentication (MEDIUM PRIORITY)
 **Goal:** PIN-based auth to protect admin operations while keeping crew view open.
 
 **Files to modify:** new `src/auth.rs`, `src/main.rs`, `src/config.rs`, `static/index.html`
@@ -123,7 +134,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 11: Security Hardening (MEDIUM PRIORITY)
+## Phase 12: Security Hardening (MEDIUM PRIORITY)
 **Goal:** Production-ready security posture for LAN deployment.
 
 **Files to modify:** `src/main.rs`
@@ -134,7 +145,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 12: Nice-to-haves (LOW PRIORITY)
+## Phase 13: Nice-to-haves (LOW PRIORITY)
 
 | Feature | Description |
 |---------|-------------|
@@ -150,7 +161,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 ## Verification Checklist
 
 - [x] `cargo build` — compiles without errors
-- [ ] `cargo test` — all tests pass (after Phase 9)
+- [ ] `cargo test` — all tests pass (after Phase 10)
 - [x] Manual test: `cargo run` → browser at `http://localhost:8080`
 - [x] LTC: test with LTC audio from a generator app or DAW
 - [x] MTC: test with MIDI loopback or DAW sending MTC

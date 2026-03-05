@@ -7,9 +7,9 @@ Self-hosted, local-WiFi show management platform for live productions. Reads SMP
 ## Features
 
 - **Three timecode sources:** Built-in generator (Freerun/Countdown/Clock/Loop), SMPTE LTC audio input, MIDI MTC input
-- **Real-time countdowns:** 10Hz engine broadcasts cue states to all connected browsers via WebSocket
+- **Frame-accurate timecode:** 10Hz engine broadcasts timecode with frame precision to all connected browsers via WebSocket
 - **Per-department cue state:** Each cue stays active until the next cue in the same department triggers
-- **Ready / 3-2-1 / Go visualization:** Dedicated countdown zone with traffic-light colors (red→orange→green) — READY, 3, 2, 1, GO! with scale-pop and flash effects
+- **Ready / 3-2-1 / Go visualization:** Dedicated countdown zone — READY stays visible while 3, 2, 1 digits appear alongside, then GO! with department name. Traffic-light colors (red→orange→green), fixed-height layout (no size jumps), scale-pop and flash effects
 - **Clean dashboard layout:** Passed cues count badge (expandable dropdown), active cue strips, centered timer with transport controls, Ready/Go zone, scrollable coming cues
 - **Uniform cue cards:** All cards same size regardless of state — no layout shifts, color-only tier differentiation
 - **Cue navigation:** Click any cue to load its timecode into Goto, Prev/Next buttons to step through cues
