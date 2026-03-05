@@ -88,22 +88,29 @@ http://<your-ip>:8080
 
 ### Show Tab (default)
 
-The main operational view for live shows.
+The main operational view for live shows. The dashboard is organized into 5 vertical sections:
 
-- **Dominant timecode display** (8rem default, sticky at the top, readable across the room)
-- **Transport controls** hidden behind a toggle — the Show view is a read-only cue monitor; transport opens on click
-- **Ready / 3-2-1 / Go display:** Shows the next imminent cue with countdown, consistent layout across all states
-- **Department filter chips** let you show/hide cues by department
-- **Cue cards** in stable timecode order with cue numbers — state changes only affect color and border, cues never shift position
-- Each card shows a **large countdown** (the live, urgent number) and a dimmer trigger timecode (reference info)
-- Cues stay **active until replaced** by the next cue in the same department
-- **Show/Hide Passed** toggle to declutter the view during a show
+1. **Passed cues** (top) — stacked deck of completed cues, overlapping like cards. Hover to expand and see all.
+2. **Triggered cues** — stacked deck of currently active (NOW) cues, one per department. Hover to expand.
+3. **Timer + Controls** (center) — large timecode display with meta info (state/fps/source) on the left, transport controls on the right in two rows: Prev/Play/Pause/Stop/Next on top, Goto timecode input below.
+4. **Ready/Go zone** — dedicated animated countdown for the next imminent cue: READY → 3 → 2 → 1 → GO! with scale-pop animations and green flash on trigger.
+5. **Coming cues** (bottom) — scrollable list of upcoming cues with countdown timers and progress bars.
 
-**Keyboard shortcuts** (work even with transport hidden):
+**Interactions:**
+- **Click any cue card** to load its timecode into the Goto field
+- **Prev/Next buttons** step through cues in timecode order, loading each into Goto
+- **Scroll down** in the coming cues section to auto-collapse the above-timer sections
+- **Department filter chips** (sidebar) to show/hide cues by department
+- **Show/Hide Passed** toggle (sidebar) to declutter during a show
+
+**Keyboard shortcuts:**
 - `Space` - Play
 - `P` - Pause
 - `Escape` - Stop
+- `N` - Next cue (loads TC into Goto)
+- `B` - Previous cue (loads TC into Goto)
 - `G` - Focus the goto timecode input
+- `S` - Toggle sidebar
 
 ### Manage Tab
 

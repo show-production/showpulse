@@ -41,11 +41,11 @@ Single-page app served from `static/index.html` with three tabs:
 
 | Tab | Purpose |
 |-----|---------|
-| **Show** | Dominant sticky timecode (8rem default), collapsible transport, Ready/Go countdown, department filter chips, cue cards in stable timecode order (DOM-diffed, no position shifts), passed cues toggle |
+| **Show** | 5-section dashboard: stacked passed cues deck, stacked triggered (NOW) cues deck, centered timer with 2-row transport controls (Prev/Play/Pause/Stop/Next + Goto), animated Ready/Go countdown zone (READY → 3 → 2 → 1 → GO! with pop/flash effects), scrollable coming cues. Click any cue to load TC into Goto. Prev/Next cue navigation. Above-timer sections fold on scroll. Department filter chips, DOM-diffed cue cards, passed cues toggle |
 | **Manage** | Department CRUD (left panel), cue list table (right panel) with # column, department dropdown filter, sortable column headers, CSV/JSON bulk import, add/edit/delete modals with cue number field |
 | **Settings** | Timecode source selector (Generator/LTC/MTC) with device selectors, frame rate, generator mode, speed, start TC, theme colors (live preview), TC size slider, show data export/import JSON |
 
-**Keyboard shortcuts (Show tab):** Space = Play, P = Pause, Escape = Stop, G = Focus goto input
+**Keyboard shortcuts (Show tab):** Space = Play, P = Pause, Escape = Stop, N = Next cue, B = Previous cue, G = Focus goto input, S = Toggle sidebar
 
 **WebSocket:** Auto-connects for real-time timecode updates. Green dot indicator in top-right. Falls back to 1s polling if WebSocket disconnects.
 
@@ -72,7 +72,7 @@ Single-page app served from `static/index.html` with three tabs:
 | Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick, per-department cue state tracking (active until replaced by next dept cue), second-boundary broadcast, 60s passed-cue cleanup |
 | Config | `src/config.rs` | Basic: port (8080) + data file path (showpulse-data.json) |
 | Server entrypoint | `src/main.rs` | Full: Axum router with all routes, state wiring, seed on startup, static file fallback |
-| Web UI - Show view | `static/index.html` | Full: Dominant sticky timecode (8rem), collapsible transport, DOM-diffed cue cards in stable timecode order, cue numbers, Ready/Go countdown, department filters, passed cues toggle, disconnection banner |
+| Web UI - Show view | `static/index.html` | Full: 5-section dashboard (stacked passed deck, stacked triggered deck, centered timer with 2-row transport + Prev/Next, animated Ready/Go zone with 3-2-1-GO pop effects, scrollable coming cues). Click-to-goto on cue cards, Prev/Next cue navigation, scroll-fold for above-timer sections. DOM-diffed cards, department filters, passed cues toggle, disconnection banner |
 | Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with # column + sortable headers + department filter, bulk CSV/JSON import, add/edit/delete modals with cue number field |
 | Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show data export/import |
 | Web UI - UX polish | `static/index.html` | Full: Toast notifications, confirm modals (replaces native confirm), loading spinner, responsive table scroll, 44px touch targets, favicon, DOM diffing for flicker-free cue updates |

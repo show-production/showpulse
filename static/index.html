@@ -21,7 +21,7 @@
   --active-glow: #00ff8840;
   --warning-glow: #ffaa0040;
   --border: #2a2a3e;
-  --tc-size: 8rem;
+  --tc-size: 6rem;
   --font-mono: 'Courier New', 'Consolas', monospace;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -82,222 +82,6 @@ body {
 /* ── Views ── */
 .view { display: none; padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
 .view.active { display: block; }
-
-/* ══════════════════════════════════════════
-   SHOW VIEW
-   ══════════════════════════════════════════ */
-
-/* Sticky header wrapper for TC + transport */
-.show-sticky-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--bg-primary);
-  padding-bottom: 0.25rem;
-}
-
-.tc-display {
-  text-align: center;
-  padding: 0.75rem 0 0.5rem;
-}
-.tc-display .tc-value {
-  font-family: var(--font-mono);
-  font-size: var(--tc-size);
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: 0.1em;
-  text-shadow: 0 0 30px var(--active-glow);
-  line-height: 1;
-}
-.tc-display .tc-meta {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  margin-top: 0.75rem;
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.tc-display .tc-meta .running { color: var(--accent); }
-.tc-display .tc-meta .stopped { color: var(--danger); }
-
-/* Transport controls */
-.transport-wrap { position: relative; }
-.transport-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 0.2rem 0;
-  border: none;
-  background: none;
-  color: var(--text-dim);
-  cursor: pointer;
-  font-size: 0.7rem;
-  letter-spacing: 0.05em;
-  font-family: var(--font-sans);
-  transition: color 0.15s;
-}
-.transport-toggle:hover { color: var(--text-primary); }
-.transport-toggle .arrow { transition: transform 0.2s; display: inline-block; margin-right: 0.3rem; }
-.transport-toggle.open .arrow { transform: rotate(180deg); }
-.transport {
-  display: none;
-  justify-content: center;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border);
-}
-.transport.open { display: flex; }
-.transport button {
-  padding: 0.5rem 1.25rem;
-  border: 1px solid var(--border);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  transition: all 0.15s;
-}
-.transport button:hover { background: var(--bg-input); border-color: var(--accent); }
-.transport button.play-btn:hover { border-color: var(--accent); color: var(--accent); }
-.transport button.stop-btn:hover { border-color: var(--danger); color: var(--danger); }
-.transport .goto-group {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-left: 1rem;
-}
-.transport .goto-group input {
-  width: 130px;
-  padding: 0.45rem 0.6rem;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-}
-
-/* Department filter chips */
-.dept-filters {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-.dept-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  cursor: pointer;
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  transition: all 0.15s;
-}
-.dept-chip.active { border-color: var(--text-dim); color: var(--text-primary); }
-.dept-chip .chip-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-}
-
-/* Cue cards */
-.cue-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.9rem 1rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-.cue-card .dept-bar {
-  width: 4px;
-  align-self: stretch;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-.cue-card .cue-info { flex: 1; min-width: 0; }
-.cue-card .cue-label {
-  font-weight: 600;
-  font-size: 0.95rem;
-  margin-bottom: 0.2rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.cue-card .cue-dept {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-}
-.cue-card .cue-tc {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  text-align: right;
-  flex-shrink: 0;
-}
-.cue-card .cue-countdown {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 1.4rem;
-  min-width: 110px;
-  text-align: right;
-  flex-shrink: 0;
-}
-.cue-card .progress-bg {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--bg-surface);
-}
-.cue-card .progress-fill {
-  height: 100%;
-  transition: width 0.5s linear;
-  border-radius: 0 2px 2px 0;
-}
-
-/* Cue states */
-.cue-card.state-upcoming .cue-countdown { color: var(--text-dim); }
-.cue-card.state-warning {
-  border-color: var(--warning);
-  box-shadow: 0 0 12px var(--warning-glow);
-}
-.cue-card.state-warning .cue-countdown { color: var(--warning); }
-.cue-card.state-warning .progress-fill { background: var(--warning); }
-
-.cue-card.state-active {
-  border-color: var(--accent);
-  box-shadow: 0 0 16px var(--active-glow);
-}
-.cue-card.state-active .cue-countdown { color: var(--accent); }
-.cue-card.state-active .progress-fill { background: var(--accent); }
-
-.cue-card.state-passed {
-  opacity: 0.4;
-  border-color: transparent;
-}
-.cue-card.state-passed .cue-countdown { color: var(--text-dim); }
-.cue-card.state-passed .progress-fill { background: var(--text-dim); width: 100% !important; }
-
-.no-cues {
-  text-align: center;
-  padding: 3rem;
-  color: var(--text-dim);
-  font-size: 0.9rem;
-}
 
 /* ══════════════════════════════════════════
    MANAGE VIEW
@@ -652,11 +436,6 @@ body {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
 }
-.tc-display.disconnected .tc-value {
-  opacity: 0.4;
-  text-shadow: 0 0 30px rgba(255,68,68,0.4);
-}
-
 
 /* ══════════════════════════════════════════
    CONFIRM MODAL (Item 3)
@@ -756,13 +535,6 @@ body {
 .toggle-btn.active { border-color: var(--text-dim); color: var(--text-primary); }
 .toggle-btn:hover { border-color: var(--text-dim); }
 
-/* Transport button touch targets */
-.transport button {
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0.6rem 1.4rem;
-}
-
 /* ══════════════════════════════════════════
    CUE TABLE SCROLL (Item 9)
    ══════════════════════════════════════════ */
@@ -788,69 +560,6 @@ body {
   text-align: right;
 }
 
-/* ══════════════════════════════════════════
-   READY / GO COUNTDOWN DISPLAY
-   ══════════════════════════════════════════ */
-.next-up-display {
-  display: none;
-  text-align: center;
-  padding: 1.5rem 1rem;
-  margin-bottom: 1rem;
-  border-radius: 10px;
-  border: 2px solid var(--border);
-  background: var(--bg-card);
-  transition: all 0.3s;
-}
-.next-up-display.visible { display: block; }
-.next-up-display.state-ready {
-  border-color: var(--warning);
-  box-shadow: 0 0 20px var(--warning-glow);
-}
-.next-up-display.state-countdown {
-  border-color: var(--warning);
-  box-shadow: 0 0 30px var(--warning-glow);
-}
-.next-up-display.state-go {
-  border-color: var(--accent);
-  box-shadow: 0 0 30px var(--active-glow);
-}
-.next-up-display .next-up-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text-dim);
-  margin-bottom: 0.4rem;
-}
-.next-up-display .next-up-dept {
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 0.3rem;
-}
-.next-up-display .next-up-cue {
-  font-size: 1rem;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-.next-up-display .next-up-status {
-  font-family: var(--font-mono);
-  font-weight: 800;
-  font-size: 3rem;
-  line-height: 1;
-  min-height: 3rem;
-  transition: color 0.3s;
-}
-.next-up-display .next-up-status.ready {
-  color: var(--warning);
-}
-.next-up-display .next-up-status.countdown-num {
-  color: var(--warning);
-  text-shadow: 0 0 30px var(--warning-glow);
-}
-.next-up-display .next-up-status.go {
-  color: var(--accent);
-  text-shadow: 0 0 30px var(--active-glow);
-}
-
 /* Speed field suffix (Item 5) */
 .speed-row {
   display: flex;
@@ -862,6 +571,487 @@ body {
   font-size: 0.85rem;
   color: var(--text-dim);
   font-weight: 600;
+}
+
+/* ══════════════════════════════════════════
+   SIDEBAR (Show view)
+   ══════════════════════════════════════════ */
+.sidebar-toggle {
+  position: fixed;
+  top: 56px;
+  left: 8px;
+  width: 40px;
+  height: 40px;
+  z-index: 30;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sidebar-toggle:hover { background: var(--bg-surface); border-color: var(--accent); }
+
+.show-sidebar {
+  position: fixed;
+  top: 48px;
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  z-index: 25;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  padding: 1rem;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+}
+.show-sidebar.open { transform: translateX(0); }
+
+.sidebar-section-title {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  margin: 1rem 0 0.5rem;
+}
+.sidebar-section-title:first-child { margin-top: 0; }
+
+.sidebar-shortcuts { font-size: 0.75rem; color: var(--text-dim); line-height: 1.8; }
+.sidebar-shortcuts kbd {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-primary);
+  margin-right: 0.3rem;
+}
+
+.dept-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  transition: all 0.15s;
+}
+.dept-chip.active { border-color: var(--text-dim); color: var(--text-primary); }
+.dept-chip .chip-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+
+.sidebar-dept-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.sidebar-dept-filters .dept-chip {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.sidebar-options { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0,0,0,0.4);
+}
+.sidebar-backdrop.visible { display: block; }
+
+/* ══════════════════════════════════════════
+   FLOW AREA (Show view)
+   ══════════════════════════════════════════ */
+#view-show.view { padding: 0; max-width: none; }
+
+.flow-area {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 48px);
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* ── Stacked deck containers (passed + triggered) ── */
+.flow-passed, .flow-triggered {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: max-height 0.35s ease, opacity 0.3s;
+}
+.flow-passed {
+  max-height: 120px;
+  padding-bottom: 0.25rem;
+}
+.flow-triggered {
+  max-height: 100px;
+  padding-bottom: 0.25rem;
+}
+/* Cards overlap — only ~8px edge visible */
+.flow-passed .flow-card,
+.flow-triggered .flow-card {
+  margin-bottom: -28px;
+  position: relative;
+  flex-shrink: 0;
+  transition: margin-bottom 0.3s ease;
+  cursor: pointer;
+}
+.flow-passed .flow-card:last-child,
+.flow-triggered .flow-card:last-child {
+  margin-bottom: 0;
+}
+/* Expand on hover */
+.flow-passed:hover .flow-card,
+.flow-triggered:hover .flow-card {
+  margin-bottom: 0.35rem;
+}
+.flow-passed:hover,
+.flow-triggered:hover {
+  max-height: 40vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+/* Folded state (on scroll) */
+.flow-passed.folded, .flow-triggered.folded {
+  max-height: 18px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.flow-passed:empty, .flow-triggered:empty {
+  max-height: 0;
+  padding: 0;
+}
+
+.flow-timecode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 0;
+  flex-shrink: 0;
+  gap: 1.5rem;
+}
+.flow-timecode .tc-left {
+  flex: 1;
+  text-align: right;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.flow-timecode .tc-left .running { color: var(--accent); }
+.flow-timecode .tc-left .stopped { color: var(--danger); }
+.flow-timecode .tc-value {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: var(--tc-size);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 30px var(--active-glow);
+  line-height: 1;
+}
+.flow-timecode .tc-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+.tc-transport {
+  display: flex;
+  gap: 0.4rem;
+}
+.tc-btn {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tc-btn:hover { background: var(--bg-input); border-color: var(--accent); }
+.tc-goto-group {
+  display: flex;
+  gap: 0.3rem;
+  margin-left: 0.3rem;
+}
+.tc-goto-group input {
+  width: 110px;
+  padding: 0.35rem 0.5rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+@media (max-width: 640px) {
+  .flow-timecode {
+    flex-wrap: wrap;
+  }
+  .flow-timecode .tc-value {
+    flex: 1 1 100%;
+    text-align: center;
+    order: -1;
+  }
+  .flow-timecode .tc-left {
+    text-align: left;
+    flex: 0 0 auto;
+  }
+  .flow-timecode .tc-right {
+    flex: 0 0 auto;
+    align-items: flex-end;
+  }
+  .tc-btn { padding: 0.3rem 0.5rem; font-size: 0.75rem; }
+  .tc-goto-group input { width: 90px; }
+}
+/* Clickable cue cards in all containers */
+.flow-upcoming .flow-card { cursor: pointer; }
+.flow-timecode.disconnected .tc-value {
+  opacity: 0.3;
+  animation: blink 1.5s ease-in-out infinite;
+}
+@keyframes blink { 50% { opacity: 0.1; } }
+
+/* ── Ready/Go Zone ── */
+.flow-readygo {
+  flex-shrink: 0;
+  text-align: center;
+  min-height: 0;
+  overflow: hidden;
+  transition: min-height 0.4s ease, padding 0.4s ease, opacity 0.4s ease;
+  padding: 0;
+  border-radius: 8px;
+}
+.flow-readygo:empty {
+  min-height: 0;
+  padding: 0;
+}
+.flow-readygo.visible {
+  min-height: 70px;
+  padding: 0.75rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+.readygo-countdown {
+  font-family: var(--font-mono);
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+  animation: readygo-pop 0.35s ease-out;
+}
+.readygo-countdown.state-ready { color: var(--text-dim); font-size: 1.4rem; }
+.readygo-countdown.state-3 { color: var(--warning); }
+.readygo-countdown.state-2 { color: var(--warning); }
+.readygo-countdown.state-1 { color: var(--danger); animation: readygo-pop 0.35s ease-out, readygo-shake 0.4s ease-in-out; }
+.readygo-countdown.state-go {
+  color: var(--accent);
+  font-size: 3.2rem;
+  animation: readygo-pop 0.35s ease-out;
+}
+.flow-readygo.go-flash {
+  animation: readygo-flash 1.5s ease-out;
+}
+.readygo-label {
+  font-size: 0.8rem;
+  color: var(--text-label);
+  margin-top: 0.35rem;
+}
+.readygo-progress {
+  height: 3px;
+  background: var(--bg-surface);
+  border-radius: 2px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+.readygo-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s linear;
+}
+@keyframes readygo-pop {
+  0% { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes readygo-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes readygo-flash {
+  0% { background: rgba(0, 255, 136, 0.15); border-color: var(--accent); }
+  100% { background: var(--bg-card); border-color: var(--border); }
+}
+
+.flow-upcoming {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.flow-no-cues {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+/* ══════════════════════════════════════════
+   FLOW CARDS + TIERS
+   ══════════════════════════════════════════ */
+.flow-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.4rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+.flow-card .dept-bar {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.flow-card .card-info { flex: 1; min-width: 0; }
+.flow-card .card-label {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.flow-card .card-dept {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+.flow-card .card-tc {
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  text-align: right;
+  flex-shrink: 0;
+}
+.flow-card .card-countdown {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-align: right;
+  flex-shrink: 0;
+}
+.flow-card .progress-bg {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--bg-surface);
+}
+.flow-card .progress-fill {
+  height: 100%;
+  transition: width 0.5s linear;
+  border-radius: 0 2px 2px 0;
+}
+
+/* ── Tier: Active ── */
+.flow-card.tier-active {
+  padding: 1.2rem 1rem;
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--active-glow);
+  animation: active-glow 2s ease-in-out infinite;
+}
+.flow-card.tier-active .card-label { font-size: 1.05rem; }
+.flow-card.tier-active .card-countdown { font-size: 1.8rem; color: var(--accent); min-width: 120px; }
+.flow-card.tier-active .card-tc { font-size: 0.7rem; }
+.flow-card.tier-active .progress-fill { background: var(--accent); }
+
+/* ── Tier: Warning ── */
+.flow-card.tier-warning {
+  padding: 1rem;
+  border-color: var(--warning);
+  box-shadow: 0 0 12px var(--warning-glow);
+  animation: warn-pulse 1.5s ease-in-out infinite;
+}
+.flow-card.tier-warning .card-label { font-size: 1rem; }
+.flow-card.tier-warning .card-countdown { font-size: 1.4rem; color: var(--warning); min-width: 110px; }
+.flow-card.tier-warning .card-tc { font-size: 0.7rem; }
+.flow-card.tier-warning .progress-fill { background: var(--warning); }
+
+/* ── Tier: Near (≤120s) ── */
+.flow-card.tier-near {
+  padding: 0.75rem 1rem;
+}
+.flow-card.tier-near .card-label { font-size: 0.95rem; }
+.flow-card.tier-near .card-countdown { font-size: 1.1rem; color: var(--text-primary); min-width: 100px; }
+.flow-card.tier-near .card-tc { font-size: 0.7rem; }
+
+/* ── Tier: Far (≤600s) ── */
+.flow-card.tier-far {
+  padding: 0.5rem 0.8rem;
+  opacity: 0.7;
+}
+.flow-card.tier-far .card-label { font-size: 0.88rem; }
+.flow-card.tier-far .card-countdown { font-size: 0.9rem; color: var(--text-dim); min-width: 90px; }
+.flow-card.tier-far .card-tc { font-size: 0.65rem; }
+
+/* ── Tier: Distant (>600s) ── */
+.flow-card.tier-distant {
+  padding: 0.35rem 0.7rem;
+  opacity: 0.45;
+}
+.flow-card.tier-distant .card-label { font-size: 0.82rem; }
+.flow-card.tier-distant .card-countdown { font-size: 0.8rem; color: var(--text-dim); min-width: 80px; }
+.flow-card.tier-distant .card-tc { font-size: 0.6rem; }
+.flow-card.tier-distant .card-dept { display: none; }
+
+/* ── Tier: Passed ── */
+.flow-card.tier-passed {
+  padding: 0.3rem 0.7rem;
+  opacity: 0.3;
+  border-color: transparent;
+}
+.flow-card.tier-passed .card-label { font-size: 0.82rem; }
+.flow-card.tier-passed .card-countdown { font-size: 0.8rem; color: var(--text-dim); min-width: 80px; }
+.flow-card.tier-passed .card-tc { font-size: 0.6rem; }
+.flow-card.tier-passed .progress-fill { background: var(--text-dim); width: 100% !important; }
+
+/* ── Animations ── */
+@keyframes active-glow {
+  0%, 100% { box-shadow: 0 0 16px var(--active-glow); }
+  50% { box-shadow: 0 0 24px var(--active-glow); }
+}
+@keyframes warn-pulse {
+  0%, 100% { box-shadow: 0 0 12px var(--warning-glow); }
+  50% { box-shadow: 0 0 24px var(--warning-glow); }
 }
 </style>
 </head>
@@ -893,47 +1083,56 @@ body {
 
 <!-- ═══ SHOW VIEW ═══ -->
 <div class="view active" id="view-show">
-  <div class="show-sticky-header">
-    <div class="tc-display">
-      <div class="tc-value" id="tc-value">00:00:00:00</div>
-      <div class="tc-meta">
-        <span id="tc-state" class="stopped">STOPPED</span>
-        <span id="tc-fps">30 fps</span>
-        <span id="tc-source">Generator</span>
-      </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar (S)">&#9776;</button>
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
+  <aside class="show-sidebar" id="show-sidebar">
+    <div class="sidebar-section-title">Departments</div>
+    <div class="sidebar-dept-filters" id="dept-filters"></div>
+
+    <div class="sidebar-section-title">Options</div>
+    <div class="sidebar-options">
+      <button class="toggle-btn active" id="toggle-passed" onclick="togglePassedCues()">Show Passed</button>
     </div>
 
-    <div class="transport-wrap">
-      <button class="transport-toggle" id="transport-toggle" onclick="toggleTransport()">
-        <span class="arrow">&#9660;</span> Transport
-      </button>
-      <div class="transport" id="transport-panel">
-        <button class="play-btn" onclick="genCmd('play')">&#9654; Play</button>
-        <button onclick="genCmd('pause')">&#9646;&#9646; Pause</button>
-        <button class="stop-btn" onclick="genCmd('stop')">&#9632; Stop</button>
-        <div class="goto-group">
+    <div class="sidebar-section-title">Shortcuts</div>
+    <div class="sidebar-shortcuts">
+      <kbd>Space</kbd> Play<br>
+      <kbd>P</kbd> Pause<br>
+      <kbd>Esc</kbd> Stop<br>
+      <kbd>N</kbd> Next Cue<br>
+      <kbd>B</kbd> Prev Cue<br>
+      <kbd>G</kbd> Goto TC<br>
+      <kbd>S</kbd> Sidebar
+    </div>
+  </aside>
+
+  <div class="flow-area">
+    <div class="flow-passed" id="flow-passed"></div>
+    <div class="flow-triggered" id="flow-triggered"></div>
+    <div class="flow-timecode" id="flow-timecode">
+      <div class="tc-left">
+        <div id="tc-state" class="stopped">STOPPED</div>
+        <div id="tc-fps">30 fps</div>
+        <div id="tc-source">Generator</div>
+      </div>
+      <div class="tc-value" id="tc-value">00:00:00:00</div>
+      <div class="tc-right">
+        <div class="tc-transport">
+          <button class="tc-btn" onclick="prevCue()" title="Previous cue (B)">&#9198;</button>
+          <button class="tc-btn" onclick="genCmd('play')" title="Play (Space)">&#9654;</button>
+          <button class="tc-btn" onclick="genCmd('pause')" title="Pause (P)">&#9646;&#9646;</button>
+          <button class="tc-btn" onclick="genCmd('stop')" title="Stop (Esc)">&#9632;</button>
+          <button class="tc-btn" onclick="nextCue()" title="Next cue (N)">&#9197;</button>
+        </div>
+        <div class="tc-goto-group">
           <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF">
-          <button onclick="gotoTC()">Go</button>
+          <button class="tc-btn" onclick="gotoTC()" title="Goto (G)">Go</button>
         </div>
       </div>
     </div>
+    <div class="flow-readygo" id="flow-readygo"></div>
+    <div class="flow-upcoming" id="flow-upcoming"></div>
   </div>
-
-  <div class="dept-filters" id="dept-filters"></div>
-
-  <!-- Ready / Go Countdown Display -->
-  <div class="next-up-display" id="next-up-display">
-    <div class="next-up-label" id="next-up-label">NEXT UP</div>
-    <div class="next-up-dept" id="next-up-dept"></div>
-    <div class="next-up-cue" id="next-up-cue"></div>
-    <div class="next-up-status" id="next-up-status"></div>
-  </div>
-
-  <div class="cue-controls">
-    <button class="toggle-btn active" id="toggle-passed" onclick="togglePassedCues()">Show Passed</button>
-  </div>
-
-  <div id="cue-list"></div>
 </div>
 
 <!-- ═══ MANAGE VIEW ═══ -->
@@ -1075,8 +1274,8 @@ body {
         <div class="setting-group">
           <label>Timecode Size</label>
           <div class="slider-row">
-            <input type="range" min="2" max="12" step="0.5" value="8" id="tc-size-slider" oninput="setThemeColor('--tc-size', this.value+'rem'); document.getElementById('tc-size-label').textContent=this.value+'rem'">
-            <span class="slider-value" id="tc-size-label">8rem</span>
+            <input type="range" min="2" max="12" step="0.5" value="6" id="tc-size-slider" oninput="setThemeColor('--tc-size', this.value+'rem'); document.getElementById('tc-size-label').textContent=this.value+'rem'">
+            <span class="slider-value" id="tc-size-label">6rem</span>
           </div>
         </div>
       </div>
@@ -1193,8 +1392,9 @@ let wsConnected = false;
 let cueTableSort = { key: 'trigger_tc', asc: true };
 let showPassedCues = true;
 let confirmResolve = null; // for confirm modal promise
-let goDisplayTimeout = null; // tracks the GO display timer
-let lastGoId = null; // prevents re-triggering GO for same cue
+let sidebarOpen = localStorage.getItem('sidebarOpen') === 'true';
+let readygoLastValue = null; // track Ready/Go countdown transitions
+let readygoGoTimer = null;   // timer for GO! display duration
 
 // ═══════════════════════════════════════════
 // View switching
@@ -1256,14 +1456,14 @@ function connectWS() {
     wsConnected = true;
     document.getElementById('ws-dot').classList.add('connected');
     document.getElementById('disconnect-banner').classList.remove('visible');
-    document.querySelector('.tc-display').classList.remove('disconnected');
+    document.getElementById('flow-timecode').classList.remove('disconnected');
   };
 
   ws.onclose = () => {
     wsConnected = false;
     document.getElementById('ws-dot').classList.remove('connected');
     document.getElementById('disconnect-banner').classList.add('visible');
-    document.querySelector('.tc-display').classList.add('disconnected');
+    document.getElementById('flow-timecode').classList.add('disconnected');
     setTimeout(connectWS, 2000);
   };
 
@@ -1274,19 +1474,18 @@ function connectWS() {
     stateEl.textContent = data.status.toUpperCase();
     stateEl.className = data.status;
     document.getElementById('tc-fps').textContent = data.frame_rate + ' fps';
-    renderCueCards(data.cues);
-    renderNextUp(data.cues);
+    renderFlowCues(data.cues);
   };
 }
 
 // ═══════════════════════════════════════════
-// Transport controls
+// Sidebar
 // ═══════════════════════════════════════════
-function toggleTransport() {
-  const panel = document.getElementById('transport-panel');
-  const toggle = document.getElementById('transport-toggle');
-  panel.classList.toggle('open');
-  toggle.classList.toggle('open');
+function toggleSidebar(forceState) {
+  sidebarOpen = forceState !== undefined ? forceState : !sidebarOpen;
+  document.getElementById('show-sidebar').classList.toggle('open', sidebarOpen);
+  document.getElementById('sidebar-backdrop').classList.toggle('visible', sidebarOpen);
+  localStorage.setItem('sidebarOpen', sidebarOpen);
 }
 
 function genCmd(cmd) {
@@ -1299,13 +1498,81 @@ function gotoTC() {
   api('/generator/goto', { method: 'POST', body: { timecode: tc } });
 }
 
+function prevCue() {
+  const currentTcStr = document.getElementById('tc-value').textContent;
+  const currentSecs = tcToSeconds(currentTcStr);
+  const sorted = getSortedCueTCs();
+  // Find the closest cue BEFORE current time
+  let best = null;
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    if (sorted[i].secs < currentSecs - 0.5) { best = sorted[i]; break; }
+  }
+  if (best) document.getElementById('goto-tc').value = best.tc;
+}
+
+function nextCue() {
+  const currentTcStr = document.getElementById('tc-value').textContent;
+  const currentSecs = tcToSeconds(currentTcStr);
+  const sorted = getSortedCueTCs();
+  // Find the closest cue AFTER current time
+  let best = null;
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i].secs > currentSecs + 0.5) { best = sorted[i]; break; }
+  }
+  if (best) document.getElementById('goto-tc').value = best.tc;
+}
+
+function getSortedCueTCs() {
+  let list = cues;
+  if (activeDeptFilters.size > 0) {
+    list = cues.filter(c => activeDeptFilters.has(c.department_id));
+  }
+  return list
+    .map(c => ({ tc: fmtTC(c.trigger_tc), secs: tcObjToSeconds(c.trigger_tc) }))
+    .sort((a, b) => a.secs - b.secs);
+}
+
+function tcToSeconds(str) {
+  const p = (str || '00:00:00:00').split(':').map(Number);
+  return (p[0]||0) * 3600 + (p[1]||0) * 60 + (p[2]||0) + (p[3]||0) / 30;
+}
+
+function tcObjToSeconds(tc) {
+  if (!tc) return 0;
+  return tc.hours * 3600 + tc.minutes * 60 + tc.seconds + tc.frames / 30;
+}
+
 // ═══════════════════════════════════════════
-// Show View — Cue cards
+// Show View — Flow-based cue rendering
 // ═══════════════════════════════════════════
-function renderCueCards(wsCues) {
-  const container = document.getElementById('cue-list');
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function getTier(c) {
+  if (c.state === 'passed') return 'tier-passed';
+  if (c.state === 'active') return 'tier-active';
+  if (c.state === 'warning') return 'tier-warning';
+  if (c.countdown_sec <= 120) return 'tier-near';
+  if (c.countdown_sec <= 600) return 'tier-far';
+  return 'tier-distant';
+}
+
+function renderFlowCues(wsCues) {
+  const passedContainer = document.getElementById('flow-passed');
+  const triggeredContainer = document.getElementById('flow-triggered');
+  const readygoContainer = document.getElementById('flow-readygo');
+  const upcomingContainer = document.getElementById('flow-upcoming');
+
   if (!wsCues || wsCues.length === 0) {
-    container.innerHTML = '<div class="no-cues">No cues yet. Go to Manage to add some.</div>';
+    passedContainer.innerHTML = '';
+    triggeredContainer.innerHTML = '';
+    renderReadyGo(readygoContainer, null);
+    upcomingContainer.innerHTML = '<div class="flow-no-cues">No cues yet. Go to Manage to add some.</div>';
     return;
   }
 
@@ -1315,46 +1582,136 @@ function renderCueCards(wsCues) {
     filtered = wsCues.filter(c => activeDeptFilters.has(c.department_id));
   }
 
-  // Hide passed cues if toggled off
-  if (!showPassedCues) {
-    filtered = filtered.filter(c => c.state !== 'passed');
+  // 4-way split
+  const passed = showPassedCues ? filtered.filter(c => c.state === 'passed') : [];
+  const triggered = filtered.filter(c => c.state === 'active');
+
+  // Ready/Go: find closest warning cue (lowest countdown_sec)
+  const warningCues = filtered.filter(c => c.state === 'warning');
+  let readygoCue = null;
+  if (warningCues.length > 0) {
+    readygoCue = warningCues.reduce((a, b) => a.countdown_sec < b.countdown_sec ? a : b);
   }
 
-  if (filtered.length === 0) {
-    container.innerHTML = '<div class="no-cues">No matching cues.</div>';
+  // Coming cues: everything not in the other containers
+  const coming = filtered.filter(c =>
+    c.state !== 'passed' && c.state !== 'active' &&
+    !(readygoCue && c.id === readygoCue.id)
+  );
+
+  // Render
+  diffCueList(passedContainer, passed);
+  diffCueList(triggeredContainer, triggered);
+  renderReadyGo(readygoContainer, readygoCue);
+  diffCueList(upcomingContainer, coming);
+
+  if (coming.length === 0 && passed.length === 0 && triggered.length === 0 && !readygoCue) {
+    upcomingContainer.innerHTML = '<div class="flow-no-cues">No matching cues.</div>';
+  }
+
+  // Auto-scroll passed container to show latest
+  passedContainer.scrollTop = passedContainer.scrollHeight;
+}
+
+function renderReadyGo(container, cue) {
+  if (!cue) {
+    // Check if we should show GO! briefly (cue just became active)
+    if (readygoGoTimer) return; // still showing GO!
+    container.classList.remove('visible');
+    container.innerHTML = '';
+    readygoLastValue = null;
     return;
   }
 
-  // DOM diffing: update existing cards in place, add/remove as needed
-  const existingCards = container.querySelectorAll('.cue-card');
+  container.classList.add('visible');
+  const cd = Math.ceil(cue.countdown_sec);
+  let displayValue, stateClass, displayColor;
+
+  if (cd > 3) {
+    displayValue = 'READY';
+    stateClass = 'state-ready';
+    displayColor = 'var(--warning)';
+  } else if (cd === 3) {
+    displayValue = '3';
+    stateClass = 'state-3';
+    displayColor = 'var(--warning)';
+  } else if (cd === 2) {
+    displayValue = '2';
+    stateClass = 'state-2';
+    displayColor = 'var(--warning)';
+  } else if (cd === 1) {
+    displayValue = '1';
+    stateClass = 'state-1';
+    displayColor = 'var(--danger)';
+  } else {
+    displayValue = 'GO!';
+    stateClass = 'state-go';
+    displayColor = 'var(--accent)';
+  }
+
+  // Detect transition — re-trigger animation
+  if (readygoLastValue !== displayValue) {
+    readygoLastValue = displayValue;
+
+    const deptColor = getDeptColor(cue.department_id);
+    const labelText = (cue.cue_number ? cue.cue_number + ' \u00b7 ' : '') + cue.label;
+    const warnMax = getCueWarnMax(cue.department_id, cue.id);
+    const progress = warnMax > 0 ? Math.max(0, Math.min(100, ((warnMax - cue.countdown_sec) / warnMax) * 100)) : 0;
+
+    container.innerHTML = `<div class="readygo-countdown ${stateClass}">${displayValue}</div>
+      <div class="readygo-label"><span style="color:${deptColor}">\u25CF</span> ${esc(labelText)} \u00b7 ${esc(cue.department)}</div>
+      <div class="readygo-progress"><div class="readygo-progress-fill" style="width:${progress}%;background:${displayColor}"></div></div>`;
+
+    // GO! flash effect
+    if (displayValue === 'GO!') {
+      container.classList.remove('go-flash');
+      void container.offsetWidth; // force reflow
+      container.classList.add('go-flash');
+      // Keep GO! visible for 2 seconds after cue becomes active
+      if (readygoGoTimer) clearTimeout(readygoGoTimer);
+      readygoGoTimer = setTimeout(() => {
+        readygoGoTimer = null;
+        container.classList.remove('visible', 'go-flash');
+        container.innerHTML = '';
+        readygoLastValue = null;
+      }, 2000);
+    }
+  } else {
+    // Same value — just update progress bar
+    const fillEl = container.querySelector('.readygo-progress-fill');
+    if (fillEl) {
+      const warnMax = getCueWarnMax(cue.department_id, cue.id);
+      const progress = warnMax > 0 ? Math.max(0, Math.min(100, ((warnMax - cue.countdown_sec) / warnMax) * 100)) : 0;
+      fillEl.style.width = progress + '%';
+    }
+  }
+}
+
+function diffCueList(container, cueList) {
+  const existingCards = container.querySelectorAll('.flow-card');
   const existingMap = {};
   existingCards.forEach(card => { existingMap[card.dataset.cueId] = card; });
 
-  const wantedIds = new Set(filtered.map(c => c.id));
+  const wantedIds = new Set(cueList.map(c => c.id));
 
-  // Remove cards no longer in the filtered list
+  // Remove cards no longer wanted
   existingCards.forEach(card => {
     if (!wantedIds.has(card.dataset.cueId)) card.remove();
   });
 
-  // Update or create cards in order
+  // Update or create in order
   let prevNode = null;
-  filtered.forEach(c => {
+  cueList.forEach(c => {
     let card = existingMap[c.id];
     if (card) {
-      // Update in place
-      updateCueCard(card, c);
-      // Ensure correct order
+      updateFlowCard(card, c);
       if (prevNode) {
-        if (prevNode.nextElementSibling !== card) {
-          prevNode.after(card);
-        }
+        if (prevNode.nextElementSibling !== card) prevNode.after(card);
       } else if (container.firstElementChild !== card) {
         container.prepend(card);
       }
     } else {
-      // Create new card
-      card = createCueCard(c);
+      card = createFlowCard(c);
       if (prevNode) {
         prevNode.after(card);
       } else {
@@ -1364,45 +1721,67 @@ function renderCueCards(wsCues) {
     prevNode = card;
   });
 
-  // Remove any trailing non-cue-card elements (like old "no-cues" divs)
+  // Remove trailing non-card elements
   while (prevNode && prevNode.nextElementSibling) {
     prevNode.nextElementSibling.remove();
   }
 }
 
-function createCueCard(c) {
+function createFlowCard(c) {
   const deptColor = getDeptColor(c.department_id);
+  const tier = getTier(c);
   const card = document.createElement('div');
-  card.className = 'cue-card state-' + c.state;
+  card.className = 'flow-card ' + tier;
   card.dataset.cueId = c.id;
+  card.dataset.triggerTc = fmtTC(c.trigger_tc);
+
+  // Click to load cue TC into goto field
+  card.addEventListener('click', () => {
+    document.getElementById('goto-tc').value = card.dataset.triggerTc;
+  });
+
+  // Apply dept tint for active/warning
+  const tint = (tier === 'tier-active' || tier === 'tier-warning') ? hexToRgba(deptColor, 0.06) : '';
+
   card.innerHTML = `<div class="dept-bar" style="background:${deptColor}"></div>
-    <div class="cue-info">
-      <div class="cue-label"></div>
-      <div class="cue-dept">${esc(c.department)}</div>
+    <div class="card-info">
+      <div class="card-label"></div>
+      <div class="card-dept">${esc(c.department)}</div>
     </div>
-    <div class="cue-tc">${fmtTC(c.trigger_tc)}</div>
-    <div class="cue-countdown"></div>
+    <div class="card-tc">${fmtTC(c.trigger_tc)}</div>
+    <div class="card-countdown"></div>
     <div class="progress-bg"><div class="progress-fill"></div></div>`;
-  updateCueCard(card, c);
+
+  if (tint) card.style.background = tint;
+  updateFlowCard(card, c);
   return card;
 }
 
-function updateCueCard(card, c) {
-  // Update state class without replacing the whole className
-  const newClass = 'cue-card state-' + c.state;
+function updateFlowCard(card, c) {
+  const tier = getTier(c);
+  const newClass = 'flow-card ' + tier;
   if (card.className !== newClass) card.className = newClass;
+  card.dataset.triggerTc = fmtTC(c.trigger_tc);
 
-  // Update label (with cue number prefix)
-  const labelEl = card.querySelector('.cue-label');
-  const labelHTML = (c.cue_number ? '<span style="color:var(--text-dim);margin-right:0.4rem">' + esc(c.cue_number) + '</span>' : '') + esc(c.label);
-  if (labelEl.innerHTML !== labelHTML) labelEl.innerHTML = labelHTML;
+  // Dept tint for active/warning
+  const deptColor = getDeptColor(c.department_id);
+  if (tier === 'tier-active' || tier === 'tier-warning') {
+    card.style.background = hexToRgba(deptColor, 0.06);
+  } else {
+    card.style.background = '';
+  }
 
-  // Update countdown
-  const cdEl = card.querySelector('.cue-countdown');
-  const cdText = c.state === 'passed' ? '\u2713' : fmtCountdown(c.countdown_sec);
+  // Label: "Q1 · Label"
+  const labelEl = card.querySelector('.card-label');
+  const labelText = (c.cue_number ? c.cue_number + ' \u00b7 ' : '') + c.label;
+  if (labelEl.textContent !== labelText) labelEl.textContent = labelText;
+
+  // Countdown
+  const cdEl = card.querySelector('.card-countdown');
+  const cdText = c.state === 'passed' ? '\u2713' : (c.state === 'active' ? 'NOW' : fmtCountdown(c.countdown_sec));
   if (cdEl.textContent !== cdText) cdEl.textContent = cdText;
 
-  // Update progress bar
+  // Progress bar
   const warnMax = getCueWarnMax(c.department_id, c.id);
   const progress = c.state === 'passed' ? 100 :
     c.state === 'active' ? 100 :
@@ -1451,77 +1830,6 @@ function toggleDeptFilter(id) {
 function clearDeptFilters() {
   activeDeptFilters.clear();
   renderDeptFilters();
-}
-
-// ═══════════════════════════════════════════
-// Ready / Go Countdown Display
-// ═══════════════════════════════════════════
-function renderNextUp(wsCues) {
-  const el = document.getElementById('next-up-display');
-  const labelEl = document.getElementById('next-up-label');
-  const deptEl = document.getElementById('next-up-dept');
-  const cueEl = document.getElementById('next-up-cue');
-  const statusEl = document.getElementById('next-up-status');
-
-  if (!wsCues || wsCues.length === 0) {
-    el.classList.remove('visible');
-    return;
-  }
-
-  // Apply department filter
-  let filtered = wsCues;
-  if (activeDeptFilters.size > 0) {
-    filtered = wsCues.filter(c => activeDeptFilters.has(c.department_id));
-  }
-
-  // Find warning cues — pick the one closest to triggering (lowest countdown_sec)
-  const warningCues = filtered.filter(c => c.state === 'warning');
-  if (warningCues.length === 0) {
-    // No warning cues — check if we should show GO
-    if (!goDisplayTimeout) {
-      el.classList.remove('visible');
-      el.className = 'next-up-display';
-    }
-    return;
-  }
-
-  warningCues.sort((a, b) => a.countdown_sec - b.countdown_sec);
-  const nearest = warningCues[0];
-  const deptColor = getDeptColor(nearest.department_id);
-  const secs = Math.ceil(nearest.countdown_sec);
-
-  el.classList.add('visible');
-  deptEl.innerHTML = `<span style="color:${deptColor}">${esc(nearest.department)}</span>`;
-  cueEl.textContent = (nearest.cue_number ? nearest.cue_number + ' — ' : '') + nearest.label;
-
-  if (secs <= 0) {
-    // Cue is about to trigger — show GO
-    if (lastGoId !== nearest.id) {
-      lastGoId = nearest.id;
-      el.className = 'next-up-display visible state-go';
-      labelEl.textContent = 'STANDBY';
-      statusEl.className = 'next-up-status go';
-      statusEl.textContent = 'GO';
-      if (goDisplayTimeout) clearTimeout(goDisplayTimeout);
-      goDisplayTimeout = setTimeout(() => {
-        el.classList.remove('visible');
-        el.className = 'next-up-display';
-        goDisplayTimeout = null;
-      }, 3000);
-    }
-  } else if (secs <= 3) {
-    // Show 3, 2, 1 countdown
-    el.className = 'next-up-display visible state-countdown';
-    labelEl.textContent = 'STANDBY';
-    statusEl.className = 'next-up-status countdown-num';
-    statusEl.textContent = secs;
-  } else {
-    // Show READY
-    el.className = 'next-up-display visible state-ready';
-    labelEl.textContent = 'NEXT UP';
-    statusEl.className = 'next-up-status ready';
-    statusEl.textContent = fmtCountdown(nearest.countdown_sec);
-  }
 }
 
 // ═══════════════════════════════════════════
@@ -2059,10 +2367,13 @@ document.addEventListener('keydown', (e) => {
   if (e.code === 'Space') { e.preventDefault(); genCmd('play'); }
   else if (e.code === 'Escape') { genCmd('stop'); }
   else if (e.code === 'KeyP') { genCmd('pause'); }
+  else if (e.code === 'KeyS') { e.preventDefault(); toggleSidebar(); }
   else if (e.code === 'KeyG') {
     e.preventDefault();
     document.getElementById('goto-tc').focus();
   }
+  else if (e.code === 'KeyN') { e.preventDefault(); nextCue(); }
+  else if (e.code === 'KeyB') { e.preventDefault(); prevCue(); }
 });
 
 // ═══════════════════════════════════════════
@@ -2123,6 +2434,15 @@ loadTheme();
   } catch (e) {
     showToast('Failed to load initial data', 'error');
   }
+  // Restore sidebar state
+  if (sidebarOpen) toggleSidebar(true);
+  // Scroll fold: collapse above-timer sections when scrolling down in upcoming
+  const upEl = document.getElementById('flow-upcoming');
+  upEl.addEventListener('scroll', () => {
+    const folded = upEl.scrollTop > 30;
+    document.getElementById('flow-passed').classList.toggle('folded', folded);
+    document.getElementById('flow-triggered').classList.toggle('folded', folded);
+  });
   // Hide loading overlay
   const overlay = document.getElementById('loading-overlay');
   overlay.classList.add('hidden');
