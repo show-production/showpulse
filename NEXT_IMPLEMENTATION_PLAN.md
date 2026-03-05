@@ -57,9 +57,19 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 4. DOM diffing: cue cards updated in place by ID, no innerHTML replacement, smooth CSS transitions
 5. Keyboard hints removed from sticky header to reclaim vertical space
 
+**Phase 7 — Dashboard Layout Overhaul v2:**
+1. 5-section vertical layout: stacked passed deck → stacked triggered deck → timer+controls → Ready/Go zone → coming cues
+2. Stacked deck containers: cards overlap with negative margins (~8px edge visible), hover to expand, fold on scroll
+3. Transport controls split into 2 rows: Prev/Play/Pause/Stop/Next + Goto input below
+4. Dedicated animated Ready/Go zone: READY → 3 → 2 → 1 → GO! with CSS pop/shake/flash animations
+5. Click-to-goto: clicking any cue card loads its timecode into the Goto input
+6. Prev/Next cue navigation buttons step through cues by timecode order
+7. Scroll-fold: above-timer sections collapse to thin bars when scrolling down in upcoming cues
+8. New keyboard shortcuts: N (next cue), B (previous cue)
+
 ---
 
-## Phase 7: Unit & Integration Tests (HIGH PRIORITY)
+## Phase 8: Unit & Integration Tests (HIGH PRIORITY)
 **Goal:** Establish test coverage for critical logic.
 
 **Files to modify:** `Cargo.toml` (dev-deps), `src/timecode/types.rs`, `src/cue/store.rs`, `src/engine/countdown.rs`, new `tests/api.rs`
@@ -87,7 +97,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 8: Authentication (MEDIUM PRIORITY)
+## Phase 9: Authentication (MEDIUM PRIORITY)
 **Goal:** PIN-based auth to protect admin operations while keeping crew view open.
 
 **Files to modify:** new `src/auth.rs`, `src/main.rs`, `src/config.rs`, `static/index.html`
@@ -100,7 +110,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 9: Security Hardening (MEDIUM PRIORITY)
+## Phase 10: Security Hardening (MEDIUM PRIORITY)
 **Goal:** Production-ready security posture for LAN deployment.
 
 **Files to modify:** `src/main.rs`
@@ -111,7 +121,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 10: Nice-to-haves (LOW PRIORITY)
+## Phase 11: Nice-to-haves (LOW PRIORITY)
 
 | Feature | Description |
 |---------|-------------|
