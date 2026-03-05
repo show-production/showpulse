@@ -718,6 +718,16 @@ body {
             <label for="src-mtc" onclick="setSource('mtc')">MTC</label>
           </div>
         </div>
+        <div class="setting-group" id="ltc-device-group" style="display:none;">
+          <label>Audio Input Device</label>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <select id="ltc-device-select" style="flex:1;" onchange="selectLtcDevice()">
+              <option value="">-- Select audio device --</option>
+            </select>
+            <button onclick="refreshLtcDevices()" title="Refresh device list" style="padding:0.4rem 0.6rem;">&#x21bb;</button>
+          </div>
+          <div id="ltc-status" style="font-size:0.8rem;margin-top:0.3rem;color:var(--text-dim);"></div>
+        </div>
         <div class="setting-group">
           <label>Frame Rate</label>
           <select id="set-fps" onchange="updateGenConfig()">
@@ -1265,6 +1275,56 @@ function setSource(source) {
   // Update radio visual
   document.querySelectorAll('#source-radio label').forEach(l => l.classList.remove('selected'));
   event.target.classList.add('selected');
+  // Show/hide LTC device selector
+  const ltcGroup = document.getElementById('ltc-device-group');
+  if (source === 'ltc') {
+    ltcGroup.style.display = '';
+    refreshLtcDevices();
+  } else {
+    ltcGroup.style.display = 'none';
+  }
+}
+
+async function refreshLtcDevices() {
+  const select = document.getElementById('ltc-device-select');
+  const statusEl = document.getElementById('ltc-status');
+  try {
+    const devices = await api('/ltc/devices');
+    select.innerHTML = '<option value="">-- Select audio device --</option>';
+    if (devices && devices.length > 0) {
+      devices.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.index;
+        opt.textContent = d.name;
+        select.appendChild(opt);
+      });
+      statusEl.textContent = devices.length + ' device(s) found';
+    } else {
+      statusEl.textContent = 'No audio input devices found';
+    }
+  } catch (e) {
+    statusEl.textContent = 'Error loading devices';
+  }
+}
+
+async function selectLtcDevice() {
+  const select = document.getElementById('ltc-device-select');
+  const statusEl = document.getElementById('ltc-status');
+  const idx = select.value;
+  if (idx === '') {
+    // Stop LTC if deselected
+    await api('/ltc/stop', { method: 'POST' });
+    statusEl.textContent = 'LTC stopped';
+    return;
+  }
+  try {
+    await api('/ltc/device', { method: 'PUT', body: { device_index: parseInt(idx) } });
+    statusEl.textContent = 'Listening on: ' + select.options[select.selectedIndex].text;
+    statusEl.style.color = 'var(--accent)';
+  } catch (e) {
+    statusEl.textContent = 'Failed to open device';
+    statusEl.style.color = 'var(--danger, #ff4444)';
+  }
 }
 
 function updateGenConfig() {
