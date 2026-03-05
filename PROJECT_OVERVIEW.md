@@ -16,8 +16,8 @@ A self-hosted, local-WiFi show management platform for live productions. It read
 
 ```
 Timecode Sources --> TimecodeManager --> Countdown Engine --> WsHub --> Crew Browsers
-                                              |
-                                          CueStore (JSON file)
+  (LTC/MTC/Gen)                               |
+                                           CueStore (JSON file)
 ```
 
 ## Running the App
@@ -33,7 +33,7 @@ cargo run
 
 On first launch with no data file, the app seeds 6 demo departments and 22 cues automatically.
 
-Dependencies: Rust toolchain. On Windows, requires Visual Studio Build Tools with C++ workload.
+Dependencies: Rust toolchain + cpal (audio) + midir (MIDI). On Windows, requires Visual Studio Build Tools with C++ workload.
 
 ## Frontend (Web UI)
 
@@ -43,7 +43,7 @@ Single-page app served from `static/index.html` with three tabs:
 |-----|---------|
 | **Show** | Live timecode display, transport controls (Play/Pause/Stop/Goto), department filter chips, cue countdown cards grouped by state (Active > Warning > Upcoming > Passed) |
 | **Manage** | Department CRUD (left panel), cue list table (right panel) with department dropdown filter, sortable column headers (Timecode, Label, Department, Warn), add/edit/delete modals |
-| **Settings** | Timecode source selector (Generator/LTC/MTC), frame rate, generator mode, speed, start TC, theme colors, timecode display size, show export/import JSON |
+| **Settings** | Timecode source selector (Generator/LTC/MTC) with device selectors, frame rate, generator mode, speed, start TC, theme colors, timecode display size, show export/import JSON |
 
 **Keyboard shortcuts (Show tab):** Space = Play, P = Pause, Escape = Stop, G = Focus goto input
 
@@ -57,22 +57,24 @@ Single-page app served from `static/index.html` with three tabs:
 |-----------|---------|--------|
 | Timecode types | `src/timecode/types.rs` | Full: Timecode struct, FrameRate enum (24/25/29.97df/30), frame math, drop-frame support, parse/display |
 | Timecode generator | `src/timecode/generator.rs` | Full: Freerun, Countdown, Clock (wall-clock sync), Loop modes. Variable speed. Command channel architecture |
-| Timecode manager | `src/timecode/mod.rs` | Full: Source switching (LTC/MTC/Generator), unified status API |
-| LTC decoder | `src/timecode/ltc.rs` | Stub only - awaiting `cpal` integration |
-| MTC decoder | `src/timecode/mtc.rs` | Stub only - awaiting `midir` integration |
+| Timecode manager | `src/timecode/mod.rs` | Full: Source switching (LTC/MTC/Generator), unified status API, device management access |
+| LTC decoder | `src/timecode/ltc.rs` | Full: cpal audio capture, bi-phase zero-crossing detection, 80-bit LTC frame extraction, BCD timecode parsing, sync word (0x3FFD). Dedicated OS thread. Device listing and selection API |
+| MTC decoder | `src/timecode/mtc.rs` | Full: midir MIDI input, quarter-frame accumulation (8 messages → full TC), full-frame SysEx parsing, frame rate detection. Dedicated OS thread. Port listing and selection API |
 | Cue/Department models | `src/cue/types.rs` | Full: Department, Cue (with serde defaults), ShowData, CueState, CueStatus |
 | Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments and cues, auto-seed on empty store |
 | REST API - Timecode | `src/api/timecode.rs` | Full: GET status, PUT source |
 | REST API - Generator | `src/api/generator.rs` | Full: GET status, PUT config, POST play/pause/stop/goto |
 | REST API - Departments | `src/api/departments.rs` | Full: CRUD (list, create, update, delete) |
 | REST API - Cues | `src/api/cues.rs` | Full: CRUD + department filter query param |
+| REST API - LTC | `src/api/ltc.rs` | Full: GET devices, PUT device (select + start), POST stop |
+| REST API - MTC | `src/api/mtc.rs` | Full: GET devices, PUT device (select + start), POST stop |
 | WebSocket hub | `src/ws/hub.rs` | Full: Broadcast with per-client department filtering, subscribe protocol |
 | Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick, cue state computation, second-boundary broadcast optimization |
 | Config | `src/config.rs` | Basic: port (8080) + data file path (showpulse-data.json) |
 | Server entrypoint | `src/main.rs` | Full: Axum router with all routes, state wiring, seed on startup, static file fallback |
 | Web UI - Show view | `static/index.html` | Full: Live timecode, transport controls, department filter chips, cue countdown cards with state animations |
 | Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with sortable columns and department filter dropdown, add/edit/delete modals |
-| Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, theme customization, export/import |
+| Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC audio device selector, MTC MIDI port selector, theme customization, export/import |
 | Demo seed data | `src/cue/store.rs` | 6 departments (Lighting, Sound, Video, Pyro, Automation, Stage Mgmt) + 22 cues from 00:00:10 to 00:08:00 |
 
 ### Cue Data Model
@@ -90,8 +92,8 @@ Single-page app served from `static/index.html` with three tabs:
 
 | Feature | Notes |
 |---------|-------|
-| LTC audio decoding | Needs `cpal` crate for audio input |
-| MTC MIDI decoding | Needs `midir` crate for MIDI input |
+| Unit & integration tests | No test coverage yet |
+| UI/UX improvements | Disconnection banner, keyboard hints, mobile touch targets, etc. |
 | Authentication | PIN-based auth, session tokens, rate limiting |
 | CSV/JSON cue import endpoint | `POST /api/cues/import` |
 | Multi-show support | Show switching/archiving |
@@ -110,6 +112,12 @@ Single-page app served from `static/index.html` with three tabs:
 | POST | `/api/generator/pause` | Pause |
 | POST | `/api/generator/stop` | Stop and reset |
 | POST | `/api/generator/goto` | Jump to timecode position |
+| GET | `/api/ltc/devices` | List available audio input devices |
+| PUT | `/api/ltc/device` | Select and start LTC audio device |
+| POST | `/api/ltc/stop` | Stop LTC audio stream |
+| GET | `/api/mtc/devices` | List available MIDI input ports |
+| PUT | `/api/mtc/device` | Select and start MTC MIDI port |
+| POST | `/api/mtc/stop` | Stop MTC MIDI input |
 | GET | `/api/departments` | List departments |
 | POST | `/api/departments` | Create department |
 | PUT | `/api/departments/{id}` | Update department |
@@ -121,6 +129,22 @@ Single-page app served from `static/index.html` with three tabs:
 | DELETE | `/api/cues/{id}` | Delete cue |
 | GET | `/ws` | WebSocket endpoint for live countdown data |
 
+## Dependencies
+
+```toml
+axum = { version = "0.7", features = ["ws"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+tower-http = { version = "0.5", features = ["cors", "fs"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+futures = "0.3"
+cpal = "0.15"        # Audio input for LTC decoding
+midir = "0.10"       # MIDI input for MTC decoding
+```
+
 ## Key Design Decisions
 
 1. **Single binary deployment** - No database, no runtime dependencies. JSON file for persistence.
@@ -131,7 +155,8 @@ Single-page app served from `static/index.html` with three tabs:
 6. **Drop-frame timecode** - Proper 29.97df frame math with correct drop compensation in both directions (to/from total frames).
 7. **Auto-seed on empty store** - First launch populates demo data so the app is immediately usable for testing.
 8. **Serde defaults on Cue** - Only `department_id` is mandatory; all other fields have sensible defaults for quick cue creation.
+9. **Dedicated OS threads for audio/MIDI** - cpal's `Stream` and midir's connection are `!Send`, so they run on their own OS threads with command channels for control.
 
-## Warnings
+## Build Warnings
 
-The build currently produces 2 dead-code warnings for `LtcDecoder::start` and `MtcDecoder::start` - these are stub methods that will be called once the audio/MIDI integration is implemented.
+The build currently produces 2 harmless warnings about unused assignments in the LTC and MTC shutdown paths. These are structurally correct (the assignment clears the stream/connection before receiving a new one).
