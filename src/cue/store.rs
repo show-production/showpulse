@@ -138,12 +138,44 @@ impl CueStore {
             imported += 1;
         }
 
-        if imported > 0 {
-            let mut data = self.data.write().await;
-            data.cues = valid_cues;
-            drop(data);
-            self.persist().await;
+        // Always replace — clear old cues even if some/all failed validation
+        let mut data = self.data.write().await;
+        data.cues = valid_cues;
+        drop(data);
+        self.persist().await;
+
+        CueImportResult { imported, errors }
+    }
+
+    /// Replace the entire show (departments + cues) atomically.
+    pub async fn replace_show(&self, departments: Vec<Department>, cues: Vec<Cue>) -> CueImportResult {
+        let dept_ids: std::collections::HashSet<Uuid> = departments.iter().map(|d| d.id).collect();
+
+        let mut imported = 0;
+        let mut errors = Vec::new();
+        let mut valid_cues = Vec::new();
+
+        for (index, mut cue) in cues.into_iter().enumerate() {
+            if !dept_ids.contains(&cue.department_id) {
+                errors.push(CueImportError {
+                    index,
+                    message: format!(
+                        "department_id {} does not match any department in import",
+                        cue.department_id
+                    ),
+                });
+                continue;
+            }
+            cue.id = Uuid::new_v4();
+            valid_cues.push(cue);
+            imported += 1;
         }
+
+        let mut data = self.data.write().await;
+        data.departments = departments;
+        data.cues = valid_cues;
+        drop(data);
+        self.persist().await;
 
         CueImportResult { imported, errors }
     }
