@@ -87,6 +87,15 @@ body {
    SHOW VIEW
    ══════════════════════════════════════════ */
 
+/* Sticky header wrapper for TC + transport */
+.show-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-primary);
+  padding-bottom: 0.25rem;
+}
+
 .tc-display {
   text-align: center;
   padding: 2rem 0 1rem;
@@ -848,31 +857,33 @@ body {
 
 <!-- ═══ SHOW VIEW ═══ -->
 <div class="view active" id="view-show">
-  <div class="tc-display">
-    <div class="tc-value" id="tc-value">00:00:00:00</div>
-    <div class="tc-meta">
-      <span id="tc-state" class="stopped">STOPPED</span>
-      <span id="tc-fps">30 fps</span>
-      <span id="tc-source">Generator</span>
+  <div class="show-sticky-header">
+    <div class="tc-display">
+      <div class="tc-value" id="tc-value">00:00:00:00</div>
+      <div class="tc-meta">
+        <span id="tc-state" class="stopped">STOPPED</span>
+        <span id="tc-fps">30 fps</span>
+        <span id="tc-source">Generator</span>
+      </div>
     </div>
-  </div>
 
-  <div class="transport">
-    <button class="play-btn" onclick="genCmd('play')">&#9654; Play</button>
-    <button onclick="genCmd('pause')">&#9646;&#9646; Pause</button>
-    <button class="stop-btn" onclick="genCmd('stop')">&#9632; Stop</button>
-    <div class="goto-group">
-      <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF">
-      <button onclick="gotoTC()">Go</button>
+    <div class="transport">
+      <button class="play-btn" onclick="genCmd('play')">&#9654; Play</button>
+      <button onclick="genCmd('pause')">&#9646;&#9646; Pause</button>
+      <button class="stop-btn" onclick="genCmd('stop')">&#9632; Stop</button>
+      <div class="goto-group">
+        <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF">
+        <button onclick="gotoTC()">Go</button>
+      </div>
     </div>
-  </div>
 
-  <!-- Keyboard Hints (Item 2) -->
-  <div class="keyboard-hints">
-    <span><kbd>Space</kbd> Play</span>
-    <span><kbd>P</kbd> Pause</span>
-    <span><kbd>Esc</kbd> Stop</span>
-    <span><kbd>G</kbd> Goto</span>
+    <!-- Keyboard Hints -->
+    <div class="keyboard-hints">
+      <span><kbd>Space</kbd> Play</span>
+      <span><kbd>P</kbd> Pause</span>
+      <span><kbd>Esc</kbd> Stop</span>
+      <span><kbd>G</kbd> Goto</span>
+    </div>
   </div>
 
   <div class="dept-filters" id="dept-filters"></div>
