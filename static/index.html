@@ -21,7 +21,7 @@
   --active-glow: #00ff8840;
   --warning-glow: #ffaa0040;
   --border: #2a2a3e;
-  --tc-size: 5rem;
+  --tc-size: 8rem;
   --font-mono: 'Courier New', 'Consolas', monospace;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -98,7 +98,7 @@ body {
 
 .tc-display {
   text-align: center;
-  padding: 2rem 0 1rem;
+  padding: 0.75rem 0 0.5rem;
 }
 .tc-display .tc-value {
   font-family: var(--font-mono);
@@ -123,15 +123,34 @@ body {
 .tc-display .tc-meta .stopped { color: var(--danger); }
 
 /* Transport controls */
-.transport {
+.transport-wrap { position: relative; }
+.transport-toggle {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.2rem 0;
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  font-family: var(--font-sans);
+  transition: color 0.15s;
+}
+.transport-toggle:hover { color: var(--text-primary); }
+.transport-toggle .arrow { transition: transform 0.2s; display: inline-block; margin-right: 0.3rem; }
+.transport-toggle.open .arrow { transform: rotate(180deg); }
+.transport {
+  display: none;
   justify-content: center;
   align-items: center;
   gap: 0.75rem;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 1.5rem;
 }
+.transport.open { display: flex; }
 .transport button {
   padding: 0.5rem 1.25rem;
   border: 1px solid var(--border);
@@ -225,16 +244,16 @@ body {
 }
 .cue-card .cue-tc {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--text-label);
+  font-size: 0.7rem;
+  color: var(--text-dim);
   text-align: right;
   flex-shrink: 0;
 }
 .cue-card .cue-countdown {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 1.1rem;
-  min-width: 100px;
+  font-size: 1.4rem;
+  min-width: 110px;
   text-align: right;
   flex-shrink: 0;
 }
@@ -263,7 +282,7 @@ body {
   border-color: var(--accent);
   box-shadow: 0 0 16px var(--active-glow);
 }
-.cue-card.state-active .cue-countdown { color: var(--accent); font-size: 1.3rem; }
+.cue-card.state-active .cue-countdown { color: var(--accent); }
 .cue-card.state-active .progress-fill { background: var(--accent); }
 
 .cue-card.state-passed {
@@ -638,29 +657,6 @@ body {
   text-shadow: 0 0 30px rgba(255,68,68,0.4);
 }
 
-/* ══════════════════════════════════════════
-   KEYBOARD HINTS (Item 2)
-   ══════════════════════════════════════════ */
-.keyboard-hints {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  padding: 0.5rem 0;
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  letter-spacing: 0.05em;
-}
-.keyboard-hints kbd {
-  display: inline-block;
-  padding: 0.15rem 0.45rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-label);
-  margin-right: 0.2rem;
-}
 
 /* ══════════════════════════════════════════
    CONFIRM MODAL (Item 3)
@@ -760,9 +756,7 @@ body {
 .toggle-btn.active { border-color: var(--text-dim); color: var(--text-primary); }
 .toggle-btn:hover { border-color: var(--text-dim); }
 
-/* ══════════════════════════════════════════
-   TRANSPORT TOUCH TARGETS (Item 10)
-   ══════════════════════════════════════════ */
+/* Transport button touch targets */
 .transport button {
   min-width: 44px;
   min-height: 44px;
@@ -909,22 +903,19 @@ body {
       </div>
     </div>
 
-    <div class="transport">
-      <button class="play-btn" onclick="genCmd('play')">&#9654; Play</button>
-      <button onclick="genCmd('pause')">&#9646;&#9646; Pause</button>
-      <button class="stop-btn" onclick="genCmd('stop')">&#9632; Stop</button>
-      <div class="goto-group">
-        <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF">
-        <button onclick="gotoTC()">Go</button>
+    <div class="transport-wrap">
+      <button class="transport-toggle" id="transport-toggle" onclick="toggleTransport()">
+        <span class="arrow">&#9660;</span> Transport
+      </button>
+      <div class="transport" id="transport-panel">
+        <button class="play-btn" onclick="genCmd('play')">&#9654; Play</button>
+        <button onclick="genCmd('pause')">&#9646;&#9646; Pause</button>
+        <button class="stop-btn" onclick="genCmd('stop')">&#9632; Stop</button>
+        <div class="goto-group">
+          <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF">
+          <button onclick="gotoTC()">Go</button>
+        </div>
       </div>
-    </div>
-
-    <!-- Keyboard Hints -->
-    <div class="keyboard-hints">
-      <span><kbd>Space</kbd> Play</span>
-      <span><kbd>P</kbd> Pause</span>
-      <span><kbd>Esc</kbd> Stop</span>
-      <span><kbd>G</kbd> Goto</span>
     </div>
   </div>
 
@@ -1084,8 +1075,8 @@ body {
         <div class="setting-group">
           <label>Timecode Size</label>
           <div class="slider-row">
-            <input type="range" min="2" max="12" step="0.5" value="5" id="tc-size-slider" oninput="setThemeColor('--tc-size', this.value+'rem'); document.getElementById('tc-size-label').textContent=this.value+'rem'">
-            <span class="slider-value" id="tc-size-label">5rem</span>
+            <input type="range" min="2" max="12" step="0.5" value="8" id="tc-size-slider" oninput="setThemeColor('--tc-size', this.value+'rem'); document.getElementById('tc-size-label').textContent=this.value+'rem'">
+            <span class="slider-value" id="tc-size-label">8rem</span>
           </div>
         </div>
       </div>
@@ -1291,6 +1282,13 @@ function connectWS() {
 // ═══════════════════════════════════════════
 // Transport controls
 // ═══════════════════════════════════════════
+function toggleTransport() {
+  const panel = document.getElementById('transport-panel');
+  const toggle = document.getElementById('transport-toggle');
+  panel.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+
 function genCmd(cmd) {
   api('/generator/' + cmd, { method: 'POST' });
 }
@@ -1322,30 +1320,96 @@ function renderCueCards(wsCues) {
     filtered = filtered.filter(c => c.state !== 'passed');
   }
 
-  // Render in timecode order (server already sorts) — no regrouping
-  let html = '';
-  filtered.forEach(c => html += cueCardHTML(c));
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="no-cues">No matching cues.</div>';
+    return;
+  }
 
-  container.innerHTML = html || '<div class="no-cues">No matching cues.</div>';
+  // DOM diffing: update existing cards in place, add/remove as needed
+  const existingCards = container.querySelectorAll('.cue-card');
+  const existingMap = {};
+  existingCards.forEach(card => { existingMap[card.dataset.cueId] = card; });
+
+  const wantedIds = new Set(filtered.map(c => c.id));
+
+  // Remove cards no longer in the filtered list
+  existingCards.forEach(card => {
+    if (!wantedIds.has(card.dataset.cueId)) card.remove();
+  });
+
+  // Update or create cards in order
+  let prevNode = null;
+  filtered.forEach(c => {
+    let card = existingMap[c.id];
+    if (card) {
+      // Update in place
+      updateCueCard(card, c);
+      // Ensure correct order
+      if (prevNode) {
+        if (prevNode.nextElementSibling !== card) {
+          prevNode.after(card);
+        }
+      } else if (container.firstElementChild !== card) {
+        container.prepend(card);
+      }
+    } else {
+      // Create new card
+      card = createCueCard(c);
+      if (prevNode) {
+        prevNode.after(card);
+      } else {
+        container.prepend(card);
+      }
+    }
+    prevNode = card;
+  });
+
+  // Remove any trailing non-cue-card elements (like old "no-cues" divs)
+  while (prevNode && prevNode.nextElementSibling) {
+    prevNode.nextElementSibling.remove();
+  }
 }
 
-function cueCardHTML(c) {
+function createCueCard(c) {
   const deptColor = getDeptColor(c.department_id);
+  const card = document.createElement('div');
+  card.className = 'cue-card state-' + c.state;
+  card.dataset.cueId = c.id;
+  card.innerHTML = `<div class="dept-bar" style="background:${deptColor}"></div>
+    <div class="cue-info">
+      <div class="cue-label"></div>
+      <div class="cue-dept">${esc(c.department)}</div>
+    </div>
+    <div class="cue-tc">${fmtTC(c.trigger_tc)}</div>
+    <div class="cue-countdown"></div>
+    <div class="progress-bg"><div class="progress-fill"></div></div>`;
+  updateCueCard(card, c);
+  return card;
+}
+
+function updateCueCard(card, c) {
+  // Update state class without replacing the whole className
+  const newClass = 'cue-card state-' + c.state;
+  if (card.className !== newClass) card.className = newClass;
+
+  // Update label (with cue number prefix)
+  const labelEl = card.querySelector('.cue-label');
+  const labelHTML = (c.cue_number ? '<span style="color:var(--text-dim);margin-right:0.4rem">' + esc(c.cue_number) + '</span>' : '') + esc(c.label);
+  if (labelEl.innerHTML !== labelHTML) labelEl.innerHTML = labelHTML;
+
+  // Update countdown
+  const cdEl = card.querySelector('.cue-countdown');
+  const cdText = c.state === 'passed' ? '\u2713' : fmtCountdown(c.countdown_sec);
+  if (cdEl.textContent !== cdText) cdEl.textContent = cdText;
+
+  // Update progress bar
   const warnMax = getCueWarnMax(c.department_id, c.id);
   const progress = c.state === 'passed' ? 100 :
     c.state === 'active' ? 100 :
     warnMax > 0 ? Math.max(0, Math.min(100, ((warnMax - c.countdown_sec) / warnMax) * 100)) : 0;
-
-  return `<div class="cue-card state-${c.state}">
-    <div class="dept-bar" style="background:${deptColor}"></div>
-    <div class="cue-info">
-      <div class="cue-label">${c.cue_number ? '<span style="color:var(--text-dim);margin-right:0.4rem">' + esc(c.cue_number) + '</span>' : ''}${esc(c.label)}</div>
-      <div class="cue-dept">${esc(c.department)}</div>
-    </div>
-    <div class="cue-tc">${fmtTC(c.trigger_tc)}</div>
-    <div class="cue-countdown">${c.state === 'passed' ? '&#10003;' : fmtCountdown(c.countdown_sec)}</div>
-    <div class="progress-bg"><div class="progress-fill" style="width:${progress}%;background:${c.state === 'warning' ? 'var(--warning)' : 'var(--accent)'}"></div></div>
-  </div>`;
+  const fillEl = card.querySelector('.progress-fill');
+  fillEl.style.width = progress + '%';
+  fillEl.style.background = c.state === 'warning' ? 'var(--warning)' : 'var(--accent)';
 }
 
 function getDeptColor(id) {
