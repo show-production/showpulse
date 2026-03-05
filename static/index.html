@@ -1907,36 +1907,17 @@ function importShow(event) {
   reader.onload = async (e) => {
     try {
       const data = JSON.parse(e.target.result);
+      const depts = data.departments || [];
+      const cues = data.cues || [];
 
-      // Delete existing departments (cascades to their cues)
-      const existingDepts = await api('/departments');
-      for (const d of existingDepts) {
-        await api('/departments/' + d.id, { method: 'DELETE' });
-      }
-
-      let deptCount = 0;
-      let cueResult = null;
-
-      if (data.departments && data.departments.length > 0) {
-        for (const d of data.departments) {
-          await api('/departments', { method: 'POST', body: d });
-          deptCount++;
-        }
-      }
-
-      if (data.cues && data.cues.length > 0) {
-        cueResult = await api('/cues/import', { method: 'POST', body: data.cues });
-      }
+      const result = await api('/show/import', { method: 'POST', body: { departments: depts, cues: cues } });
 
       refreshManageView();
-      let msg = `Replaced show: ${deptCount} department(s)`;
-      if (cueResult) {
-        msg += `, ${cueResult.imported} cue(s)`;
-        if (cueResult.errors.length > 0) {
-          msg += ` (${cueResult.errors.length} cue error(s))`;
-        }
+      let msg = `Replaced show: ${depts.length} department(s), ${result.imported} cue(s)`;
+      if (result.errors.length > 0) {
+        msg += ` (${result.errors.length} cue error(s))`;
       }
-      showToast(msg, cueResult && cueResult.errors.length > 0 ? 'info' : 'success');
+      showToast(msg, result.errors.length > 0 ? 'info' : 'success');
     } catch (err) {
       showToast('Import failed: ' + err.message, 'error');
     }

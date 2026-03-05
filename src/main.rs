@@ -83,6 +83,7 @@ async fn main() {
         .route("/api/cues", get(api::cues::list))
         .route("/api/cues", post(api::cues::create))
         .route("/api/cues/import", post(api::cues::import))
+        .route("/api/show/import", post(api::cues::import_show))
         .route("/api/cues/{id}", get(api::cues::get))
         .route("/api/cues/{id}", put(api::cues::update))
         .route("/api/cues/{id}", delete(api::cues::delete))

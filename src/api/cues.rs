@@ -6,7 +6,7 @@ use axum::{
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::cue::types::{Cue, CueImportResult};
+use crate::cue::types::{Cue, CueImportResult, ShowData};
 use crate::AppState;
 
 #[derive(Deserialize)]
@@ -46,6 +46,13 @@ pub async fn import(
     Json(cues): Json<Vec<Cue>>,
 ) -> Json<CueImportResult> {
     Json(state.store.import_cues(cues).await)
+}
+
+pub async fn import_show(
+    State(state): State<AppState>,
+    Json(show): Json<ShowData>,
+) -> Json<CueImportResult> {
+    Json(state.store.replace_show(show.departments, show.cues).await)
 }
 
 pub async fn update(
