@@ -1907,6 +1907,13 @@ function importShow(event) {
   reader.onload = async (e) => {
     try {
       const data = JSON.parse(e.target.result);
+
+      // Delete existing departments (cascades to their cues)
+      const existingDepts = await api('/departments');
+      for (const d of existingDepts) {
+        await api('/departments/' + d.id, { method: 'DELETE' });
+      }
+
       let deptCount = 0;
       let cueResult = null;
 
@@ -1922,7 +1929,7 @@ function importShow(event) {
       }
 
       refreshManageView();
-      let msg = `Imported ${deptCount} department(s)`;
+      let msg = `Replaced show: ${deptCount} department(s)`;
       if (cueResult) {
         msg += `, ${cueResult.imported} cue(s)`;
         if (cueResult.errors.length > 0) {

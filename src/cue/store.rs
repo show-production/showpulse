@@ -120,8 +120,8 @@ impl CueStore {
 
         let mut imported = 0;
         let mut errors = Vec::new();
+        let mut valid_cues = Vec::new();
 
-        let mut data = self.data.write().await;
         for (index, mut cue) in cues.into_iter().enumerate() {
             if !dept_ids.contains(&cue.department_id) {
                 errors.push(CueImportError {
@@ -134,12 +134,14 @@ impl CueStore {
                 continue;
             }
             cue.id = Uuid::new_v4();
-            data.cues.push(cue);
+            valid_cues.push(cue);
             imported += 1;
         }
-        drop(data);
 
         if imported > 0 {
+            let mut data = self.data.write().await;
+            data.cues = valid_cues;
+            drop(data);
             self.persist().await;
         }
 
