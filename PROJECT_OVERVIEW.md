@@ -6,7 +6,7 @@ A self-hosted, local-WiFi show management platform for live productions. It read
 
 ## Architecture
 
-**Stack:** Rust + Tokio + Axum (HTTP/WebSocket), JSON file persistence, no database.
+**Stack:** Rust + Tokio + Axum (HTTP/WebSocket), JSON file persistence, no database. Single-page HTML/CSS/JS frontend.
 
 **Runtime flow:**
 1. Timecode sources (LTC/MTC/Generator) write current timecode to `watch` channels
@@ -20,9 +20,38 @@ Timecode Sources --> TimecodeManager --> Countdown Engine --> WsHub --> Crew Bro
                                           CueStore (JSON file)
 ```
 
+## Running the App
+
+```bash
+cargo run
+# Server starts on http://0.0.0.0:8080
+```
+
+- **Local access:** `http://localhost:8080`
+- **LAN access:** `http://<your-ip>:8080` (ensure firewall allows port 8080)
+- **Windows firewall:** `New-NetFirewallRule -DisplayName "ShowPulse" -Direction Inbound -Protocol TCP -LocalPort 8080 -Action Allow`
+
+On first launch with no data file, the app seeds 6 demo departments and 22 cues automatically.
+
+Dependencies: Rust toolchain. On Windows, requires Visual Studio Build Tools with C++ workload.
+
+## Frontend (Web UI)
+
+Single-page app served from `static/index.html` with three tabs:
+
+| Tab | Purpose |
+|-----|---------|
+| **Show** | Live timecode display, transport controls (Play/Pause/Stop/Goto), department filter chips, cue countdown cards grouped by state (Active > Warning > Upcoming > Passed) |
+| **Manage** | Department CRUD (left panel), cue list table (right panel) with department dropdown filter, sortable column headers (Timecode, Label, Department, Warn), add/edit/delete modals |
+| **Settings** | Timecode source selector (Generator/LTC/MTC), frame rate, generator mode, speed, start TC, theme colors, timecode display size, show export/import JSON |
+
+**Keyboard shortcuts (Show tab):** Space = Play, P = Pause, Escape = Stop, G = Focus goto input
+
+**WebSocket:** Auto-connects for real-time timecode updates. Green dot indicator in top-right. Falls back to 1s polling if WebSocket disconnects.
+
 ## Current Implementation Status
 
-### Completed (Phases 1 & 2)
+### Completed
 
 | Component | File(s) | Status |
 |-----------|---------|--------|
@@ -31,30 +60,43 @@ Timecode Sources --> TimecodeManager --> Countdown Engine --> WsHub --> Crew Bro
 | Timecode manager | `src/timecode/mod.rs` | Full: Source switching (LTC/MTC/Generator), unified status API |
 | LTC decoder | `src/timecode/ltc.rs` | Stub only - awaiting `cpal` integration |
 | MTC decoder | `src/timecode/mtc.rs` | Stub only - awaiting `midir` integration |
-| Cue/Department models | `src/cue/types.rs` | Full: Department, Cue, ShowData, CueState, CueStatus |
-| Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments and cues |
+| Cue/Department models | `src/cue/types.rs` | Full: Department, Cue (with serde defaults), ShowData, CueState, CueStatus |
+| Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments and cues, auto-seed on empty store |
 | REST API - Timecode | `src/api/timecode.rs` | Full: GET status, PUT source |
 | REST API - Generator | `src/api/generator.rs` | Full: GET status, PUT config, POST play/pause/stop/goto |
 | REST API - Departments | `src/api/departments.rs` | Full: CRUD (list, create, update, delete) |
-| REST API - Cues | `src/api/cues.rs` | Full: CRUD + department filter |
+| REST API - Cues | `src/api/cues.rs` | Full: CRUD + department filter query param |
 | WebSocket hub | `src/ws/hub.rs` | Full: Broadcast with per-client department filtering, subscribe protocol |
 | Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick, cue state computation, second-boundary broadcast optimization |
-| Config | `src/config.rs` | Basic: port + data file path |
-| Server entrypoint | `src/main.rs` | Full: Axum router with all routes, state wiring, static file fallback |
+| Config | `src/config.rs` | Basic: port (8080) + data file path (showpulse-data.json) |
+| Server entrypoint | `src/main.rs` | Full: Axum router with all routes, state wiring, seed on startup, static file fallback |
+| Web UI - Show view | `static/index.html` | Full: Live timecode, transport controls, department filter chips, cue countdown cards with state animations |
+| Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with sortable columns and department filter dropdown, add/edit/delete modals |
+| Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, theme customization, export/import |
+| Demo seed data | `src/cue/store.rs` | 6 departments (Lighting, Sound, Video, Pyro, Automation, Stage Mgmt) + 22 cues from 00:00:10 to 00:08:00 |
+
+### Cue Data Model
+
+| Field | Type | Required | Default |
+|-------|------|----------|---------|
+| `id` | UUID | No | Auto-generated |
+| `department_id` | UUID | **Yes** | -- |
+| `label` | String | No | "Untitled Cue" |
+| `trigger_tc` | Timecode (HH:MM:SS:FF) | No | 00:00:00:00 |
+| `warn_seconds` | u32 | No | 10 |
+| `notes` | String | No | "" |
 
 ### Not Yet Implemented
 
-| Feature | Plan Reference |
-|---------|---------------|
-| LTC audio decoding | Phase 1.2 - needs `cpal` crate |
-| MTC MIDI decoding | Phase 1.2 - needs `midir` crate |
-| Frontend (Crew view) | Phase 4 - countdown display, department selector, wake lock |
-| Frontend (Admin view) | Phase 5 - cue editor, department CRUD UI, generator controls |
-| Authentication | Security Plan - PIN-based auth, session tokens, rate limiting |
-| CSV/JSON cue import | Phase 2.2 - `POST /api/cues/import` |
-| Multi-show support | Phase 5.1 |
-| Security headers/CORS hardening | Security Plan |
-| QR code onboarding | Phase 5.1 |
+| Feature | Notes |
+|---------|-------|
+| LTC audio decoding | Needs `cpal` crate for audio input |
+| MTC MIDI decoding | Needs `midir` crate for MIDI input |
+| Authentication | PIN-based auth, session tokens, rate limiting |
+| CSV/JSON cue import endpoint | `POST /api/cues/import` |
+| Multi-show support | Show switching/archiving |
+| Security headers/CORS hardening | Production hardening |
+| QR code onboarding | For quick crew device setup |
 
 ## API Endpoints
 
@@ -72,9 +114,9 @@ Timecode Sources --> TimecodeManager --> Countdown Engine --> WsHub --> Crew Bro
 | POST | `/api/departments` | Create department |
 | PUT | `/api/departments/{id}` | Update department |
 | DELETE | `/api/departments/{id}` | Delete department + its cues |
-| GET | `/api/cues` | List cues (optional `?department_id=` filter) |
+| GET | `/api/cues` | List cues (optional `?department_id=` filter), sorted by trigger_tc |
 | GET | `/api/cues/{id}` | Get single cue |
-| POST | `/api/cues` | Create cue |
+| POST | `/api/cues` | Create cue (only `department_id` required) |
 | PUT | `/api/cues/{id}` | Update cue |
 | DELETE | `/api/cues/{id}` | Delete cue |
 | GET | `/ws` | WebSocket endpoint for live countdown data |
@@ -85,17 +127,10 @@ Timecode Sources --> TimecodeManager --> Countdown Engine --> WsHub --> Crew Bro
 2. **Watch channels for timecode** - `tokio::sync::watch` provides latest-value semantics perfect for timecode (readers always get the most recent value, no backpressure).
 3. **Broadcast channel for WebSocket** - `tokio::sync::broadcast` for fan-out to all connected clients.
 4. **Second-boundary optimization** - The countdown engine only broadcasts when the timecode second changes, reducing WebSocket traffic.
-5. **Department filtering** - Clients subscribe to specific departments, receiving only relevant cue data.
+5. **Department filtering** - Clients subscribe to specific departments, receiving only relevant cue data. Available in both Show view (filter chips) and Manage view (dropdown).
 6. **Drop-frame timecode** - Proper 29.97df frame math with correct drop compensation in both directions (to/from total frames).
-
-## Build & Run
-
-```bash
-cargo run
-# Server starts on http://0.0.0.0:8080
-```
-
-Dependencies: Rust toolchain. On Windows, requires Visual Studio Build Tools with C++ workload.
+7. **Auto-seed on empty store** - First launch populates demo data so the app is immediately usable for testing.
+8. **Serde defaults on Cue** - Only `department_id` is mandatory; all other fields have sensible defaults for quick cue creation.
 
 ## Warnings
 
