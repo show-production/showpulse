@@ -48,6 +48,20 @@ impl Default for ShowData {
     }
 }
 
+/// Error detail for a single cue that failed import validation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CueImportError {
+    pub index: usize,
+    pub message: String,
+}
+
+/// Response from the bulk cue import endpoint.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CueImportResult {
+    pub imported: usize,
+    pub errors: Vec<CueImportError>,
+}
+
 /// Cue state relative to current timecode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
