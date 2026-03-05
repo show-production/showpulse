@@ -18,6 +18,8 @@ pub struct TimecodeManager {
     mtc_tc_rx: watch::Receiver<Timecode>,
     /// Generator instance (for sending commands)
     pub generator: Arc<TimecodeGenerator>,
+    /// LTC decoder instance (for device management)
+    pub ltc_decoder: Arc<ltc::LtcDecoder>,
     /// Frame rate
     frame_rate: Arc<RwLock<FrameRate>>,
 }
@@ -29,9 +31,9 @@ impl TimecodeManager {
         let (mtc_tc_tx, mtc_tc_rx) = watch::channel(Timecode::ZERO);
 
         let generator = Arc::new(TimecodeGenerator::new(gen_tc_tx));
+        let ltc_decoder = Arc::new(ltc::LtcDecoder::new(ltc_tc_tx));
 
-        // Initialize LTC and MTC decoders (stubs for now)
-        let _ltc = ltc::LtcDecoder::new(ltc_tc_tx);
+        // MTC decoder (stub for now)
         let _mtc = mtc::MtcDecoder::new(mtc_tc_tx);
 
         Self {
@@ -40,6 +42,7 @@ impl TimecodeManager {
             ltc_tc_rx,
             mtc_tc_rx,
             generator,
+            ltc_decoder,
             frame_rate: Arc::new(RwLock::new(FrameRate::default())),
         }
     }
@@ -61,6 +64,7 @@ impl TimecodeManager {
             TimecodeSource::Generator => {
                 self.generator.status().state == generator::GeneratorState::Running
             }
+            TimecodeSource::Ltc => self.ltc_decoder.is_receiving(),
             _ => tc != Timecode::ZERO, // simplified: assume running if non-zero
         };
         TimecodeStatus {

@@ -85,6 +85,10 @@ async fn main() {
         .route("/api/cues/{id}", get(api::cues::get))
         .route("/api/cues/{id}", put(api::cues::update))
         .route("/api/cues/{id}", delete(api::cues::delete))
+        // LTC
+        .route("/api/ltc/devices", get(api::ltc::list_devices))
+        .route("/api/ltc/device", put(api::ltc::set_device))
+        .route("/api/ltc/stop", post(api::ltc::stop))
         // WebSocket
         .route("/ws", get(ws_handler))
         .with_state(state)
