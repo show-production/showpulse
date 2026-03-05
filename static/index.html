@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ShowPulse</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>&#x23F1;</text></svg>">
 <style>
 /* ── CSS Custom Properties (Theme) ── */
 :root {
@@ -621,6 +622,202 @@ body {
   50% { box-shadow: 0 0 24px var(--active-glow); }
 }
 .cue-card.state-active { animation: active-glow 2s ease-in-out infinite; }
+
+/* ══════════════════════════════════════════
+   DISCONNECTION BANNER (Item 1)
+   ══════════════════════════════════════════ */
+.disconnect-banner {
+  display: none;
+  position: fixed;
+  top: 48px; left: 0; right: 0;
+  z-index: 90;
+  background: var(--danger);
+  color: #fff;
+  text-align: center;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  animation: banner-pulse 2s ease-in-out infinite;
+}
+.disconnect-banner.visible { display: block; }
+@keyframes banner-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.tc-display.disconnected .tc-value {
+  opacity: 0.4;
+  text-shadow: 0 0 30px rgba(255,68,68,0.4);
+}
+
+/* ══════════════════════════════════════════
+   KEYBOARD HINTS (Item 2)
+   ══════════════════════════════════════════ */
+.keyboard-hints {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 0.5rem 0;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+.keyboard-hints kbd {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-label);
+  margin-right: 0.2rem;
+}
+
+/* ══════════════════════════════════════════
+   CONFIRM MODAL (Item 3)
+   ══════════════════════════════════════════ */
+.modal-footer .btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+  font-weight: 600;
+}
+.modal-footer .btn-danger:hover { opacity: 0.9; }
+
+/* ══════════════════════════════════════════
+   TOAST NOTIFICATIONS (Item 12)
+   ══════════════════════════════════════════ */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+.toast {
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  pointer-events: auto;
+  animation: toast-in 0.3s ease-out;
+  max-width: 360px;
+}
+.toast.success { background: var(--accent); color: var(--bg-primary); }
+.toast.error { background: var(--danger); color: #fff; }
+.toast.info { background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════
+   LOADING SPINNER (Item 11)
+   ══════════════════════════════════════════ */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  transition: opacity 0.4s;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-overlay .loading-text {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+/* ══════════════════════════════════════════
+   PASSED CUES TOGGLE (Item 13)
+   ══════════════════════════════════════════ */
+.cue-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+  gap: 0.75rem;
+}
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  transition: all 0.15s;
+}
+.toggle-btn.active { border-color: var(--text-dim); color: var(--text-primary); }
+.toggle-btn:hover { border-color: var(--text-dim); }
+
+/* ══════════════════════════════════════════
+   TRANSPORT TOUCH TARGETS (Item 10)
+   ══════════════════════════════════════════ */
+.transport button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.6rem 1.4rem;
+}
+
+/* ══════════════════════════════════════════
+   CUE TABLE SCROLL (Item 9)
+   ══════════════════════════════════════════ */
+.cue-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ══════════════════════════════════════════
+   SLIDER VALUE LABEL (Item 14)
+   ══════════════════════════════════════════ */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.slider-row input[type="range"] { flex: 1; }
+.slider-value {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-label);
+  min-width: 3.5rem;
+  text-align: right;
+}
+
+/* Speed field suffix (Item 5) */
+.speed-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.speed-row input { flex: 1; }
+.speed-suffix {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
 </style>
 </head>
 <body>
@@ -636,6 +833,18 @@ body {
     ShowPulse <span class="dot" id="ws-dot"></span>
   </div>
 </nav>
+
+<!-- ═══ Disconnection Banner (Item 1) ═══ -->
+<div class="disconnect-banner" id="disconnect-banner">Connection Lost — Reconnecting...</div>
+
+<!-- ═══ Loading Overlay (Item 11) ═══ -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading ShowPulse...</div>
+</div>
+
+<!-- ═══ Toast Container (Item 12) ═══ -->
+<div class="toast-container" id="toast-container"></div>
 
 <!-- ═══ SHOW VIEW ═══ -->
 <div class="view active" id="view-show">
@@ -658,7 +867,19 @@ body {
     </div>
   </div>
 
+  <!-- Keyboard Hints (Item 2) -->
+  <div class="keyboard-hints">
+    <span><kbd>Space</kbd> Play</span>
+    <span><kbd>P</kbd> Pause</span>
+    <span><kbd>Esc</kbd> Stop</span>
+    <span><kbd>G</kbd> Goto</span>
+  </div>
+
   <div class="dept-filters" id="dept-filters"></div>
+
+  <div class="cue-controls">
+    <button class="toggle-btn active" id="toggle-passed" onclick="togglePassedCues()">Show Passed</button>
+  </div>
 
   <div id="cue-list"></div>
 </div>
@@ -684,18 +905,20 @@ body {
         </div>
       </div>
       <div class="panel-body" style="padding:0;">
+        <div class="cue-table-wrap">
         <table class="cue-table">
           <thead>
             <tr>
               <th class="sortable" onclick="sortCueTable('trigger_tc')" id="sort-trigger_tc">Timecode ▲</th>
               <th class="sortable" onclick="sortCueTable('label')" id="sort-label">Label</th>
               <th class="sortable" onclick="sortCueTable('department')" id="sort-department">Department</th>
-              <th class="sortable" onclick="sortCueTable('warn_seconds')" id="sort-warn_seconds">Warn</th>
+              <th class="sortable" onclick="sortCueTable('warn_seconds')" id="sort-warn_seconds" title="Warning lead time in seconds before cue trigger">Lead Time</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="cue-table-body"></tbody>
         </table>
+        </div>
       </div>
     </div>
   </div>
@@ -711,11 +934,11 @@ body {
           <label>Source</label>
           <div class="radio-group" id="source-radio">
             <input type="radio" name="source" value="generator" id="src-gen" checked>
-            <label for="src-gen" class="selected" onclick="setSource('generator')">Generator</label>
+            <label for="src-gen" class="selected" onclick="setSource('generator', this)">Generator</label>
             <input type="radio" name="source" value="ltc" id="src-ltc">
-            <label for="src-ltc" onclick="setSource('ltc')">LTC</label>
+            <label for="src-ltc" onclick="setSource('ltc', this)">LTC</label>
             <input type="radio" name="source" value="mtc" id="src-mtc">
-            <label for="src-mtc" onclick="setSource('mtc')">MTC</label>
+            <label for="src-mtc" onclick="setSource('mtc', this)">MTC</label>
           </div>
         </div>
         <div class="setting-group" id="ltc-device-group" style="display:none;">
@@ -762,7 +985,10 @@ body {
         </div>
         <div class="setting-group">
           <label>Speed</label>
-          <input type="number" id="set-speed" value="1.0" step="0.1" min="0.1" max="10" onchange="updateGenConfig()">
+          <div class="speed-row">
+            <input type="number" id="set-speed" value="1.0" step="0.1" min="0.1" max="10" onchange="updateGenConfig()">
+            <span class="speed-suffix">x</span>
+          </div>
         </div>
       </div>
     </div>
@@ -773,29 +999,37 @@ body {
         <div class="setting-group">
           <label>Background</label>
           <div class="color-row">
-            <input type="color" value="#0a0a0f" onchange="setThemeColor('--bg-primary', this.value)">
+            <input type="color" value="#0a0a0f" oninput="setThemeColor('--bg-primary', this.value)">
             <input type="text" value="#0a0a0f" onchange="setThemeColor('--bg-primary', this.value)" data-var="--bg-primary">
           </div>
         </div>
         <div class="setting-group">
           <label>Accent Color</label>
           <div class="color-row">
-            <input type="color" value="#00ff88" onchange="setThemeColor('--accent', this.value); setThemeColor('--active-glow', this.value+'40')">
+            <input type="color" value="#00ff88" oninput="setThemeColor('--accent', this.value); setThemeColor('--active-glow', this.value+'40')">
             <input type="text" value="#00ff88" onchange="setThemeColor('--accent', this.value)" data-var="--accent">
           </div>
         </div>
         <div class="setting-group">
           <label>Warning Color</label>
           <div class="color-row">
-            <input type="color" value="#ffaa00" onchange="setThemeColor('--warning', this.value); setThemeColor('--warning-glow', this.value+'40')">
+            <input type="color" value="#ffaa00" oninput="setThemeColor('--warning', this.value); setThemeColor('--warning-glow', this.value+'40')">
             <input type="text" value="#ffaa00" onchange="setThemeColor('--warning', this.value)" data-var="--warning">
           </div>
         </div>
         <div class="setting-group">
           <label>Timecode Size</label>
-          <input type="range" min="2" max="12" step="0.5" value="5" oninput="setThemeColor('--tc-size', this.value+'rem')">
+          <div class="slider-row">
+            <input type="range" min="2" max="12" step="0.5" value="5" id="tc-size-slider" oninput="setThemeColor('--tc-size', this.value+'rem'); document.getElementById('tc-size-label').textContent=this.value+'rem'">
+            <span class="slider-value" id="tc-size-label">5rem</span>
+          </div>
         </div>
+      </div>
+    </div>
 
+    <div class="panel">
+      <div class="panel-header"><h3>Show Data</h3></div>
+      <div class="panel-body" style="padding:1rem;">
         <div class="data-actions">
           <button onclick="exportShow()">Export Show JSON</button>
           <button onclick="document.getElementById('import-file').click()">Import Show JSON</button>
@@ -871,6 +1105,23 @@ body {
   </div>
 </div>
 
+<!-- ═══ Confirm Modal (Item 3) ═══ -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal" style="width:360px;">
+    <div class="modal-header">
+      <h3 id="confirm-modal-title">Confirm</h3>
+      <button class="icon-btn" onclick="closeConfirm(false)">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-modal-message" style="font-size:0.9rem;color:var(--text-primary);"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeConfirm(false)">Cancel</button>
+      <button class="btn-danger" id="confirm-modal-ok" onclick="closeConfirm(true)">Delete</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════
 // State
@@ -881,6 +1132,8 @@ let activeDeptFilters = new Set(); // empty = show all
 let ws = null;
 let wsConnected = false;
 let cueTableSort = { key: 'trigger_tc', asc: true };
+let showPassedCues = true;
+let confirmResolve = null; // for confirm modal promise
 
 // ═══════════════════════════════════════════
 // View switching
@@ -905,6 +1158,9 @@ const api = (path, opts = {}) => {
   }
   return fetch('/api' + path, opts).then(r => {
     if (r.status === 204) return null;
+    if (!r.ok) {
+      return r.text().then(t => { throw new Error(t || r.statusText); });
+    }
     return r.json();
   });
 };
@@ -938,11 +1194,15 @@ function connectWS() {
   ws.onopen = () => {
     wsConnected = true;
     document.getElementById('ws-dot').classList.add('connected');
+    document.getElementById('disconnect-banner').classList.remove('visible');
+    document.querySelector('.tc-display').classList.remove('disconnected');
   };
 
   ws.onclose = () => {
     wsConnected = false;
     document.getElementById('ws-dot').classList.remove('connected');
+    document.getElementById('disconnect-banner').classList.add('visible');
+    document.querySelector('.tc-display').classList.add('disconnected');
     setTimeout(connectWS, 2000);
   };
 
@@ -1006,7 +1266,7 @@ function renderCueCards(wsCues) {
     html += '<div class="cue-section-label">Upcoming</div>';
     groups.upcoming.forEach(c => html += cueCardHTML(c));
   }
-  if (groups.passed.length) {
+  if (groups.passed.length && showPassedCues) {
     html += '<div class="cue-section-label">Passed</div>';
     groups.passed.forEach(c => html += cueCardHTML(c));
   }
@@ -1143,7 +1403,7 @@ function renderCueTable() {
   ['trigger_tc', 'label', 'department', 'warn_seconds'].forEach(k => {
     const th = document.getElementById('sort-' + k);
     if (!th) return;
-    const base = { trigger_tc: 'Timecode', label: 'Label', department: 'Department', warn_seconds: 'Warn' }[k];
+    const base = { trigger_tc: 'Timecode', label: 'Label', department: 'Department', warn_seconds: 'Lead Time' }[k];
     th.textContent = k === cueTableSort.key ? base + (cueTableSort.asc ? ' ▲' : ' ▼') : base;
   });
 
@@ -1205,18 +1465,29 @@ async function saveDept() {
     name: document.getElementById('dept-name').value,
     color: document.getElementById('dept-color').value,
   };
-  if (id) {
-    await api('/departments/' + id, { method: 'PUT', body });
-  } else {
-    await api('/departments', { method: 'POST', body });
+  try {
+    if (id) {
+      await api('/departments/' + id, { method: 'PUT', body });
+    } else {
+      await api('/departments', { method: 'POST', body });
+    }
+    closeModal('dept-modal');
+    showToast(id ? 'Department updated' : 'Department created', 'success');
+  } catch (e) {
+    showToast('Failed to save department: ' + e.message, 'error');
   }
-  closeModal('dept-modal');
   refreshManageView();
 }
 
 async function deleteDept(id) {
-  if (!confirm('Delete this department and all its cues?')) return;
-  await api('/departments/' + id, { method: 'DELETE' });
+  const ok = await showConfirm('Delete Department', 'Delete this department and all its cues?');
+  if (!ok) return;
+  try {
+    await api('/departments/' + id, { method: 'DELETE' });
+    showToast('Department deleted', 'success');
+  } catch (e) {
+    showToast('Failed to delete department', 'error');
+  }
   refreshManageView();
 }
 
@@ -1261,30 +1532,41 @@ async function saveCue() {
     warn_seconds: parseInt(document.getElementById('cue-warn').value) || 10,
     notes: document.getElementById('cue-notes').value,
   };
-  if (id) {
-    await api('/cues/' + id, { method: 'PUT', body });
-  } else {
-    await api('/cues', { method: 'POST', body });
+  try {
+    if (id) {
+      await api('/cues/' + id, { method: 'PUT', body });
+    } else {
+      await api('/cues', { method: 'POST', body });
+    }
+    closeModal('cue-modal');
+    showToast(id ? 'Cue updated' : 'Cue created', 'success');
+  } catch (e) {
+    showToast('Failed to save cue: ' + e.message, 'error');
   }
-  closeModal('cue-modal');
   refreshManageView();
 }
 
 async function deleteCue(id) {
-  if (!confirm('Delete this cue?')) return;
-  await api('/cues/' + id, { method: 'DELETE' });
+  const ok = await showConfirm('Delete Cue', 'Delete this cue?');
+  if (!ok) return;
+  try {
+    await api('/cues/' + id, { method: 'DELETE' });
+    showToast('Cue deleted', 'success');
+  } catch (e) {
+    showToast('Failed to delete cue', 'error');
+  }
   refreshManageView();
 }
 
 // ═══════════════════════════════════════════
 // Settings
 // ═══════════════════════════════════════════
-function setSource(source) {
+function setSource(source, el) {
   api('/timecode/source', { method: 'PUT', body: { source } });
   document.getElementById('tc-source').textContent = source.charAt(0).toUpperCase() + source.slice(1);
   // Update radio visual
   document.querySelectorAll('#source-radio label').forEach(l => l.classList.remove('selected'));
-  event.target.classList.add('selected');
+  if (el) el.classList.add('selected');
   // Show/hide device selectors
   const ltcGroup = document.getElementById('ltc-device-group');
   const mtcGroup = document.getElementById('mtc-device-group');
@@ -1490,14 +1772,68 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ═══════════════════════════════════════════
+// Toast notifications (Item 12)
+// ═══════════════════════════════════════════
+function showToast(message, type = 'info', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+// ═══════════════════════════════════════════
+// Confirm modal (Item 3)
+// ═══════════════════════════════════════════
+function showConfirm(title, message) {
+  return new Promise(resolve => {
+    confirmResolve = resolve;
+    document.getElementById('confirm-modal-title').textContent = title;
+    document.getElementById('confirm-modal-message').textContent = message;
+    document.getElementById('confirm-modal').classList.add('open');
+  });
+}
+
+function closeConfirm(result) {
+  document.getElementById('confirm-modal').classList.remove('open');
+  if (confirmResolve) {
+    confirmResolve(result);
+    confirmResolve = null;
+  }
+}
+
+// ═══════════════════════════════════════════
+// Passed cues toggle (Item 13)
+// ═══════════════════════════════════════════
+function togglePassedCues() {
+  showPassedCues = !showPassedCues;
+  const btn = document.getElementById('toggle-passed');
+  btn.classList.toggle('active', showPassedCues);
+  btn.textContent = showPassedCues ? 'Show Passed' : 'Hide Passed';
+}
+
+// ═══════════════════════════════════════════
 // Init
 // ═══════════════════════════════════════════
 loadTheme();
-loadDepartments().then(() => {
-  loadCues().then(() => {
+(async function init() {
+  try {
+    await loadDepartments();
+    await loadCues();
     renderDeptFilters();
-  });
-});
+  } catch (e) {
+    showToast('Failed to load initial data', 'error');
+  }
+  // Hide loading overlay
+  const overlay = document.getElementById('loading-overlay');
+  overlay.classList.add('hidden');
+  setTimeout(() => overlay.remove(), 500);
+})();
 connectWS();
 
 // Poll timecode status when WS is not delivering (fallback)
