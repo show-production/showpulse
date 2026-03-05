@@ -12,12 +12,25 @@ pub struct Department {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Cue {
+    #[serde(default)]
     pub id: Uuid,
     pub department_id: Uuid,
+    #[serde(default = "default_cue_label")]
     pub label: String,
+    #[serde(default)]
     pub trigger_tc: Timecode,
+    #[serde(default = "default_warn_seconds")]
     pub warn_seconds: u32,
+    #[serde(default)]
     pub notes: String,
+}
+
+fn default_cue_label() -> String {
+    "Untitled Cue".to_string()
+}
+
+fn default_warn_seconds() -> u32 {
+    10
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
