@@ -61,7 +61,7 @@ Single-page app served from `static/index.html` with three tabs:
 | LTC decoder | `src/timecode/ltc.rs` | Full: cpal audio capture, bi-phase zero-crossing detection, 80-bit LTC frame extraction, BCD timecode parsing, sync word (0x3FFD). Dedicated OS thread. Device listing and selection API |
 | MTC decoder | `src/timecode/mtc.rs` | Full: midir MIDI input, quarter-frame accumulation (8 messages → full TC), full-frame SysEx parsing, frame rate detection. Dedicated OS thread. Port listing and selection API |
 | Cue/Department models | `src/cue/types.rs` | Full: Department, Cue (with serde defaults + cue_number), ShowData, CueState, CueStatus, CueImportError, CueImportResult |
-| Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments and cues, bulk import with validation, auto-generated cue numbers (Q1, Q2...), auto-seed on empty store |
+| Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments and cues, bulk import (replaces existing cues) with validation, auto-generated cue numbers (Q1, Q2...), auto-seed on empty store |
 | REST API - Timecode | `src/api/timecode.rs` | Full: GET status, PUT source |
 | REST API - Generator | `src/api/generator.rs` | Full: GET status, PUT config, POST play/pause/stop/goto |
 | REST API - Departments | `src/api/departments.rs` | Full: CRUD (list, create, update, delete) |
@@ -125,7 +125,7 @@ Single-page app served from `static/index.html` with three tabs:
 | GET | `/api/cues` | List cues (optional `?department_id=` filter), sorted by trigger_tc |
 | GET | `/api/cues/{id}` | Get single cue |
 | POST | `/api/cues` | Create cue (only `department_id` required; `cue_number` auto-generated if empty) |
-| POST | `/api/cues/import` | Bulk import cues (validates department_id, returns `{imported, errors}`) |
+| POST | `/api/cues/import` | Bulk import cues — replaces all existing cues (validates department_id, returns `{imported, errors}`) |
 | PUT | `/api/cues/{id}` | Update cue |
 | DELETE | `/api/cues/{id}` | Delete cue |
 | GET | `/ws` | WebSocket endpoint for live countdown data |
@@ -158,7 +158,7 @@ midir = "0.10"       # MIDI input for MTC decoding
 8. **Serde defaults on Cue** - Only `department_id` is mandatory; all other fields have sensible defaults for quick cue creation.
 9. **Dedicated OS threads for audio/MIDI** - cpal's `Stream` and midir's connection are `!Send`, so they run on their own OS threads with command channels for control.
 10. **Per-department cue state tracking** - A cue stays "active" until the next cue in the same department triggers, reflecting real show operations where each department works independently.
-11. **Bulk import with single persist** - `POST /api/cues/import` validates and inserts all cues in one write + one `persist()` call, far more efficient than N individual API calls.
+11. **Bulk import replaces existing data** - `POST /api/cues/import` clears all existing cues and replaces with the imported set. `importShow()` deletes all departments (cascading to cues) before creating new ones. This ensures a clean slate on every import.
 12. **Auto-generated cue numbers** - Cues receive Q1, Q2, Q3... numbers automatically on creation if no custom number is provided, editable afterward.
 
 ## Build Warnings

@@ -30,7 +30,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 | UI/UX: Speed suffix, live color preview, TC size slider label | Done |
 | Cue state: active until replaced by next same-department cue | Done |
 | Ready / 3-2-1 / Go countdown visualization | Done |
-| Bulk cue import (JSON + CSV with column aliases, dept name resolution) | Done |
+| Bulk cue import (JSON + CSV, replaces existing, dept name resolution) | Done |
 | Documentation (README, GETTING_STARTED, PROJECT_OVERVIEW, plans) | Done |
 
 ### Completed Phases
@@ -41,7 +41,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 **Phase 3 — UI/UX Improvements (15 items):** Disconnection banner, keyboard hints, confirm modals replacing native `confirm()`, "Lead Time" column rename, speed suffix, data panel separation, `setSource()` fix, table scroll, touch targets, loading spinner, toast notifications, passed cues toggle, TC size label, live color preview, favicon.
 
-**Phase 4 — CSV/JSON Cue Import:** `POST /api/cues/import` bulk endpoint with department validation, single persist, frontend CSV parser with column aliases, JSON array/wrapper support, import button in Manage view, updated `importShow()` to use bulk endpoint.
+**Phase 4 — CSV/JSON Cue Import:** `POST /api/cues/import` bulk endpoint that replaces all existing cues, department validation, single persist. Frontend CSV parser with column aliases, JSON array/wrapper support, import button in Manage view. `importShow()` deletes all existing departments+cues before importing new ones.
 
 **Phase 5 — User Feedback Items:**
 1. Sticky timecode display + transport at top of Show view
@@ -131,8 +131,8 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 - [x] Manual test: `cargo run` → browser at `http://localhost:8080`
 - [x] LTC: test with LTC audio from a generator app or DAW
 - [x] MTC: test with MIDI loopback or DAW sending MTC
-- [x] CSV import: test with 72-cue awards show file (`test-import-cues.csv`)
-- [x] JSON import: test with 72-cue show file (`test-import-show.json`)
+- [x] CSV import: test with 30-cue show file (`test-import-cues.csv`)
+- [x] JSON import: test with 30-cue show file (`test-import-show.json`)
 - [x] Each phase committed and pushed to GitHub
 
 ## Commit Strategy
