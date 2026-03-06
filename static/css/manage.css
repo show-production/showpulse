@@ -107,7 +107,7 @@
   font-size: var(--font-size-md);
 }
 .cue-table th {
-  text-align: left;
+  text-align: start;
   padding: 0.5rem 0.75rem;
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -138,7 +138,7 @@
 .cue-table .actions-cell {
   display: flex;
   gap: var(--gap-xs);
-  justify-content: flex-end;
+  justify-content: end;
 }
 .cue-table th.sortable { cursor: pointer; user-select: none; }
 .cue-table th.sortable:hover { color: var(--text-primary); }
