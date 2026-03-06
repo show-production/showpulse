@@ -369,6 +369,7 @@ ShowPulse runs on a **local, trusted WiFi network** (production VLAN or dedicate
 | 9 | Dashboard v2 | 5-section layout, stacked decks, animated Ready/Go zone, cue navigation, Prev/Next, scroll-fold | **Done** |
 | 10 | Testing | 71 unit & integration tests for timecode, store, API endpoints | **Done** |
 | 10.5 | Cue field expansion | Duration, armed, color, continue_mode, post_wait on Cue | **Done** |
+| 10.6 | Go state + ReadyGo polish | Backend CueState::Go, traffic-light text, progress bar 0→100%, smooth DOM transitions | **Done** |
 | 11 | Authentication | PIN-based auth, SessionStore, require_auth middleware | **Done** |
 | 12 | Security hardening | CORS, body limit, concurrency limit, security headers, input validation | **Done** |
 | 13 | Polish & packaging | Multi-show, generator presets, print view, portable dist | Planned |

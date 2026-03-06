@@ -33,7 +33,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 | Bulk cue import (JSON + CSV, replaces existing, dept name resolution) | Done |
 | Documentation (README, GETTING_STARTED, PROJECT_OVERVIEW, plans) | Done |
 | Show view clarity: passed count badge, active strips, uniform cards | Done |
-| Traffic-light Ready/Go colors (red→orange→green) | Done |
+| Traffic-light Ready/Go colors on text+digits+bar (red→orange→green) | Done |
 | Timer vertical layout (meta+timer row, controls row below) | Done |
 | Ready/Go two-element layout (READY + digit, fixed height, GO! with dept name) | Done |
 | Frame-accurate timecode broadcast (10Hz with cached cue states) | Done |
@@ -86,17 +86,20 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 **Phase 9 — Ready/Go & Broadcast Polish:**
 1. Ready/Go two-element countdown: READY label stays visible while 3→2→1 digits appear alongside (both 1.4rem, fixed 2.2rem row height)
 2. GO! shows department name: "GO! — Sound" in green, replaces READY label at zero
-3. Traffic-light digit colors: red-orange (3) → orange (2) → yellow-green (1) → green (GO!)
+3. Traffic-light colors on READY text, digits, and progress bar: red (>3s) → orange (3) → yellow (2) → green (1) → green (GO!)
 4. Fixed-height countdown row prevents layout shifts during state transitions
 5. Frame-accurate timecode: countdown engine broadcasts every 100ms tick (was second-boundary only), cue states cached and recomputed on second change
 6. Scroll-fold space collapse: above-timer sections now use max-height:0 + overflow:hidden transition (was opacity-only, leaving dead space)
+7. Backend-driven `CueState::Go`: engine emits Go state for 2s after trigger, frontend uses single unified `renderReadyGo()` code path
+8. Progress bar fills 0%→100% as cue approaches trigger
+9. In-place DOM updates during 3-2-1 countdown preserve CSS transitions (no innerHTML rebuilds)
 
 ---
 
 ## Phase 10: Unit & Integration Tests ✅ Done
 **Goal:** Establish test coverage for critical logic.
 
-71 tests implemented:
+73 tests implemented:
 - Unit tests in `src/timecode/types.rs`: round-trip frame math, drop-frame edge cases, parse/display, add_frames, to_seconds_f64
 - Unit tests in `src/cue/store.rs`: CRUD, cascading delete, sorting, filtering, bulk import, cue numbers, persistence round-trip
 - Integration tests in `tests/api.rs`: HTTP endpoint tests for departments and cues CRUD, bulk import, status codes
@@ -110,6 +113,18 @@ New fields on `Cue`: `duration` (Option\<u32\>), `armed` (bool), `color` (Option
 New `ContinueMode` enum: Stop, AutoContinue, AutoFollow.
 Updated `CueStatus` broadcast: includes `armed`, `duration`, `color`, `elapsed_sec`.
 Countdown engine: filters disarmed cues, duration-based Passed transition, elapsed_sec computation.
+
+---
+
+## Phase 10.6: Backend-Driven Go State + ReadyGo Polish ✅ Done
+**Goal:** Fix GO! visual inconsistency and polish ReadyGo rendering.
+
+1. **Backend Go state**: Added `CueState::Go` to state machine. Countdown engine emits `Go` for 2 seconds after trigger (`GO_HOLD_SECONDS`), eliminating frontend race conditions
+2. **Progress bar direction**: Fixed to fill 0%→100% (was inverted 100%→0%) in both ReadyGo zone and upcoming flow cards
+3. **Traffic-light READY text**: Status text color now follows the same red→orange→yellow→green sequence as digits and progress bar
+4. **Smooth DOM transitions**: ReadyGo zone uses in-place DOM updates during 3-2-1 countdown instead of full innerHTML rebuilds, preserving CSS transitions on progress bar
+5. **Frontend cleanup**: Removed `renderGoFlash()`, `readygoCueId`, `readygoGoTimer` globals — no longer needed with backend-driven Go state
+6. Mock data files updated with all new cue fields (duration, armed, color, continue_mode, post_wait)
 
 ---
 
@@ -157,7 +172,7 @@ Remaining: rate limiting on login endpoint, CSP headers
 ## Verification Checklist
 
 - [x] `cargo build` — compiles without errors
-- [x] `cargo test` — 71 tests pass
+- [x] `cargo test` — 73 tests pass
 - [x] Manual test: `cargo run` → browser at `http://localhost:8080`
 - [x] LTC: test with LTC audio from a generator app or DAW
 - [x] MTC: test with MIDI loopback or DAW sending MTC

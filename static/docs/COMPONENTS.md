@@ -71,8 +71,11 @@
 - **HTML**: `<div id="flow-readygo">`
 - **JS**: `renderReadyGo()` in `show.js`
 - **CSS**: `show.css` — `.flow-readygo`, `.readygo-status`, `.readygo-digit`
-- **State**: `readygoLastValue`, `readygoGoTimer`
+- **State**: `readygoLastValue` (tracks digit/state transitions), `container.dataset.cueId` (tracks current cue for DOM reuse)
 - **Animations**: Pop (digit appears), shake (digit=1), flash (GO!)
+- **Rendering**: Initial DOM built on cue change; in-place updates for digit/color/progress transitions (preserves CSS transitions)
+- **Traffic-light**: READY text, digits, and progress bar all follow red → orange → yellow → green → GO! color sequence
+- **Progress bar**: Fills 0% → 100% as cue approaches trigger (not draining)
 
 ### UpcomingList
 - **Visual**: Scrollable list of FlowCards for upcoming cues

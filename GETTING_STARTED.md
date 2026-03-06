@@ -93,7 +93,7 @@ The main operational view for live shows. The dashboard is organized into clear 
 1. **Passed cues badge** (top) — small pill showing "N passed". Click to expand a dropdown listing all passed cues with department colors and timecodes.
 2. **Active cue strips** — compact single-line rows for currently triggered cues, one per department. Green dept-colored left border with checkmark and label.
 3. **Timer + Controls** (center) — large timecode display with meta info (state/fps/source) on the left, transport controls below: Prev/Play/Pause/Stop/Next + Goto timecode input.
-4. **Ready/Go zone** — dedicated countdown for the next imminent cue. "READY" stays visible in red while countdown digits (3, 2, 1) appear alongside with traffic-light colors (red-orange→orange→yellow-green). At zero: "GO! — Department" in green with flash effect. Fixed-height layout with no size jumps.
+4. **Ready/Go zone** — dedicated countdown for the next imminent cue. "READY" text and progress bar follow traffic-light colors throughout (red→orange→yellow→green). Countdown digits (3, 2, 1) appear alongside with matching colors. At zero: "GO! — Department" in green with flash effect. Progress bar fills from 0% to 100%. Backend-driven Go state ensures reliable 2-second GO! display. Fixed-height layout with no size jumps, smooth in-place DOM updates.
 5. **Coming cues** (bottom) — scrollable list of upcoming cues with countdown timers and progress bars. All cards are the same size — state is shown through color and opacity only (no layout shifts).
 
 **Interactions:**

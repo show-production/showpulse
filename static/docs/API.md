@@ -248,5 +248,6 @@ WS /ws
 |-------|---------|
 | `upcoming` | Not yet in warning range |
 | `warning` | Within warn_seconds of trigger |
-| `active` | Triggered (past trigger TC, after GO hold delay) |
+| `go` | Triggered — held for 2 seconds for GO! animation |
+| `active` | Past trigger TC + GO hold delay, still running |
 | `passed` | Next same-department cue has triggered, or duration expired |
