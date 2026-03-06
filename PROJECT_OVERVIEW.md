@@ -60,7 +60,7 @@ Single-page app served from `static/index.html` with three tabs:
 | Timecode manager | `src/timecode/mod.rs` | Full: Source switching (LTC/MTC/Generator), unified status API, device management access |
 | LTC decoder | `src/timecode/ltc.rs` | Full: cpal audio capture, bi-phase zero-crossing detection, 80-bit LTC frame extraction, BCD timecode parsing, sync word (0x3FFD). Dedicated OS thread. Device listing and selection API |
 | MTC decoder | `src/timecode/mtc.rs` | Full: midir MIDI input, quarter-frame accumulation (8 messages → full TC), full-frame SysEx parsing, frame rate detection. Dedicated OS thread. Port listing and selection API |
-| Cue/Department models | `src/cue/types.rs` | Full: Department, Cue (with serde defaults + cue_number + duration/armed/color/continue_mode/post_wait), ContinueMode enum, ShowData, CueState, CueStatus (with armed/duration/color/elapsed_sec), CueImportError, CueImportResult |
+| Cue/Department models | `src/cue/types.rs` | Full: Department, Cue (with serde defaults + cue_number + duration/armed/color/continue_mode/post_wait), ContinueMode enum, ShowData, CueState (Upcoming/Warning/Go/Active/Passed), CueStatus (with armed/duration/color/elapsed_sec), CueImportError, CueImportResult |
 | Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments and cues, bulk import (replaces existing cues) with validation, auto-generated cue numbers (Q1, Q2...), input sanitization (string clamping, color validation, post_wait clamping), auto-seed on empty store |
 | REST API - Timecode | `src/api/timecode.rs` | Full: GET status, PUT source |
 | REST API - Generator | `src/api/generator.rs` | Full: GET status, PUT config, POST play/pause/stop/goto |
@@ -69,11 +69,11 @@ Single-page app served from `static/index.html` with three tabs:
 | REST API - LTC | `src/api/ltc.rs` | Full: GET devices, PUT device (select + start), POST stop |
 | REST API - MTC | `src/api/mtc.rs` | Full: GET devices, PUT device (select + start), POST stop |
 | WebSocket hub | `src/ws/hub.rs` | Full: Broadcast with per-client department filtering, subscribe protocol |
-| Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick with frame-accurate broadcast, per-department cue state tracking (active until replaced by next dept cue), disarmed cue filtering, duration-based Passed transition, elapsed_sec computation, GO_HOLD_SECONDS delay, cached cue states with second-boundary recomputation, 60s passed-cue cleanup |
+| Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick with frame-accurate broadcast, per-department cue state tracking (active until replaced by next dept cue), disarmed cue filtering, duration-based Passed transition, elapsed_sec computation, backend-driven Go state (2s `GO_HOLD_SECONDS` hold before Active), cached cue states with second-boundary recomputation, 60s passed-cue cleanup |
 | Config | `src/config.rs` | Full: port, bind_address, data_file, optional PIN — all via env vars (`SHOWPULSE_PORT`, `SHOWPULSE_BIND`, `SHOWPULSE_DATA_FILE`, `SHOWPULSE_PIN`) |
 | Authentication | `src/auth.rs` | Full: PIN-based auth with `SessionStore`, `require_auth` middleware (protects POST/PUT/DELETE, passes GET), Bearer token or `?token=` query param |
 | Server entrypoint | `src/main.rs` | Full: Axum router with 25 API routes + WS, auth middleware, CORS (same-origin), body limit (1MB), concurrency limit (50), security headers, state wiring, seed on startup, static file fallback |
-| Web UI - Show view | `static/index.html` | Full: Clean dashboard with passed cues count badge (expandable dropdown), active cue strips (compact dept-colored rows), centered timer with 2-row transport + Prev/Next, animated Ready/Go zone (READY + digit two-element layout, fixed height, traffic-light colors, GO! with dept name), scrollable coming cues with uniform-size cards (color-only tier differentiation). Click-to-goto on cue cards/strips/passed items, Prev/Next cue navigation, scroll-fold collapses above-timer sections. Frame-accurate 10Hz timecode. DOM-diffed cards, department filters, passed cues toggle, disconnection banner |
+| Web UI - Show view | `static/index.html` | Full: Clean dashboard with passed cues count badge (expandable dropdown), active cue strips (compact dept-colored rows), centered timer with 2-row transport + Prev/Next, animated Ready/Go zone (READY + digit two-element layout, fixed height, traffic-light colors on text+digits+progress bar, GO! with dept name, backend-driven Go state, in-place DOM updates for smooth transitions, progress bar fills 0%→100%), scrollable coming cues with uniform-size cards (color-only tier differentiation). Click-to-goto on cue cards/strips/passed items, Prev/Next cue navigation, scroll-fold collapses above-timer sections. Frame-accurate 10Hz timecode. DOM-diffed cards, department filters, passed cues toggle, disconnection banner |
 | Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with # column + sortable headers + department filter, bulk CSV/JSON import, add/edit/delete modals with cue number field |
 | Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show data export/import |
 | Web UI - UX polish | `static/index.html` | Full: Toast notifications, confirm modals (replaces native confirm), loading spinner, responsive table scroll, 44px touch targets, favicon, DOM diffing for flicker-free cue updates |
@@ -102,7 +102,7 @@ Single-page app served from `static/index.html` with three tabs:
 
 | Feature | Notes |
 |---------|-------|
-| Unit & integration tests | 71 tests: Timecode unit tests, CueStore unit tests, REST endpoint integration tests (`tests/api.rs`) |
+| Unit & integration tests | 73 tests: Timecode unit tests, CueStore unit tests, REST endpoint integration tests (`tests/api.rs`) |
 | PIN authentication | `src/auth.rs` — SessionStore, `require_auth` middleware, Bearer token / `?token=` query param. ENV: `SHOWPULSE_PIN` |
 | QR code onboarding | `GET /api/qr` — SVG QR code with server URL for crew devices |
 | Security hardening | CORS same-origin, body limit (1MB), concurrency limit (50), WS client limit (100), security headers |

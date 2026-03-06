@@ -454,6 +454,103 @@ async fn import_cues_endpoint() {
     assert_eq!(state.store.list_cues(None).await.len(), 2);
 }
 
+// ── Cue with all fields populated ──
+
+#[tokio::test]
+async fn create_cue_with_all_fields() {
+    let (state, _tmp) = test_state();
+    let dept = state
+        .store
+        .create_department(Department {
+            id: uuid::Uuid::nil(),
+            name: "Pyro".to_string(),
+            color: "#ff4400".to_string(),
+        })
+        .await;
+
+    let resp = app(state)
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/api/cues")
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    serde_json::to_string(&serde_json::json!({
+                        "department_id": dept.id,
+                        "cue_number": "PY1",
+                        "label": "CO2 jets — stage edge",
+                        "trigger_tc": Timecode::new(0, 3, 0, 0),
+                        "warn_seconds": 12,
+                        "notes": "3-second burst",
+                        "duration": 3,
+                        "armed": true,
+                        "color": "#ffdd00",
+                        "continue_mode": "auto_continue",
+                        "post_wait": 2.5
+                    }))
+                    .unwrap(),
+                ))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status(), StatusCode::CREATED);
+    let body = resp.into_body().collect().await.unwrap().to_bytes();
+    let cue: Cue = serde_json::from_slice(&body).unwrap();
+    assert_eq!(cue.cue_number, "PY1");
+    assert_eq!(cue.label, "CO2 jets — stage edge");
+    assert_eq!(cue.warn_seconds, 12);
+    assert_eq!(cue.duration, Some(3));
+    assert!(cue.armed);
+    assert_eq!(cue.color, Some("#ffdd00".to_string()));
+    assert_eq!(cue.continue_mode, showpulse::cue::types::ContinueMode::AutoContinue);
+    assert_eq!(cue.post_wait, Some(2.5));
+}
+
+#[tokio::test]
+async fn create_disarmed_cue() {
+    let (state, _tmp) = test_state();
+    let dept = state
+        .store
+        .create_department(Department {
+            id: uuid::Uuid::nil(),
+            name: "Automation".to_string(),
+            color: "#88ff44".to_string(),
+        })
+        .await;
+
+    let resp = app(state)
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/api/cues")
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    serde_json::to_string(&serde_json::json!({
+                        "department_id": dept.id,
+                        "label": "Lower main curtain",
+                        "trigger_tc": Timecode::new(0, 12, 0, 0),
+                        "armed": false,
+                        "duration": 8
+                    }))
+                    .unwrap(),
+                ))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status(), StatusCode::CREATED);
+    let body = resp.into_body().collect().await.unwrap().to_bytes();
+    let cue: Cue = serde_json::from_slice(&body).unwrap();
+    assert!(!cue.armed);
+    assert_eq!(cue.duration, Some(8));
+    assert_eq!(cue.continue_mode, showpulse::cue::types::ContinueMode::Stop);
+    assert_eq!(cue.color, None);
+    assert_eq!(cue.post_wait, None);
+}
+
 // ── Timecode status endpoint ──
 
 #[tokio::test]

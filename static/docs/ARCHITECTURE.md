@@ -120,11 +120,12 @@ Global variables in `state.js`:
 ## Cue State Machine
 
 ```
-upcoming → warning → active → passed
+upcoming → warning → go → active → passed
 ```
 
 - **upcoming**: Countdown > warn_seconds
-- **warning**: Countdown ≤ warn_seconds (Ready/Go zone appears). Held for 2s after trigger (GO animation)
+- **warning**: Countdown ≤ warn_seconds (Ready/Go zone appears, traffic-light colors on text + digits + progress bar)
+- **go**: Triggered — backend emits this state for 2 seconds (`GO_HOLD_SECONDS`). Frontend shows GO! animation with flash effect
 - **active**: Past trigger point + GO hold delay (per-department tracking). Stays active until next same-dept cue triggers or duration expires
 - **passed**: Next same-department cue has triggered, or cue duration expired
 
