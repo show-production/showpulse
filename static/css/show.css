@@ -10,7 +10,7 @@
 .sidebar-toggle {
   position: fixed;
   top: 56px;
-  left: 8px;
+  inset-inline-start: 8px;
   width: 40px;
   height: 40px;
   z-index: 30;
@@ -30,12 +30,12 @@
 .show-sidebar {
   position: fixed;
   top: 48px;
-  left: 0;
+  inset-inline-start: 0;
   bottom: 0;
   width: 260px;
   z-index: 25;
   background: var(--bg-card);
-  border-right: 1px solid var(--border);
+  border-inline-end: 1px solid var(--border);
   padding: 1rem;
   overflow-y: auto;
   transform: translateX(-100%);
@@ -62,7 +62,7 @@
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--text-primary);
-  margin-right: var(--gap-xs);
+  margin-inline-end: var(--gap-xs);
 }
 
 .dept-chip {
@@ -183,7 +183,7 @@
   display: none;
   position: absolute;
   top: 100%;
-  left: 0;
+  inset-inline-start: 0;
   z-index: 15;
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -253,7 +253,7 @@
   padding: 0 0.6rem;
   background: var(--bg-card);
   border-radius: var(--radius-sm);
-  border-left: 3px solid var(--accent);
+  border-inline-start: 3px solid var(--accent);
   cursor: pointer;
   transition: background 0.15s;
   overflow: hidden;
@@ -285,9 +285,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.5rem 0;
+  padding: 0.75rem 1rem;
   flex-shrink: 0;
   gap: 0.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 .flow-timecode .tc-row {
   display: flex;
@@ -298,7 +301,7 @@
 }
 .flow-timecode .tc-left {
   flex: 0 0 auto;
-  text-align: right;
+  text-align: end;
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -406,7 +409,7 @@
   font-family: var(--font-mono);
   font-size: var(--card-tc-size);
   color: var(--text-dim);
-  text-align: right;
+  text-align: end;
   flex-shrink: 0;
 }
 .readygo-countdown-row {
@@ -414,14 +417,18 @@
   align-items: center;
   justify-content: center;
   gap: var(--gap-md);
-  padding: 0.25rem 0;
-  height: 2.2rem;
+  padding: 0.25rem var(--card-pad);
+  min-height: 2.2rem;
 }
 .readygo-status {
   font-family: var(--font-mono);
   font-size: 1.4rem;
   font-weight: 800;
   line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .readygo-digit {
   font-family: var(--font-mono);
@@ -469,6 +476,7 @@
   flex: 1;
   overflow-y: auto;
   padding-top: 0.5rem;
+  scroll-behavior: smooth;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
@@ -510,14 +518,14 @@
   font-family: var(--font-mono);
   font-size: var(--card-tc-size);
   color: var(--text-dim);
-  text-align: right;
+  text-align: end;
   flex-shrink: 0;
 }
 .flow-card .card-countdown {
   font-family: var(--font-mono);
   font-size: var(--card-cd-size);
   font-weight: 700;
-  text-align: right;
+  text-align: end;
   flex-shrink: 0;
   min-width: var(--card-cd-width);
 }
@@ -567,6 +575,11 @@
 .flow-card.tier-passed { opacity: 0.3; border-color: transparent; }
 .flow-card.tier-passed .card-countdown { color: var(--text-dim); }
 .flow-card.tier-passed .progress-fill { background: var(--text-dim); width: 100% !important; }
+
+/* ── RTL overrides ── */
+[dir="rtl"] .show-sidebar { transform: translateX(100%); }
+[dir="rtl"] .show-sidebar.open { transform: translateX(0); }
+[dir="rtl"] .flow-card .progress-fill { border-radius: 2px 0 0 2px; }
 
 /* ── Animations ── */
 @keyframes active-glow {

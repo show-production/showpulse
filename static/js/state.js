@@ -83,6 +83,9 @@ let readygoGoTimer = null;
 /** Whether the passed cues dropdown is open. */
 let passedDropdownOpen = false;
 
+/** Tracks the cue ID currently in the ReadyGo zone (warning state). */
+let readygoCueId = null;
+
 // ── DOM cache ──────────────────────────────
 
 /** Cached DOM element references — initialized once, reused everywhere. */

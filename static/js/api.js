@@ -23,7 +23,9 @@ async function api(path, opts = {}) {
     const t = await r.text();
     throw new Error(t || r.statusText);
   }
-  return r.json();
+  const text = await r.text();
+  if (!text) return null;
+  return JSON.parse(text);
 }
 
 /**
