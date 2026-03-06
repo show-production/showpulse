@@ -137,46 +137,14 @@ function renderFlowCues(wsCues) {
     readygoCue = warningCues.reduce((a, b) => a.countdown_sec < b.countdown_sec ? a : b);
   }
 
-  // All cues in one list (except the readygo cue which has its own zone), sorted by time
-  const allCues = filtered
-    .filter(c => !(readygoCue && c.id === readygoCue.id))
-    .sort((a, b) => tcObjToSeconds(a.trigger_tc) - tcObjToSeconds(b.trigger_tc));
+  // All cues in one list (except the readygo cue which has its own zone)
+  const allCues = filtered.filter(c => !(readygoCue && c.id === readygoCue.id));
 
   renderReadyGo(DOM.flowReadygo, readygoCue);
   diffCueList(DOM.flowUpcoming, allCues);
 
   if (allCues.length === 0 && !readygoCue) {
     DOM.flowUpcoming.innerHTML = `<div class="flow-no-cues">${CONST.NO_MATCH_MSG}</div>`;
-  }
-
-  // Auto-scroll: keep the warmest non-passed cue pinned just below the sticky timer
-  autoScrollToWarmest();
-}
-
-// ── Auto-scroll ────────────────────────────
-
-/**
- * Scroll the first non-passed cue to sit just below the sticky timecode.
- * Uses smooth scrolling; skips if user is manually scrolling.
- */
-function autoScrollToWarmest() {
-  const container = document.getElementById('view-show');
-  if (!container) return;
-
-  // Find the first card that isn't passed
-  const cards = DOM.flowUpcoming.querySelectorAll('.flow-card:not(.tier-passed)');
-  // If no upcoming cards, try scrolling to the ReadyGo zone
-  const target = cards.length > 0 ? cards[0] : (DOM.flowReadygo.classList.contains('visible') ? DOM.flowReadygo : null);
-  if (!target) return;
-
-  // Calculate where to scroll: target top should be just below the sticky timecode
-  const tcRect = DOM.flowTimecode.getBoundingClientRect();
-  const tcBottom = tcRect.bottom;
-  const targetRect = target.getBoundingClientRect();
-  const offset = targetRect.top - tcBottom - 8; // 8px gap
-
-  if (Math.abs(offset) > 5) {
-    container.scrollBy({ top: offset, behavior: 'smooth' });
   }
 }
 
@@ -433,15 +401,10 @@ function updateFlowCard(card, c) {
   const labelText = formatCueLabel(c);
   if (labelEl.textContent !== labelText) labelEl.textContent = labelText;
 
-  // Countdown text + color
+  // Countdown
   const cdEl = card.querySelector('.card-countdown');
   const cdText = (c.state === 'passed' || c.state === 'active') ? CONST.CHECKMARK : (c.state === 'go' ? 'GO!' : fmtCountdown(c.countdown_sec));
   if (cdEl.textContent !== cdText) cdEl.textContent = cdText;
-  if (c.state === 'active') {
-    cdEl.style.color = 'var(--accent)';
-  } else {
-    cdEl.style.color = '';
-  }
 
   // Progress bar — fills from 0% → 100% over the warn window
   const fillEl = card.querySelector('.progress-fill');
