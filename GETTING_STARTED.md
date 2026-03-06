@@ -180,15 +180,57 @@ MTC allows ShowPulse to sync to timecode from MIDI-capable devices (DAWs, show c
 - Full-frame SysEx messages provide instant sync (used for locate/jump)
 - Ensure your MIDI routing sends MTC to ShowPulse's selected port
 
+## Authentication (Optional)
+
+ShowPulse supports optional PIN-based authentication to protect admin operations (Manage/Settings tabs) while keeping the Show view open for crew members.
+
+### Enable PIN auth
+
+Set the `SHOWPULSE_PIN` environment variable before starting:
+
+**Windows (PowerShell):**
+```powershell
+$env:SHOWPULSE_PIN = "1234"
+cargo run
+```
+
+**macOS/Linux:**
+```bash
+SHOWPULSE_PIN=1234 cargo run
+```
+
+When a PIN is set:
+- **Show view** remains fully open — crew can view countdowns without authentication
+- **Manage/Settings** operations (create, update, delete) require a valid session token
+- The frontend prompts for the PIN when needed
+- Session tokens are passed via `Authorization: Bearer <token>` header
+
+When no PIN is set (default), all operations are open.
+
+### QR Code for Crew Onboarding
+
+Navigate to `/api/qr` in your browser to display a QR code with the server URL. Crew members can scan this with their phones to quickly connect to ShowPulse.
+
+## Configuration
+
+All settings are via environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SHOWPULSE_PORT` | `8080` | Server port |
+| `SHOWPULSE_BIND` | `0.0.0.0` | Bind address (use `127.0.0.1` for local-only) |
+| `SHOWPULSE_DATA_FILE` | `showpulse-data.json` | Data file path |
+| `SHOWPULSE_PIN` | *(none)* | PIN for auth (unset = open access) |
+
 ## Data Storage
 
-All data is saved to `showpulse-data.json` in the app directory. To reset to demo data, delete this file and restart.
+All data is saved to `showpulse-data.json` in the app directory (or the path set via `SHOWPULSE_DATA_FILE`). To reset to demo data, delete this file and restart.
 
 ## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
-| Port 8080 already in use | Stop the other process, or edit `src/config.rs` to change the port |
+| Port 8080 already in use | Stop the other process, or set `SHOWPULSE_PORT=3000` (or any free port) before starting |
 | Can't connect from other devices | Check firewall rules and ensure devices are on the same network |
 | No cues showing on Show tab | Go to Manage tab and add departments + cues, or delete `showpulse-data.json` to reset demo data |
 | WebSocket dot is red | The real-time connection dropped. It auto-reconnects every 2 seconds. The app falls back to polling in the meantime |

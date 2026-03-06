@@ -60,8 +60,8 @@ Single-page app served from `static/index.html` with three tabs:
 | Timecode manager | `src/timecode/mod.rs` | Full: Source switching (LTC/MTC/Generator), unified status API, device management access |
 | LTC decoder | `src/timecode/ltc.rs` | Full: cpal audio capture, bi-phase zero-crossing detection, 80-bit LTC frame extraction, BCD timecode parsing, sync word (0x3FFD). Dedicated OS thread. Device listing and selection API |
 | MTC decoder | `src/timecode/mtc.rs` | Full: midir MIDI input, quarter-frame accumulation (8 messages → full TC), full-frame SysEx parsing, frame rate detection. Dedicated OS thread. Port listing and selection API |
-| Cue/Department models | `src/cue/types.rs` | Full: Department, Cue (with serde defaults + cue_number), ShowData, CueState, CueStatus, CueImportError, CueImportResult |
-| Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments and cues, bulk import (replaces existing cues) with validation, auto-generated cue numbers (Q1, Q2...), auto-seed on empty store |
+| Cue/Department models | `src/cue/types.rs` | Full: Department, Cue (with serde defaults + cue_number + duration/armed/color/continue_mode/post_wait), ContinueMode enum, ShowData, CueState, CueStatus (with armed/duration/color/elapsed_sec), CueImportError, CueImportResult |
+| Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments and cues, bulk import (replaces existing cues) with validation, auto-generated cue numbers (Q1, Q2...), input sanitization (string clamping, color validation, post_wait clamping), auto-seed on empty store |
 | REST API - Timecode | `src/api/timecode.rs` | Full: GET status, PUT source |
 | REST API - Generator | `src/api/generator.rs` | Full: GET status, PUT config, POST play/pause/stop/goto |
 | REST API - Departments | `src/api/departments.rs` | Full: CRUD (list, create, update, delete) |
@@ -69,9 +69,10 @@ Single-page app served from `static/index.html` with three tabs:
 | REST API - LTC | `src/api/ltc.rs` | Full: GET devices, PUT device (select + start), POST stop |
 | REST API - MTC | `src/api/mtc.rs` | Full: GET devices, PUT device (select + start), POST stop |
 | WebSocket hub | `src/ws/hub.rs` | Full: Broadcast with per-client department filtering, subscribe protocol |
-| Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick with frame-accurate broadcast, per-department cue state tracking (active until replaced by next dept cue), cached cue states with second-boundary recomputation, 60s passed-cue cleanup |
-| Config | `src/config.rs` | Basic: port (8080) + data file path (showpulse-data.json) |
-| Server entrypoint | `src/main.rs` | Full: Axum router with all routes, state wiring, seed on startup, static file fallback |
+| Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick with frame-accurate broadcast, per-department cue state tracking (active until replaced by next dept cue), disarmed cue filtering, duration-based Passed transition, elapsed_sec computation, GO_HOLD_SECONDS delay, cached cue states with second-boundary recomputation, 60s passed-cue cleanup |
+| Config | `src/config.rs` | Full: port, bind_address, data_file, optional PIN — all via env vars (`SHOWPULSE_PORT`, `SHOWPULSE_BIND`, `SHOWPULSE_DATA_FILE`, `SHOWPULSE_PIN`) |
+| Authentication | `src/auth.rs` | Full: PIN-based auth with `SessionStore`, `require_auth` middleware (protects POST/PUT/DELETE, passes GET), Bearer token or `?token=` query param |
+| Server entrypoint | `src/main.rs` | Full: Axum router with 25 API routes + WS, auth middleware, CORS (same-origin), body limit (1MB), concurrency limit (50), security headers, state wiring, seed on startup, static file fallback |
 | Web UI - Show view | `static/index.html` | Full: Clean dashboard with passed cues count badge (expandable dropdown), active cue strips (compact dept-colored rows), centered timer with 2-row transport + Prev/Next, animated Ready/Go zone (READY + digit two-element layout, fixed height, traffic-light colors, GO! with dept name), scrollable coming cues with uniform-size cards (color-only tier differentiation). Click-to-goto on cue cards/strips/passed items, Prev/Next cue navigation, scroll-fold collapses above-timer sections. Frame-accurate 10Hz timecode. DOM-diffed cards, department filters, passed cues toggle, disconnection banner |
 | Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with # column + sortable headers + department filter, bulk CSV/JSON import, add/edit/delete modals with cue number field |
 | Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show data export/import |
@@ -89,18 +90,34 @@ Single-page app served from `static/index.html` with three tabs:
 | `trigger_tc` | Timecode (HH:MM:SS:FF) | No | 00:00:00:00 |
 | `warn_seconds` | u32 | No | 10 |
 | `notes` | String | No | "" |
+| `duration` | Option\<u32\> | No | None (point cue) |
+| `armed` | bool | No | true |
+| `color` | Option\<String\> | No | None (uses department color) |
+| `continue_mode` | ContinueMode | No | "stop" |
+| `post_wait` | Option\<f64\> | No | None |
+
+**ContinueMode** values: `stop`, `auto_continue`, `auto_follow`
+
+### Completed (Recent)
+
+| Feature | Notes |
+|---------|-------|
+| Unit & integration tests | 71 tests: Timecode unit tests, CueStore unit tests, REST endpoint integration tests (`tests/api.rs`) |
+| PIN authentication | `src/auth.rs` — SessionStore, `require_auth` middleware, Bearer token / `?token=` query param. ENV: `SHOWPULSE_PIN` |
+| QR code onboarding | `GET /api/qr` — SVG QR code with server URL for crew devices |
+| Security hardening | CORS same-origin, body limit (1MB), concurrency limit (50), WS client limit (100), security headers |
+| Cue field expansion | Duration, armed/disarmed, per-cue color, continue mode (stop/auto-continue/auto-follow), post-wait |
 
 ### Not Yet Implemented
 
 | Feature | Notes |
 |---------|-------|
-| Unit & integration tests | No test coverage yet |
-| Authentication | PIN-based auth, session tokens, rate limiting |
 | Multi-show support | Show switching/archiving |
-| Security headers/CORS hardening | Production hardening |
-| QR code onboarding | For quick crew device setup |
+| Generator presets | Save/load named configs |
+| Print view | CSS print stylesheet for cue list |
+| Portable distribution | Single-folder plug-and-play with embedded static files |
 
-## API Endpoints
+## API Endpoints (25 + WS)
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
@@ -120,14 +137,19 @@ Single-page app served from `static/index.html` with three tabs:
 | POST | `/api/mtc/stop` | Stop MTC MIDI input |
 | GET | `/api/departments` | List departments |
 | POST | `/api/departments` | Create department |
-| PUT | `/api/departments/{id}` | Update department |
-| DELETE | `/api/departments/{id}` | Delete department + its cues |
+| PUT | `/api/departments/:id` | Update department |
+| DELETE | `/api/departments/:id` | Delete department + its cues |
 | GET | `/api/cues` | List cues (optional `?department_id=` filter), sorted by trigger_tc |
-| GET | `/api/cues/{id}` | Get single cue |
+| GET | `/api/cues/:id` | Get single cue |
 | POST | `/api/cues` | Create cue (only `department_id` required; `cue_number` auto-generated if empty) |
 | POST | `/api/cues/import` | Bulk import cues — replaces all existing cues (validates department_id, returns `{imported, errors}`) |
-| PUT | `/api/cues/{id}` | Update cue |
-| DELETE | `/api/cues/{id}` | Delete cue |
+| POST | `/api/show/import` | Import full show (departments + cues) — replaces all existing data |
+| PUT | `/api/cues/:id` | Update cue |
+| DELETE | `/api/cues/:id` | Delete cue |
+| GET | `/api/qr` | Generate SVG QR code with server URL for crew onboarding |
+| GET | `/api/auth/status` | Check if auth is enabled and whether current session is authenticated |
+| POST | `/api/auth/login` | Authenticate with PIN, receive Bearer token |
+| POST | `/api/auth/logout` | Invalidate session token |
 | GET | `/ws` | WebSocket endpoint for live countdown data |
 
 ## Dependencies
@@ -138,12 +160,14 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 uuid = { version = "1", features = ["v4", "serde"] }
-tower-http = { version = "0.5", features = ["cors", "fs"] }
+tower-http = { version = "0.5", features = ["cors", "fs", "set-header"] }
+tower = { version = "0.5", features = ["util", "limit", "load-shed"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
 futures = "0.3"
 cpal = "0.15"        # Audio input for LTC decoding
 midir = "0.10"       # MIDI input for MTC decoding
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
 ```
 
 ## Key Design Decisions

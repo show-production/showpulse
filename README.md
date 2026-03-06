@@ -15,7 +15,12 @@ Self-hosted, local-WiFi show management platform for live productions. Reads SMP
 - **Cue navigation:** Click any cue to load its timecode into Goto, Prev/Next buttons to step through cues
 - **Multi-department support:** Lighting, Sound, Video, Pyro, Automation, Stage Management — each with color coding and per-department filtering
 - **Cue numbering:** Auto-generated (Q1, Q2, Q3...) or custom, displayed throughout the UI
+- **Cue fields:** Armed/disarmed toggle, optional duration, per-cue color override, continue mode (stop/auto-continue/auto-follow), post-wait timing
 - **Full cue management:** CRUD for departments and cues, sortable table, department filtering, bulk CSV/JSON import
+- **PIN authentication:** Optional PIN protects admin operations (Manage/Settings) while crew Show view stays open. Session tokens via Bearer header
+- **QR code onboarding:** Auto-generated QR code with server URL for quick crew device setup
+- **Security hardening:** CORS same-origin, request body limits, concurrency limits, security headers (X-Content-Type-Options, X-Frame-Options)
+- **Test coverage:** 71 tests — unit tests for timecode math and cue store, integration tests for all REST endpoints
 - **Zero dependencies at runtime:** Single Rust binary, JSON file persistence, no database
 - **Responsive UI:** Works on desktop, tablet, and phone — dark theme for backstage use with toast notifications and 44px touch targets
 
@@ -51,4 +56,4 @@ For other devices on the same WiFi: `http://<your-ip>:8080`
 
 ## Current Status
 
-All core features are complete: LTC/MTC decoding, timecode generator, cue management with bulk import, per-department countdown engine, full UI/UX polish, animated Ready/Go countdown, clean dashboard layout with passed count badge, active strips, uniform-size cue cards (color-only differentiation), cue navigation (click-to-goto, prev/next), and transport controls. Remaining work: unit tests, authentication, and security hardening. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the roadmap.
+All core features are complete: LTC/MTC decoding, timecode generator, cue management with bulk import (including armed/duration/color/continue-mode fields), per-department countdown engine, full UI/UX polish, animated Ready/Go countdown, clean dashboard layout with passed count badge, active strips, uniform-size cue cards (color-only differentiation), cue navigation (click-to-goto, prev/next), transport controls, PIN authentication, QR onboarding, security hardening, and 71 unit/integration tests. Remaining work: multi-show support, generator presets, print view, and portable single-binary distribution. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the roadmap.

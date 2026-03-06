@@ -18,7 +18,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 | MTC MIDI Decoding (midir, quarter-frame, full-frame SysEx) | Done |
 | Cue & Department data models + JSON persistence | Done |
 | Cue numbering (auto-generated Q1/Q2/Q3, editable) | Done |
-| 19 REST API endpoints (full CRUD + bulk import) | Done |
+| 25 REST API endpoints (full CRUD + bulk import + auth + QR) | Done |
 | WebSocket hub with per-department filtering | Done |
 | 10Hz countdown engine with per-department cue state tracking | Done |
 | Frontend: Show view (sticky TC, Ready/Go countdown, cue cards) | Done |
@@ -93,75 +93,71 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 ---
 
-## Phase 10: Unit & Integration Tests (HIGH PRIORITY)
+## Phase 10: Unit & Integration Tests ✅ Done
 **Goal:** Establish test coverage for critical logic.
 
-**Files to modify:** `Cargo.toml` (dev-deps), `src/timecode/types.rs`, `src/cue/store.rs`, `src/engine/countdown.rs`, new `tests/api.rs`
-
-1. Add dev-dependencies: `tempfile`, `tower` (for oneshot testing)
-2. Unit tests in `src/timecode/types.rs` (`#[cfg(test)]` module):
-   - Round-trip: `to_total_frames` ↔ `from_total_frames` for all 4 frame rates
-   - Drop-frame edge cases (minute boundaries, 10-minute boundaries)
-   - `Timecode::parse` valid/invalid inputs
-   - `add_frames` positive/negative/wrapping
-   - `to_seconds_f64` / `from_seconds_f64` accuracy
-3. Unit tests in `src/cue/store.rs`:
-   - CRUD operations (create, read, update, delete)
-   - Department cascading delete removes associated cues
-   - Cue list sorting by trigger_tc
-   - Department filter on list_cues
-   - Bulk import: valid cues, invalid dept_id, mixed, empty
-   - Auto-generated cue numbers (Q1, Q2...)
-   - JSON persistence round-trip (write + reload)
-4. Integration tests in `tests/api.rs`:
-   - Build test app with `Router` + test `AppState`
-   - HTTP endpoint tests for departments and cues CRUD
-   - Bulk import endpoint tests
-   - Status code assertions (201 Created, 404 Not Found, 204 No Content)
+71 tests implemented:
+- Unit tests in `src/timecode/types.rs`: round-trip frame math, drop-frame edge cases, parse/display, add_frames, to_seconds_f64
+- Unit tests in `src/cue/store.rs`: CRUD, cascading delete, sorting, filtering, bulk import, cue numbers, persistence round-trip
+- Integration tests in `tests/api.rs`: HTTP endpoint tests for departments and cues CRUD, bulk import, status codes
 
 ---
 
-## Phase 11: Authentication (MEDIUM PRIORITY)
+## Phase 10.5: Cue Field Expansion ✅ Done
+**Goal:** Align cue model with professional show controller features.
+
+New fields on `Cue`: `duration` (Option\<u32\>), `armed` (bool), `color` (Option\<String\>), `continue_mode` (ContinueMode enum), `post_wait` (Option\<f64\>).
+New `ContinueMode` enum: Stop, AutoContinue, AutoFollow.
+Updated `CueStatus` broadcast: includes `armed`, `duration`, `color`, `elapsed_sec`.
+Countdown engine: filters disarmed cues, duration-based Passed transition, elapsed_sec computation.
+
+---
+
+## Phase 11: Authentication ✅ Done
 **Goal:** PIN-based auth to protect admin operations while keeping crew view open.
 
-**Files to modify:** new `src/auth.rs`, `src/main.rs`, `src/config.rs`, `static/index.html`
-
-1. Add PIN configuration (env var `SHOWPULSE_PIN`, default: no auth)
-2. `POST /api/auth` — validate PIN, return session token cookie
-3. Axum middleware layer: protect mutation endpoints (POST/PUT/DELETE)
-4. Show view (`GET /ws`, `GET /api/*`) remains open — read-only for crew
-5. Frontend: PIN prompt modal when accessing Manage/Settings if auth enabled
+Implemented in `src/auth.rs`:
+- `SessionStore` with `Arc<RwLock<HashSet<String>>>` tokens
+- `require_auth` middleware: skips auth if no PIN configured, allows GET freely, protects POST/PUT/DELETE
+- Token via `Authorization: Bearer <token>` header or `?token=` query param (for WebSocket)
+- Endpoints: `GET /api/auth/status`, `POST /api/auth/login`, `POST /api/auth/logout`
+- Config: `SHOWPULSE_PIN` env var (unset = open access)
 
 ---
 
-## Phase 12: Security Hardening (MEDIUM PRIORITY)
+## Phase 12: Security Hardening ✅ Mostly Done
 **Goal:** Production-ready security posture for LAN deployment.
 
-**Files to modify:** `src/main.rs`
+Implemented in `src/main.rs`:
+- Security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`
+- CORS: restricted to `http://localhost:{port}` (same-origin)
+- Body limit: `DefaultBodyLimit::max(1MB)`
+- Concurrency limit: `ConcurrencyLimitLayer::new(50)`
+- WebSocket client limit: `MAX_WS_CLIENTS = 100`
+- Input validation in `src/cue/store.rs`: string clamping, color hex validation, timecode range validation, post_wait clamping
 
-1. Add security headers middleware (X-Content-Type-Options, X-Frame-Options)
-2. Configure CORS properly for LAN (allow same-origin, restrict external)
-3. Input validation on all string fields (max lengths, sanitization)
+Remaining: rate limiting on login endpoint, CSP headers
 
 ---
 
 ## Phase 13: Nice-to-haves (LOW PRIORITY)
 
-| Feature | Description |
-|---------|-------------|
-| **Multi-show** | Extend `ShowData` with show name, add show switching API |
-| **QR code** | Generate QR with server URL for crew onboarding |
-| **Generator presets** | Save/load named configs in data file |
-| **Print view** | CSS print stylesheet for cue list |
-| **Wake lock** | Prevent screen sleep on crew devices during show |
-| **Audio/vibration alerts** | Warning threshold alerts on crew devices |
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **QR code** | Generate QR with server URL for crew onboarding | ✅ Done (`GET /api/qr`) |
+| **Multi-show** | Extend `ShowData` with show name, add show switching API | Planned |
+| **Generator presets** | Save/load named configs in data file | Planned |
+| **Print view** | CSS print stylesheet for cue list | Planned |
+| **Wake lock** | Prevent screen sleep on crew devices during show | Planned |
+| **Audio/vibration alerts** | Warning threshold alerts on crew devices | Planned |
+| **Portable dist** | Embed `static/` into binary, auto-open browser, USB-ready | Planned |
 
 ---
 
 ## Verification Checklist
 
 - [x] `cargo build` — compiles without errors
-- [ ] `cargo test` — all tests pass (after Phase 10)
+- [x] `cargo test` — 71 tests pass
 - [x] Manual test: `cargo run` → browser at `http://localhost:8080`
 - [x] LTC: test with LTC audio from a generator app or DAW
 - [x] MTC: test with MIDI loopback or DAW sending MTC
