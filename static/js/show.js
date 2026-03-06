@@ -269,13 +269,13 @@ function renderActiveStrips(container, activeCues) {
 // ── ReadyGo zone ───────────────────────────
 
 /**
- * Calculate progress bar percentage for a ReadyGo cue (100% → 0%).
+ * Calculate progress bar percentage for a ReadyGo cue (0% → 100%).
  * @param {Object} cue - Warning cue with countdown_sec.
  * @returns {number} Percentage 0-100.
  */
 function readygoProgressPct(cue) {
   const warnMax = getCueWarnMax(cue.department_id, cue.id);
-  return Math.max(0, Math.min(100, (cue.countdown_sec / warnMax) * 100));
+  return Math.max(0, Math.min(100, (1 - cue.countdown_sec / warnMax) * 100));
 }
 
 /**
@@ -287,6 +287,7 @@ function renderReadyGo(container, cue) {
   if (!cue) {
     container.classList.remove('visible', 'go-flash');
     container.innerHTML = '';
+    delete container.dataset.cueId;
     readygoLastValue = null;
     return;
   }
@@ -311,19 +312,19 @@ function renderReadyGo(container, cue) {
     progressColor = 'var(--danger)';
   } else if (cd === 3) {
     statusText = readyLabel;
-    statusColor = 'var(--danger)';
+    statusColor = CONST.COLOR_COUNTDOWN_3;
     digitText = '3';
     digitColor = CONST.COLOR_COUNTDOWN_3;
     progressColor = CONST.COLOR_COUNTDOWN_3;
   } else if (cd === 2) {
     statusText = readyLabel;
-    statusColor = 'var(--danger)';
+    statusColor = 'var(--warning)';
     digitText = '2';
     digitColor = 'var(--warning)';
     progressColor = 'var(--warning)';
   } else if (cd === 1) {
     statusText = readyLabel;
-    statusColor = 'var(--danger)';
+    statusColor = CONST.COLOR_COUNTDOWN_1;
     digitText = '1';
     digitColor = CONST.COLOR_COUNTDOWN_1;
     progressColor = CONST.COLOR_COUNTDOWN_1;
@@ -335,26 +336,21 @@ function renderReadyGo(container, cue) {
     progressColor = 'var(--accent)';
   }
 
-  // Detect transition — re-trigger animation on digit/state change
-  const trackValue = isGo ? 'GO' : (digitText || statusText);
   const deptColor = getDeptColor(cue.department_id);
   const labelText = formatCueLabel(cue);
+  const trackCueId = cue.id;
+  const trackValue = isGo ? 'GO' : (digitText || statusText);
 
-  if (readygoLastValue !== trackValue) {
-    // Trigger flash animation on GO transition
-    if (isGo && readygoLastValue !== 'GO') {
-      container.classList.remove('go-flash');
-      void container.offsetWidth;
-      container.classList.add('go-flash');
-    } else if (!isGo) {
-      container.classList.remove('go-flash');
-    }
-
+  // First render for this cue — build full DOM
+  const existingCueId = container.dataset.cueId;
+  if (existingCueId !== trackCueId) {
+    container.dataset.cueId = trackCueId;
+    container.classList.remove('go-flash');
     readygoLastValue = trackValue;
 
     const digitHtml = digitText
       ? `<span class="readygo-digit${cd === 1 ? ' shake' : ''}" style="color:${digitColor}">${digitText}</span>`
-      : '';
+      : '<span class="readygo-digit" style="display:none"></span>';
 
     container.innerHTML = `<div class="readygo-info-row">
         <div class="dept-bar" style="background:${deptColor}"></div>
@@ -371,7 +367,46 @@ function renderReadyGo(container, cue) {
       <div class="readygo-progress"><div class="readygo-progress-fill" style="width:${isGo ? 100 : readygoProgressPct(cue)}%;background:${progressColor}"></div></div>`;
 
   } else {
-    // Same value — update progress bar width and color
+    // In-place updates — preserve DOM elements and CSS transitions
+
+    // GO flash animation on state transition
+    if (readygoLastValue !== trackValue) {
+      if (isGo && readygoLastValue !== 'GO') {
+        container.classList.remove('go-flash');
+        void container.offsetWidth;
+        container.classList.add('go-flash');
+      } else if (!isGo) {
+        container.classList.remove('go-flash');
+      }
+      readygoLastValue = trackValue;
+    }
+
+    // Update status text and color
+    const statusEl = container.querySelector('.readygo-status');
+    if (statusEl) {
+      const escapedStatus = esc(statusText);
+      if (statusEl.innerHTML !== escapedStatus) statusEl.innerHTML = escapedStatus;
+      statusEl.style.color = statusColor;
+    }
+
+    // Update digit
+    const digitEl = container.querySelector('.readygo-digit');
+    if (digitEl) {
+      if (digitText) {
+        digitEl.style.display = '';
+        if (digitEl.textContent !== digitText) {
+          digitEl.textContent = digitText;
+          // Re-trigger pop animation
+          digitEl.className = 'readygo-digit' + (cd === 1 ? ' shake' : '');
+          void digitEl.offsetWidth;
+        }
+        digitEl.style.color = digitColor;
+      } else {
+        digitEl.style.display = 'none';
+      }
+    }
+
+    // Update progress bar (smooth — element is preserved)
     const fillEl = container.querySelector('.readygo-progress-fill');
     if (fillEl) {
       fillEl.style.width = (isGo ? 100 : readygoProgressPct(cue)) + '%';
@@ -489,13 +524,13 @@ function updateFlowCard(card, c) {
   const cdText = (c.state === 'passed' || c.state === 'active') ? CONST.CHECKMARK : (c.state === 'go' ? 'GO!' : fmtCountdown(c.countdown_sec));
   if (cdEl.textContent !== cdText) cdEl.textContent = cdText;
 
-  // Progress bar — drains from 100% → 0% over the warn window
+  // Progress bar — fills from 0% → 100% over the warn window
   const fillEl = card.querySelector('.progress-fill');
   if (c.state === 'passed' || c.state === 'active' || c.state === 'go') {
     fillEl.style.width = '100%';
   } else {
     const warnMax = getCueWarnMax(c.department_id, c.id);
-    const pct = Math.max(0, Math.min(100, (c.countdown_sec / warnMax) * 100));
+    const pct = Math.max(0, Math.min(100, (1 - c.countdown_sec / warnMax) * 100));
     fillEl.style.width = pct + '%';
   }
 }
