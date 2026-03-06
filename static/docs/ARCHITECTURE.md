@@ -36,8 +36,17 @@ AppState {
   tc_manager: Arc<TimecodeManager>,  // Timecode source orchestration
   store: Arc<CueStore>,              // Department + cue CRUD + JSON persistence
   ws_hub: Arc<WsHub>,                // WebSocket broadcast
+  sessions: SessionStore,            // PIN auth session tokens
 }
 ```
+
+### Security Layers (applied in `main.rs`)
+- **Auth middleware** (`require_auth`): Protects POST/PUT/DELETE when `SHOWPULSE_PIN` is set. GET passes through freely.
+- **CORS**: Restricted to same-origin (`http://localhost:{port}`)
+- **Body limit**: 1MB max request body (`DefaultBodyLimit`)
+- **Concurrency limit**: 50 concurrent requests (`ConcurrencyLimitLayer`)
+- **WebSocket limit**: 100 max concurrent WS connections (`MAX_WS_CLIENTS`)
+- **Security headers**: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`
 
 ### Timecode Pipeline
 ```
@@ -111,10 +120,13 @@ Global variables in `state.js`:
 ## Cue State Machine
 
 ```
-pending → warning → active → passed
+upcoming → warning → active → passed
 ```
 
-- **pending**: Countdown > warn_seconds
-- **warning**: Countdown ≤ warn_seconds (Ready/Go zone appears)
-- **active**: Timecode has passed trigger point (per-department tracking)
-- **passed**: Next same-department cue has triggered
+- **upcoming**: Countdown > warn_seconds
+- **warning**: Countdown ≤ warn_seconds (Ready/Go zone appears). Held for 2s after trigger (GO animation)
+- **active**: Past trigger point + GO hold delay (per-department tracking). Stays active until next same-dept cue triggers or duration expires
+- **passed**: Next same-department cue has triggered, or cue duration expired
+
+### Cue Data Model (expanded)
+The `Cue` struct includes: `duration` (optional seconds), `armed` (bool — disarmed cues skipped by engine), `color` (per-cue override), `continue_mode` (stop/auto_continue/auto_follow), `post_wait` (seconds before auto-continue).

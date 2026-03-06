@@ -19,14 +19,14 @@ Response: {id, name, color}
 
 ### Update department
 ```
-PUT /departments/{id}
+PUT /departments/:id
 Body: {id, name, color}
 Response: {id, name, color}
 ```
 
 ### Delete department
 ```
-DELETE /departments/{id}
+DELETE /departments/:id
 Response: 204 No Content
 ```
 
@@ -43,22 +43,35 @@ Response: [{id, department_id, cue_number, label, trigger_tc, warn_seconds, note
 ### Create cue
 ```
 POST /cues
-Body: {id: "00000000-...", department_id, cue_number?, label, trigger_tc, warn_seconds?, notes?}
-Response: {id, department_id, cue_number, label, trigger_tc, warn_seconds, notes}
+Body: {
+  department_id,        // required (UUID)
+  id?,                  // UUID, auto-generated if omitted
+  cue_number?,          // String, auto-generated (Q1, Q2...) if empty
+  label?,               // String, default: "Untitled Cue"
+  trigger_tc?,          // {hours, minutes, seconds, frames}, default: 00:00:00:00
+  warn_seconds?,        // u32, default: 10
+  notes?,               // String, default: ""
+  duration?,            // u32 (seconds), null = point cue
+  armed?,               // bool, default: true
+  color?,               // String (hex, e.g. "#ff0000"), null = use dept color
+  continue_mode?,       // "stop" | "auto_continue" | "auto_follow", default: "stop"
+  post_wait?            // f64 (seconds), only used with auto_continue
+}
+Response: {id, department_id, cue_number, label, trigger_tc, warn_seconds, notes, duration, armed, color, continue_mode, post_wait}
 ```
 
 Only `department_id` is mandatory (serde defaults apply for others).
 
 ### Update cue
 ```
-PUT /cues/{id}
-Body: {id, department_id, cue_number, label, trigger_tc, warn_seconds, notes}
+PUT /cues/:id
+Body: {id, department_id, cue_number, label, trigger_tc, warn_seconds, notes, duration?, armed?, color?, continue_mode?, post_wait?}
 Response: {id, ...}
 ```
 
 ### Delete cue
 ```
-DELETE /cues/{id}
+DELETE /cues/:id
 Response: 204 No Content
 ```
 
@@ -163,6 +176,41 @@ POST /mtc/stop
 Response: 204 No Content
 ```
 
+## Authentication
+
+When `SHOWPULSE_PIN` is set, mutation endpoints (POST/PUT/DELETE) require a valid session token. GET endpoints and WebSocket remain open.
+
+### Check auth status
+```
+GET /auth/status
+Response: {enabled: bool, authenticated: bool}
+```
+
+### Login
+```
+POST /auth/login
+Body: {pin: "1234"}
+Response: {token: "..."}   // 200 OK
+Response: 401 Unauthorized  // wrong PIN
+```
+
+### Logout
+```
+POST /auth/logout
+Header: Authorization: Bearer <token>
+Response: 204 No Content
+```
+
+Token is passed via `Authorization: Bearer <token>` header on subsequent requests. For WebSocket, pass as `?token=<token>` query parameter.
+
+## QR Code
+
+### Generate QR code
+```
+GET /qr
+Response: SVG image (image/svg+xml) with server URL for crew onboarding
+```
+
 ## WebSocket
 
 ### Connect
@@ -175,7 +223,7 @@ WS /ws
 {
   "timecode": "01:23:45:12",
   "status": "running",
-  "frame_rate": "30",
+  "frame_rate": 30,
   "cues": [
     {
       "id": "uuid",
@@ -184,10 +232,12 @@ WS /ws
       "cue_number": "Q1",
       "label": "House lights down",
       "trigger_tc": {"hours": 0, "minutes": 1, "seconds": 0, "frames": 0},
-      "warn_seconds": 10,
-      "notes": "",
       "state": "warning",
-      "countdown_sec": 5.2
+      "countdown_sec": 5.2,
+      "armed": true,
+      "duration": null,
+      "color": null,
+      "elapsed_sec": null
     }
   ]
 }
@@ -196,7 +246,7 @@ WS /ws
 ### Cue state values
 | State | Meaning |
 |-------|---------|
-| `pending` | Not yet in warning range |
+| `upcoming` | Not yet in warning range |
 | `warning` | Within warn_seconds of trigger |
-| `active` | Triggered (past trigger TC) |
-| `passed` | Next same-department cue has triggered |
+| `active` | Triggered (past trigger TC, after GO hold delay) |
+| `passed` | Next same-department cue has triggered, or duration expired |
