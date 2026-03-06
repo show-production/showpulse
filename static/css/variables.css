@@ -1,0 +1,61 @@
+/* ══════════════════════════════════════════
+   variables.css — CSS Custom Properties (Theme)
+   ══════════════════════════════════════════
+   Central design tokens for the entire application.
+   Components: All
+   ══════════════════════════════════════════ */
+
+:root {
+  /* ── Colors ── */
+  --bg-primary: #0a0a0f;
+  --bg-card: #14141f;
+  --bg-surface: #1e1e2e;
+  --bg-input: #22223a;
+  --text-primary: #e0e0e8;
+  --text-dim: #666680;
+  --text-label: #9999aa;
+  --text-white: #fff;
+  --accent: #00ff88;
+  --warning: #ffaa00;
+  --danger: #ff4444;
+  --active-glow: #00ff8840;
+  --warning-glow: #ffaa0040;
+  --border: #2a2a3e;
+
+  /* ── Timecode display ── */
+  --tc-size: 6rem;
+
+  /* ── Card sizing ── */
+  --card-pad: 0.6rem 0.85rem;
+  --card-label-size: 0.9rem;
+  --card-cd-size: 1rem;
+  --card-tc-size: 0.7rem;
+  --card-cd-width: 100px;
+
+  /* ── Typography ── */
+  --font-mono: 'Courier New', 'Consolas', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8rem;
+  --font-size-md: 0.85rem;
+  --font-size-base: 0.9rem;
+  --font-weight-medium: 600;
+
+  /* ── Sizing ── */
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* ── Spacing ── */
+  --gap-xs: 0.3rem;
+  --gap-sm: 0.5rem;
+  --gap-md: 0.75rem;
+
+  /* ── Transitions ── */
+  --transition-fast: all 0.15s ease;
+
+  /* ── Overlays ── */
+  --overlay-dark: rgba(0, 0, 0, 0.7);
+  --overlay-medium: rgba(0, 0, 0, 0.4);
+}

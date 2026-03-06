@@ -1,0 +1,144 @@
+/* ══════════════════════════════════════════
+   manage.css — ManageView: DeptPanel, CuePanel, CueTable
+   ══════════════════════════════════════════
+   CRUD interface for departments and cues.
+   Dependencies: variables.css, base.css
+   ══════════════════════════════════════════ */
+
+/* ── ManageView layout ── */
+.manage-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .manage-layout { grid-template-columns: 1fr; }
+}
+
+/* ── Panel (shared by Manage + Settings) ── */
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--gap-md) 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+.panel-header h3 {
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-label);
+  font-weight: var(--font-weight-medium);
+}
+.panel-body { padding: 0.5rem; }
+
+/* ── DeptPanel ── */
+.dept-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.5rem;
+  border-radius: var(--radius-md);
+  cursor: default;
+}
+.dept-item:hover { background: var(--bg-surface); }
+.dept-item .dept-color {
+  width: 14px; height: 14px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+}
+.dept-item .dept-name { flex: 1; font-size: var(--font-size-base); }
+.dept-item .dept-actions {
+  display: flex;
+  gap: var(--gap-xs);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.dept-item:hover .dept-actions { opacity: 1; }
+
+/* ── Small icon buttons ── */
+.icon-btn {
+  width: 28px; height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+}
+.icon-btn:hover { background: var(--bg-input); border-color: var(--border); color: var(--text-primary); }
+.icon-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+
+/* ── Add button ── */
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-label);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  transition: var(--transition-fast);
+}
+.add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── CueTable ── */
+.cue-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.cue-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-md);
+}
+.cue-table th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  font-weight: var(--font-weight-medium);
+  border-bottom: 1px solid var(--border);
+}
+.cue-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.cue-table tr:hover { background: var(--bg-surface); }
+.cue-table .tc-cell {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-label);
+}
+.cue-table .dept-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.cue-table .dept-cell .dot {
+  flex-shrink: 0;
+}
+.cue-table .actions-cell {
+  display: flex;
+  gap: var(--gap-xs);
+  justify-content: flex-end;
+}
+.cue-table th.sortable { cursor: pointer; user-select: none; }
+.cue-table th.sortable:hover { color: var(--text-primary); }
