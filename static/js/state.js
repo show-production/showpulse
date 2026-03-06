@@ -29,8 +29,9 @@ const CONST = {
   DEFAULT_WARN_SEC: 10,
 
   // Colors (countdown traffic light)
-  COLOR_COUNTDOWN_3: '#e05500',
-  COLOR_COUNTDOWN_1: '#88cc00',
+  COLOR_COUNTDOWN_3: '#ffaa00',
+  COLOR_COUNTDOWN_2: '#66dd44',
+  COLOR_COUNTDOWN_1: '#00ff88',
   TINT_ALPHA: 0.06,
   DEFAULT_DEPT_COLOR: '#888',
   DEFAULT_NEW_DEPT_COLOR: '#ffcc00',

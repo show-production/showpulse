@@ -306,25 +306,25 @@ function renderReadyGo(container, cue) {
   const readyLabel = `READY${CONST.EMDASH}${cue.department}`;
   if (cd > 3) {
     statusText = readyLabel;
-    statusColor = 'var(--danger)';
+    statusColor = CONST.COLOR_COUNTDOWN_3;
     digitText = '';
     digitColor = '';
-    progressColor = 'var(--danger)';
+    progressColor = CONST.COLOR_COUNTDOWN_3;
   } else if (cd === 3) {
     statusText = readyLabel;
-    statusColor = 'var(--danger)';
+    statusColor = CONST.COLOR_COUNTDOWN_3;
     digitText = '3';
     digitColor = CONST.COLOR_COUNTDOWN_3;
     progressColor = CONST.COLOR_COUNTDOWN_3;
   } else if (cd === 2) {
     statusText = readyLabel;
-    statusColor = 'var(--danger)';
+    statusColor = CONST.COLOR_COUNTDOWN_2;
     digitText = '2';
-    digitColor = 'var(--warning)';
-    progressColor = 'var(--warning)';
+    digitColor = CONST.COLOR_COUNTDOWN_2;
+    progressColor = CONST.COLOR_COUNTDOWN_2;
   } else if (cd === 1) {
     statusText = readyLabel;
-    statusColor = 'var(--danger)';
+    statusColor = CONST.COLOR_COUNTDOWN_1;
     digitText = '1';
     digitColor = CONST.COLOR_COUNTDOWN_1;
     progressColor = CONST.COLOR_COUNTDOWN_1;
@@ -363,12 +363,16 @@ function renderReadyGo(container, cue) {
       <div class="readygo-progress"><div class="readygo-progress-fill" style="width:${readygoProgressPct(cue)}%;background:${progressColor}"></div></div>`;
 
   } else {
-    // Same value — update progress bar width and color
+    // Same value — update progress bar width and colors
     const fillEl = container.querySelector('.readygo-progress-fill');
     if (fillEl) {
       fillEl.style.width = readygoProgressPct(cue) + '%';
       fillEl.style.background = progressColor;
     }
+    const statusEl = container.querySelector('.readygo-status');
+    if (statusEl) statusEl.style.color = statusColor;
+    const digitEl = container.querySelector('.readygo-digit');
+    if (digitEl && digitColor) digitEl.style.color = digitColor;
   }
 }
 
@@ -394,7 +398,7 @@ function renderGoFlash(container, cue) {
     <div class="readygo-countdown-row">
       <span class="readygo-status" style="color:var(--accent)">${esc(statusText)}</span>
     </div>
-    <div class="readygo-progress"><div class="readygo-progress-fill" style="width:100%;background:var(--accent)"></div></div>`;
+    <div class="readygo-progress"><div class="readygo-progress-fill" style="width:0%;background:var(--accent)"></div></div>`;
 
   container.classList.remove('go-flash');
   void container.offsetWidth;
@@ -404,8 +408,7 @@ function renderGoFlash(container, cue) {
   if (readygoGoTimer) clearTimeout(readygoGoTimer);
   readygoGoTimer = setTimeout(() => {
     readygoGoTimer = null;
-    container.classList.remove('visible', 'go-flash');
-    container.innerHTML = '';
+    container.classList.remove('go-flash');
   }, CONST.GO_DISPLAY_DURATION);
 }
 
