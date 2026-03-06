@@ -10,6 +10,20 @@ pub struct Department {
     pub color: String, // hex color, e.g. "#ff0000"
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ContinueMode {
+    Stop,
+    AutoContinue,
+    AutoFollow,
+}
+
+impl Default for ContinueMode {
+    fn default() -> Self {
+        Self::Stop
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Cue {
     #[serde(default)]
@@ -25,6 +39,21 @@ pub struct Cue {
     pub warn_seconds: u32,
     #[serde(default)]
     pub notes: String,
+    /// Duration in seconds. None = instantaneous (point cue).
+    #[serde(default)]
+    pub duration: Option<u32>,
+    /// Disarmed cues are skipped by the countdown engine.
+    #[serde(default = "default_true")]
+    pub armed: bool,
+    /// Per-cue color override. None = use department color.
+    #[serde(default)]
+    pub color: Option<String>,
+    /// What happens after this cue triggers.
+    #[serde(default)]
+    pub continue_mode: ContinueMode,
+    /// Seconds before auto-continuing to next cue (only with AutoContinue).
+    #[serde(default)]
+    pub post_wait: Option<f64>,
 }
 
 fn default_cue_label() -> String {
@@ -33,6 +62,10 @@ fn default_cue_label() -> String {
 
 fn default_warn_seconds() -> u32 {
     10
+}
+
+fn default_true() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -84,4 +117,9 @@ pub struct CueStatus {
     pub state: CueState,
     pub countdown_sec: f64,
     pub trigger_tc: Timecode,
+    pub armed: bool,
+    pub duration: Option<u32>,
+    pub color: Option<String>,
+    /// Seconds elapsed since trigger (for active cues with duration).
+    pub elapsed_sec: Option<f64>,
 }

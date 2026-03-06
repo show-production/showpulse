@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use super::types::{Cue, CueImportError, CueImportResult, Department, ShowData};
+use super::types::{ContinueMode, Cue, CueImportError, CueImportResult, Department, ShowData};
 
 /// Maximum allowed length for string fields (names, labels, notes).
 const MAX_STRING_LEN: usize = 500;
@@ -163,12 +163,22 @@ impl CueStore {
         self.data.read().await.cues.iter().find(|c| c.id == id).cloned()
     }
 
-    /// Sanitize all string fields and timecode on a cue.
+    /// Sanitize all string fields, timecode, and optional color on a cue.
     fn sanitize_cue(cue: &mut Cue) {
         clamp_string(&mut cue.label);
         clamp_string(&mut cue.cue_number);
         clamp_string(&mut cue.notes);
         sanitize_timecode(&mut cue.trigger_tc);
+        if let Some(ref color) = cue.color {
+            let sanitized = sanitize_color(color);
+            cue.color = Some(sanitized);
+        }
+        // Clamp post_wait to non-negative
+        if let Some(pw) = cue.post_wait {
+            if pw < 0.0 {
+                cue.post_wait = Some(0.0);
+            }
+        }
     }
 
     pub async fn create_cue(&self, mut cue: Cue) -> Cue {
@@ -275,6 +285,11 @@ impl CueStore {
             cue.trigger_tc = update.trigger_tc;
             cue.warn_seconds = update.warn_seconds;
             cue.notes = update.notes;
+            cue.duration = update.duration;
+            cue.armed = update.armed;
+            cue.color = update.color;
+            cue.continue_mode = update.continue_mode;
+            cue.post_wait = update.post_wait;
             let result = cue.clone();
             drop(data);
             self.persist().await;
@@ -371,6 +386,11 @@ impl CueStore {
                 trigger_tc: tc,
                 warn_seconds: warn,
                 notes: String::new(),
+                duration: None,
+                armed: true,
+                color: None,
+                continue_mode: ContinueMode::Stop,
+                post_wait: None,
             }).await;
         }
     }
@@ -405,6 +425,11 @@ mod tests {
             trigger_tc: tc,
             warn_seconds: 10,
             notes: String::new(),
+            duration: None,
+            armed: true,
+            color: None,
+            continue_mode: ContinueMode::Stop,
+            post_wait: None,
         }
     }
 

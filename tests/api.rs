@@ -249,6 +249,11 @@ async fn get_cue_returns_200() {
             trigger_tc: Timecode::ZERO,
             warn_seconds: 10,
             notes: String::new(),
+            duration: None,
+            armed: true,
+            color: None,
+            continue_mode: showpulse::cue::types::ContinueMode::Stop,
+            post_wait: None,
         })
         .await;
 
@@ -314,6 +319,11 @@ async fn list_cues_with_department_filter() {
             trigger_tc: Timecode::ZERO,
             warn_seconds: 10,
             notes: String::new(),
+            duration: None,
+            armed: true,
+            color: None,
+            continue_mode: showpulse::cue::types::ContinueMode::Stop,
+            post_wait: None,
         })
         .await;
     state
@@ -326,6 +336,11 @@ async fn list_cues_with_department_filter() {
             trigger_tc: Timecode::ZERO,
             warn_seconds: 10,
             notes: String::new(),
+            duration: None,
+            armed: true,
+            color: None,
+            continue_mode: showpulse::cue::types::ContinueMode::Stop,
+            post_wait: None,
         })
         .await;
 
@@ -368,6 +383,11 @@ async fn delete_cue_returns_204() {
             trigger_tc: Timecode::ZERO,
             warn_seconds: 10,
             notes: String::new(),
+            duration: None,
+            armed: true,
+            color: None,
+            continue_mode: showpulse::cue::types::ContinueMode::Stop,
+            post_wait: None,
         })
         .await;
 
