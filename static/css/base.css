@@ -1,0 +1,73 @@
+/* ══════════════════════════════════════════
+   base.css — Reset, body, scrollbar, utility classes
+   ══════════════════════════════════════════
+   Global reset and shared utility classes.
+   Dependencies: variables.css
+   ══════════════════════════════════════════ */
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+input, select, textarea, button { font-family: inherit; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-xs); }
+
+/* ── Shared patterns ── */
+
+/** Colored dot indicator (8px circle). */
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/** Vertical department color bar (4px wide, stretches to parent height). */
+.dept-bar {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/** Thin scrollbar for scrollable panels. */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* ── Utility classes ── */
+.hidden { display: none; }
+.inline-row { display: flex; gap: var(--gap-sm); align-items: center; }
+.flex-1 { flex: 1; }
+
+.filter-select {
+  padding: 0.3rem 0.5rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-xs);
+}
+
+.panel-body--flush { padding: 0; }
+.panel-body--padded { padding: 1rem; }
+.btn-sm { padding: 0.4rem 0.6rem; }
+
+.device-hint {
+  font-size: var(--font-size-sm);
+  margin-top: var(--gap-xs);
+  color: var(--text-dim);
+}
+
+.modal--narrow { width: 360px; }
+
+.confirm-message {
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+}

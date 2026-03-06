@@ -1,0 +1,97 @@
+/* ══════════════════════════════════════════
+   modals.css — DeptModal, CueModal, ConfirmModal
+   ══════════════════════════════════════════
+   All modal overlay and dialog styles.
+   Dependencies: variables.css, base.css
+   ══════════════════════════════════════════ */
+
+/* ── Modal overlay ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-dark);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+/* ── Modal dialog ── */
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 420px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { font-size: 1rem; }
+.modal-body { padding: 1.25rem; }
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gap-sm);
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.modal-footer button {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-md);
+}
+.modal-footer .btn-cancel {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+.modal-footer .btn-save {
+  background: var(--accent);
+  color: var(--bg-primary);
+  border-color: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+.modal-footer .btn-save:hover { opacity: 0.9; }
+.modal-footer .btn-cancel:hover { background: var(--bg-input); }
+
+/* ── ConfirmModal ── */
+.modal-footer .btn-danger {
+  background: var(--danger);
+  color: var(--text-white);
+  border-color: var(--danger);
+  font-weight: var(--font-weight-medium);
+}
+.modal-footer .btn-danger:hover { opacity: 0.9; }
+
+/* ── Form groups (used in DeptModal + CueModal) ── */
+.form-group { margin-bottom: 1rem; }
+.form-group label {
+  display: block;
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 0.35rem;
+  font-weight: var(--font-weight-medium);
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-md);
+}
+.form-group textarea { resize: vertical; min-height: 60px; }

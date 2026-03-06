@@ -1,0 +1,126 @@
+/* ══════════════════════════════════════════
+   shell.css — TopNav, DisconnectBanner, LoadingOverlay, ToastContainer
+   ══════════════════════════════════════════
+   App-level chrome that wraps all views.
+   Dependencies: variables.css, base.css
+   ══════════════════════════════════════════ */
+
+/* ── TopNav ── */
+.topnav {
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  height: 48px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  gap: 0;
+}
+.topnav .tabs { display: flex; gap: 0; flex: 1; }
+.topnav .tab {
+  padding: var(--gap-md) 1.5rem;
+  cursor: pointer;
+  color: var(--text-dim);
+  border: none;
+  background: none;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.topnav .tab:hover { color: var(--text-primary); }
+.topnav .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+.topnav .brand {
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+}
+.topnav .brand .dot {
+  background: var(--danger);
+  transition: background 0.3s;
+}
+.topnav .brand .dot.connected { background: var(--accent); }
+
+/* ── Views ── */
+.view { display: none; padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+.view.active { display: block; }
+
+/* ── DisconnectBanner ── */
+.disconnect-banner {
+  display: none;
+  position: fixed;
+  top: 48px; left: 0; right: 0;
+  z-index: 90;
+  background: var(--danger);
+  color: var(--text-white);
+  text-align: center;
+  padding: 0.6rem 1rem;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.03em;
+  animation: banner-pulse 2s ease-in-out infinite;
+}
+.disconnect-banner.visible { display: block; }
+@keyframes banner-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ── LoadingOverlay ── */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  transition: opacity 0.4s;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-overlay .loading-text {
+  font-size: var(--font-size-md);
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+/* ── ToastContainer ── */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+  pointer-events: none;
+}
+.toast {
+  padding: 0.7rem 1.2rem;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  pointer-events: auto;
+  animation: toast-in 0.3s ease-out;
+  max-width: 360px;
+}
+.toast.success { background: var(--accent); color: var(--bg-primary); }
+.toast.error { background: var(--danger); color: var(--text-white); }
+.toast.info { background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
