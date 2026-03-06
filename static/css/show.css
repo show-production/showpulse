@@ -130,15 +130,15 @@
 .toggle-btn:hover { border-color: var(--text-dim); }
 
 /* ── FlowArea ── */
-#view-show.view { padding: 0; max-width: none; }
+#view-show.view { padding: 0; max-width: none; overflow-y: auto; height: calc(100vh - 48px); }
 
 .flow-area {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 48px);
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1rem 2rem;
+  min-height: calc(100vh - 48px);
 }
 
 /* ── PassedBadge ── */
@@ -152,12 +152,6 @@
   overflow: hidden;
 }
 .flow-passed-badge:empty { display: none; }
-.flow-passed-badge.folded {
-  opacity: 0;
-  max-height: 0 !important;
-  padding: 0 !important;
-  pointer-events: none;
-}
 .passed-count-btn {
   display: inline-flex;
   align-items: center;
@@ -239,12 +233,6 @@
   overflow: hidden;
 }
 .flow-active-strips:empty { display: none; }
-.flow-active-strips.folded {
-  opacity: 0;
-  max-height: 0 !important;
-  padding: 0 !important;
-  pointer-events: none;
-}
 .active-strip {
   display: flex;
   align-items: center;
@@ -291,6 +279,9 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  position: sticky;
+  top: 48px;
+  z-index: 10;
 }
 .flow-timecode .tc-row {
   display: flex;
@@ -473,12 +464,7 @@
 
 /* ── UpcomingList ── */
 .flow-upcoming {
-  flex: 1;
-  overflow-y: auto;
   padding-top: 0.5rem;
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
 }
 
 .flow-no-cues {
