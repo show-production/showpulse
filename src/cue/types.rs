@@ -103,6 +103,7 @@ pub struct CueImportResult {
 pub enum CueState {
     Upcoming,
     Warning,
+    Go,
     Active,
     Passed,
 }

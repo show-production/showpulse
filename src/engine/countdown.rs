@@ -89,11 +89,11 @@ pub async fn run(
                 }
             } else {
                 // Cue has triggered (current_secs >= cue_secs).
-                // Hold Warning state for GO_HOLD_SECONDS after trigger so the
-                // frontend can display the GO animation before flipping to Active.
+                // Show Go state for GO_HOLD_SECONDS so frontend displays GO animation,
+                // then transition to Active.
                 let elapsed = elapsed_since_trigger.unwrap_or(0.0);
                 if elapsed < GO_HOLD_SECONDS {
-                    CueState::Warning
+                    CueState::Go
                 } else {
                     // Check duration-based completion: if cue has a duration and
                     // elapsed exceeds it, treat as passed (even without a next dept cue).
