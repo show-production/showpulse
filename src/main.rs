@@ -3,11 +3,14 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use axum::{
-    extract::{State, WebSocketUpgrade},
+    extract::{DefaultBodyLimit, State, WebSocketUpgrade},
+    http::{HeaderValue, StatusCode},
     response::IntoResponse,
     routing::get,
 };
+use tower_http::cors::{AllowOrigin, CorsLayer};
 use tower_http::services::ServeDir;
+use tower_http::set_header::SetResponseHeaderLayer;
 use tracing::info;
 
 use showpulse::cue::store::CueStore;
@@ -18,10 +21,13 @@ use showpulse::{api_router, AppState};
 async fn ws_handler(
     ws: WebSocketUpgrade,
     State(state): State<AppState>,
-) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| async move {
+) -> Result<impl IntoResponse, StatusCode> {
+    if state.ws_hub.client_count().await >= showpulse::config::MAX_WS_CLIENTS {
+        return Err(StatusCode::SERVICE_UNAVAILABLE);
+    }
+    Ok(ws.on_upgrade(move |socket| async move {
         state.ws_hub.handle_connection(socket).await;
-    })
+    }))
 }
 
 #[tokio::main]
@@ -49,10 +55,30 @@ async fn main() {
         ws_hub,
     };
 
+    // CORS: only allow same-origin requests
+    let cors = CorsLayer::new()
+        .allow_origin(AllowOrigin::exact(
+            HeaderValue::from_str(&format!("http://localhost:{}", config.port))
+                .expect("valid origin"),
+        ));
+
     let app = api_router()
         // WebSocket
         .route("/ws", get(ws_handler))
         .with_state(state)
+        // Request body size limit (1MB — generous for JSON cue imports)
+        .layer(DefaultBodyLimit::max(1024 * 1024))
+        // CORS
+        .layer(cors)
+        // Security headers
+        .layer(SetResponseHeaderLayer::overriding(
+            axum::http::header::X_CONTENT_TYPE_OPTIONS,
+            HeaderValue::from_static("nosniff"),
+        ))
+        .layer(SetResponseHeaderLayer::overriding(
+            axum::http::header::X_FRAME_OPTIONS,
+            HeaderValue::from_static("DENY"),
+        ))
         // Static files (UI)
         .fallback_service(ServeDir::new("static"));
 

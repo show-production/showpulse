@@ -18,7 +18,7 @@ pub async fn update_config(
         .generator
         .send_command(GeneratorCommand::UpdateConfig(config))
         .await;
-    StatusCode::OK
+    StatusCode::NO_CONTENT
 }
 
 pub async fn play(State(state): State<AppState>) -> StatusCode {
@@ -27,7 +27,7 @@ pub async fn play(State(state): State<AppState>) -> StatusCode {
         .generator
         .send_command(GeneratorCommand::Play)
         .await;
-    StatusCode::OK
+    StatusCode::NO_CONTENT
 }
 
 pub async fn pause(State(state): State<AppState>) -> StatusCode {
@@ -36,7 +36,7 @@ pub async fn pause(State(state): State<AppState>) -> StatusCode {
         .generator
         .send_command(GeneratorCommand::Pause)
         .await;
-    StatusCode::OK
+    StatusCode::NO_CONTENT
 }
 
 pub async fn stop(State(state): State<AppState>) -> StatusCode {
@@ -45,7 +45,7 @@ pub async fn stop(State(state): State<AppState>) -> StatusCode {
         .generator
         .send_command(GeneratorCommand::Stop)
         .await;
-    StatusCode::OK
+    StatusCode::NO_CONTENT
 }
 
 #[derive(Deserialize)]
@@ -62,5 +62,5 @@ pub async fn goto(
         .generator
         .send_command(GeneratorCommand::Goto(body.timecode))
         .await;
-    StatusCode::OK
+    StatusCode::NO_CONTENT
 }

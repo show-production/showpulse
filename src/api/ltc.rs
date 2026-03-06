@@ -23,12 +23,12 @@ pub async fn set_device(
         .tc_manager
         .ltc_decoder
         .start_device(body.device_index)
-        .map(|_| StatusCode::OK)
+        .map(|_| StatusCode::NO_CONTENT)
         .map_err(|e| (StatusCode::BAD_REQUEST, e))
 }
 
 /// POST /api/ltc/stop — stop the LTC audio stream
 pub async fn stop(State(state): State<AppState>) -> StatusCode {
     state.tc_manager.ltc_decoder.stop();
-    StatusCode::OK
+    StatusCode::NO_CONTENT
 }
