@@ -276,6 +276,16 @@ function renderActiveStrips(container, activeCues) {
 // ── ReadyGo zone ───────────────────────────
 
 /**
+ * Calculate progress bar percentage for a ReadyGo cue (100% → 0%).
+ * @param {Object} cue - Warning cue with countdown_sec.
+ * @returns {number} Percentage 0-100.
+ */
+function readygoProgressPct(cue) {
+  const warnMax = getCueWarnMax(cue.department_id, cue.id);
+  return Math.max(0, Math.min(100, (cue.countdown_sec / warnMax) * 100));
+}
+
+/**
  * Render the Ready/Go countdown zone for the nearest warning cue.
  * @param {HTMLElement} container - The #flow-readygo element.
  * @param {Object|null} cue - The closest warning cue, or null.
@@ -350,12 +360,15 @@ function renderReadyGo(container, cue) {
         <span class="readygo-status" style="color:${statusColor}">${esc(statusText)}</span>
         ${digitHtml}
       </div>
-      <div class="readygo-progress"><div class="readygo-progress-fill" style="width:100%;background:${progressColor}"></div></div>`;
+      <div class="readygo-progress"><div class="readygo-progress-fill" style="width:${readygoProgressPct(cue)}%;background:${progressColor}"></div></div>`;
 
   } else {
-    // Same value — just update progress bar color
+    // Same value — update progress bar width and color
     const fillEl = container.querySelector('.readygo-progress-fill');
-    if (fillEl) fillEl.style.background = progressColor;
+    if (fillEl) {
+      fillEl.style.width = readygoProgressPct(cue) + '%';
+      fillEl.style.background = progressColor;
+    }
   }
 }
 
@@ -505,9 +518,15 @@ function updateFlowCard(card, c) {
   const cdText = c.state === 'passed' ? CONST.CHECKMARK : (c.state === 'active' ? CONST.CHECKMARK : fmtCountdown(c.countdown_sec));
   if (cdEl.textContent !== cdText) cdEl.textContent = cdText;
 
-  // Progress bar — always full, color indicates state
+  // Progress bar — drains from 100% → 0% over the warn window
   const fillEl = card.querySelector('.progress-fill');
-  fillEl.style.width = '100%';
+  if (c.state === 'passed' || c.state === 'active') {
+    fillEl.style.width = '100%';
+  } else {
+    const warnMax = getCueWarnMax(c.department_id, c.id);
+    const pct = Math.max(0, Math.min(100, (c.countdown_sec / warnMax) * 100));
+    fillEl.style.width = pct + '%';
+  }
 }
 
 // ── Department filters ─────────────────────
