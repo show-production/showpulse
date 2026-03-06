@@ -75,8 +75,8 @@ let confirmResolve = null;
 /** Whether the sidebar is open (persisted to localStorage). */
 let sidebarOpen = localStorage.getItem('sidebarOpen') === 'true';
 
-/** Tracks the last Ready/Go countdown value to detect transitions. */
-let readygoLastValue = null;
+/** Tracks which cue ID is currently rendered in the ReadyGo zone. */
+let readygoCueInZone = null;
 
 /** Timer ID for the GO! display duration. */
 let readygoGoTimer = null;

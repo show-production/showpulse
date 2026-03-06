@@ -295,7 +295,7 @@ function renderReadyGo(container, cue) {
     if (readygoGoTimer) return; // still showing GO!
     container.classList.remove('visible');
     container.innerHTML = '';
-    readygoLastValue = null;
+    readygoCueInZone = null;
     return;
   }
 
@@ -306,10 +306,10 @@ function renderReadyGo(container, cue) {
   const readyLabel = `READY${CONST.EMDASH}${cue.department}`;
   if (cd > 3) {
     statusText = readyLabel;
-    statusColor = CONST.COLOR_COUNTDOWN_3;
+    statusColor = 'var(--danger)';
     digitText = '';
     digitColor = '';
-    progressColor = CONST.COLOR_COUNTDOWN_3;
+    progressColor = 'var(--danger)';
   } else if (cd === 3) {
     statusText = readyLabel;
     statusColor = CONST.COLOR_COUNTDOWN_3;
@@ -336,17 +336,12 @@ function renderReadyGo(container, cue) {
     progressColor = 'var(--accent)';
   }
 
-  // Detect transition — re-trigger animation on digit change
-  const trackValue = digitText || statusText;
   const deptColor = getDeptColor(cue.department_id);
   const labelText = formatCueLabel(cue);
 
-  if (readygoLastValue !== trackValue) {
-    readygoLastValue = trackValue;
-
-    const digitHtml = digitText
-      ? `<span class="readygo-digit${cd === 1 ? ' shake' : ''}" style="color:${digitColor}">${digitText}</span>`
-      : '';
+  // Build DOM once when a new cue enters; update in-place afterwards
+  if (readygoCueInZone !== cue.id) {
+    readygoCueInZone = cue.id;
 
     container.innerHTML = `<div class="readygo-info-row">
         <div class="dept-bar" style="background:${deptColor}"></div>
@@ -358,21 +353,34 @@ function renderReadyGo(container, cue) {
       </div>
       <div class="readygo-countdown-row">
         <span class="readygo-status" style="color:${statusColor}">${esc(statusText)}</span>
-        ${digitHtml}
+        <span class="readygo-digit" style="color:${digitColor};display:${digitText ? '' : 'none'}">${digitText}</span>
       </div>
       <div class="readygo-progress"><div class="readygo-progress-fill" style="width:${readygoProgressPct(cue)}%;background:${progressColor}"></div></div>`;
-
   } else {
-    // Same value — update progress bar width and colors
+    // Same cue — update progress, colors, and digit via DOM
     const fillEl = container.querySelector('.readygo-progress-fill');
     if (fillEl) {
       fillEl.style.width = readygoProgressPct(cue) + '%';
       fillEl.style.background = progressColor;
     }
     const statusEl = container.querySelector('.readygo-status');
-    if (statusEl) statusEl.style.color = statusColor;
+    if (statusEl) {
+      statusEl.style.color = statusColor;
+      if (statusEl.textContent !== statusText) statusEl.textContent = statusText;
+    }
     const digitEl = container.querySelector('.readygo-digit');
-    if (digitEl && digitColor) digitEl.style.color = digitColor;
+    if (digitEl) {
+      digitEl.style.display = digitText ? '' : 'none';
+      digitEl.style.color = digitColor;
+      if (digitEl.textContent !== digitText) {
+        digitEl.textContent = digitText;
+        if (cd === 1) {
+          digitEl.classList.add('shake');
+        } else {
+          digitEl.classList.remove('shake');
+        }
+      }
+    }
   }
 }
 
@@ -403,7 +411,7 @@ function renderGoFlash(container, cue) {
   container.classList.remove('go-flash');
   void container.offsetWidth;
   container.classList.add('go-flash');
-  readygoLastValue = null;
+  readygoCueInZone = null;
 
   if (readygoGoTimer) clearTimeout(readygoGoTimer);
   readygoGoTimer = setTimeout(() => {
