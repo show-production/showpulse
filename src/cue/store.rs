@@ -51,8 +51,27 @@ pub struct CueStore {
 
 impl CueStore {
     pub fn new(file_path: PathBuf) -> Self {
-        let data = if file_path.exists() {
-            match std::fs::read_to_string(&file_path) {
+        // Validate: reject paths with ".." to prevent directory traversal
+        assert!(
+            !file_path.components().any(|c| c == std::path::Component::ParentDir),
+            "Data file path must not contain '..' segments"
+        );
+
+        // Canonicalize — resolve to absolute path within the working directory
+        let canonical = if file_path.exists() {
+            file_path.canonicalize().expect("Failed to canonicalize data file path")
+        } else {
+            let parent = file_path.parent().unwrap_or(std::path::Path::new("."));
+            let parent_canon = if parent.as_os_str().is_empty() || parent == std::path::Path::new(".") {
+                std::env::current_dir().expect("Cannot determine working directory")
+            } else {
+                parent.canonicalize().expect("Data file parent directory must exist")
+            };
+            parent_canon.join(file_path.file_name().expect("Data file must have a file name"))
+        };
+
+        let data = if canonical.exists() {
+            match std::fs::read_to_string(&canonical) {
                 Ok(contents) => serde_json::from_str(&contents).unwrap_or_default(),
                 Err(_) => ShowData::default(),
             }
@@ -62,7 +81,7 @@ impl CueStore {
 
         Self {
             data: Arc::new(RwLock::new(data)),
-            file_path,
+            file_path: canonical,
         }
     }
 

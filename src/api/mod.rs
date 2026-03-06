@@ -3,4 +3,5 @@ pub mod departments;
 pub mod generator;
 pub mod ltc;
 pub mod mtc;
+pub mod qr;
 pub mod timecode;
