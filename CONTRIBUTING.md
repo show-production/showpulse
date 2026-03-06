@@ -53,7 +53,7 @@ Update the version in `Cargo.toml` as part of your PR.
 - Backend engineer edits `src/`, `Cargo.toml`, `Cargo.lock` only.
 - Frontend engineer edits `static/` only.
 - Shared files (`CONTRIBUTING.md`, `README.md`, config) — coordinate before editing.
-- **Axum 0.7 route syntax**: use `{id}`, not `:id` (`:id` is Axum 0.6 and silently breaks routes).
+- **Axum route syntax**: We're on Axum **0.7.9** which uses `:id` for path params. The `{id}` syntax was introduced in 0.7.10+. Always verify against the locked version in `Cargo.lock`.
 
 ## Environment Variables
 
