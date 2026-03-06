@@ -405,7 +405,7 @@
 .flow-card.tier-distant .card-dept { display: none; }
 
 /* Tier: Passed */
-.flow-card.tier-passed { opacity: 0.3; border-color: transparent; }
+.flow-card.tier-passed { opacity: 0.45; border-color: transparent; }
 .flow-card.tier-passed .card-countdown { color: var(--text-dim); }
 .flow-card.tier-passed .progress-fill { background: var(--text-dim); width: 100% !important; }
 
