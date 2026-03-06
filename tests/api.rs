@@ -11,6 +11,7 @@ use showpulse::cue::types::{Cue, CueImportResult, Department};
 use showpulse::timecode::types::Timecode;
 use showpulse::timecode::TimecodeManager;
 use showpulse::ws::hub::WsHub;
+use showpulse::auth::SessionStore;
 use showpulse::{api_router, AppState};
 
 fn test_state() -> (AppState, NamedTempFile) {
@@ -18,10 +19,12 @@ fn test_state() -> (AppState, NamedTempFile) {
     let store = Arc::new(CueStore::new(tmp.path().to_path_buf()));
     let tc_manager = Arc::new(TimecodeManager::new());
     let ws_hub = Arc::new(WsHub::new());
+    let sessions = SessionStore::new(None);
     let state = AppState {
         tc_manager,
         store,
         ws_hub,
+        sessions,
     };
     (state, tmp)
 }
