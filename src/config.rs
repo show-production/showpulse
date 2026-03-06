@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+/// Maximum concurrent WebSocket connections allowed.
+pub const MAX_WS_CLIENTS: usize = 100;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub port: u16,

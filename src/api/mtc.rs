@@ -23,12 +23,12 @@ pub async fn set_device(
         .tc_manager
         .mtc_decoder
         .start_port(body.port_index)
-        .map(|_| StatusCode::OK)
+        .map(|_| StatusCode::NO_CONTENT)
         .map_err(|e| (StatusCode::BAD_REQUEST, e))
 }
 
 /// POST /api/mtc/stop — stop the MIDI input
 pub async fn stop(State(state): State<AppState>) -> StatusCode {
     state.tc_manager.mtc_decoder.stop();
-    StatusCode::OK
+    StatusCode::NO_CONTENT
 }

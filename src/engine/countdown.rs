@@ -8,6 +8,10 @@ use crate::cue::types::{CueState, CueStatus};
 use crate::timecode::TimecodeManager;
 use crate::ws::hub::{BroadcastMessage, WsHub};
 
+/// Duration (in seconds) to keep a cue in Warning state with countdown_sec <= 0
+/// before transitioning to Active. This gives the frontend time to show GO animation.
+const GO_HOLD_SECONDS: f64 = 2.0;
+
 pub async fn run(
     tc_manager: Arc<TimecodeManager>,
     store: Arc<CueStore>,
@@ -76,12 +80,19 @@ pub async fn run(
                     CueState::Upcoming
                 }
             } else {
-                // Cue has triggered (current_secs >= cue_secs)
-                match next_dept_trigger {
-                    // Next same-dept cue has also triggered → this one is passed
-                    Some(next_t) if current_secs >= next_t => CueState::Passed,
-                    // No next same-dept cue, or it hasn't triggered yet → still active
-                    _ => CueState::Active,
+                // Cue has triggered (current_secs >= cue_secs).
+                // Hold Warning state for GO_HOLD_SECONDS after trigger so the
+                // frontend can display the GO animation before flipping to Active.
+                let elapsed_since_trigger = current_secs - cue_secs;
+                if elapsed_since_trigger < GO_HOLD_SECONDS {
+                    CueState::Warning
+                } else {
+                    match next_dept_trigger {
+                        // Next same-dept cue has also triggered → this one is passed
+                        Some(next_t) if current_secs >= next_t => CueState::Passed,
+                        // No next same-dept cue, or it hasn't triggered yet → still active
+                        _ => CueState::Active,
+                    }
                 }
             };
 
@@ -110,7 +121,7 @@ pub async fn run(
                 department_id: cue.department_id,
                 label: cue.label.clone(),
                 state,
-                countdown_sec: diff.max(0.0),
+                countdown_sec: diff,
                 trigger_tc: cue.trigger_tc,
             });
         }

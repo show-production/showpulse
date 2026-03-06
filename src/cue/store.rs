@@ -5,6 +5,44 @@ use uuid::Uuid;
 
 use super::types::{Cue, CueImportError, CueImportResult, Department, ShowData};
 
+/// Maximum allowed length for string fields (names, labels, notes).
+const MAX_STRING_LEN: usize = 500;
+
+/// Truncate a string to MAX_STRING_LEN to prevent memory abuse.
+fn clamp_string(s: &mut String) {
+    if s.len() > MAX_STRING_LEN {
+        // Truncate at a char boundary
+        let mut end = MAX_STRING_LEN;
+        while !s.is_char_boundary(end) && end > 0 {
+            end -= 1;
+        }
+        s.truncate(end);
+    }
+}
+
+/// Validate and normalize a hex color string. Returns a sanitized "#rrggbb" or a default.
+fn sanitize_color(color: &str) -> String {
+    let trimmed = color.trim();
+    let hex = trimmed.strip_prefix('#').unwrap_or(trimmed);
+    if hex.len() == 6 && hex.chars().all(|c| c.is_ascii_hexdigit()) {
+        format!("#{hex}")
+    } else if hex.len() == 3 && hex.chars().all(|c| c.is_ascii_hexdigit()) {
+        // Expand shorthand #rgb → #rrggbb
+        let expanded: String = hex.chars().flat_map(|c| [c, c]).collect();
+        format!("#{expanded}")
+    } else {
+        "#888888".to_string()
+    }
+}
+
+/// Clamp timecode fields to valid ranges.
+fn sanitize_timecode(tc: &mut super::super::timecode::types::Timecode) {
+    if tc.hours > 23 { tc.hours = 23; }
+    if tc.minutes > 59 { tc.minutes = 59; }
+    if tc.seconds > 59 { tc.seconds = 59; }
+    if tc.frames > 29 { tc.frames = 29; }
+}
+
 /// In-memory store with JSON file persistence.
 pub struct CueStore {
     data: Arc<RwLock<ShowData>>,
@@ -30,8 +68,15 @@ impl CueStore {
 
     async fn persist(&self) {
         let data = self.data.read().await;
-        if let Ok(json) = serde_json::to_string_pretty(&*data) {
-            let _ = tokio::fs::write(&self.file_path, json).await;
+        match serde_json::to_string_pretty(&*data) {
+            Ok(json) => {
+                if let Err(e) = tokio::fs::write(&self.file_path, json).await {
+                    tracing::error!("Failed to write data file {:?}: {}", self.file_path, e);
+                }
+            }
+            Err(e) => {
+                tracing::error!("Failed to serialize show data: {}", e);
+            }
         }
     }
 
@@ -47,12 +92,16 @@ impl CueStore {
 
     pub async fn create_department(&self, mut dept: Department) -> Department {
         dept.id = Uuid::new_v4();
+        clamp_string(&mut dept.name);
+        dept.color = sanitize_color(&dept.color);
         self.data.write().await.departments.push(dept.clone());
         self.persist().await;
         dept
     }
 
-    pub async fn update_department(&self, id: Uuid, update: Department) -> Option<Department> {
+    pub async fn update_department(&self, id: Uuid, mut update: Department) -> Option<Department> {
+        clamp_string(&mut update.name);
+        update.color = sanitize_color(&update.color);
         let mut data = self.data.write().await;
         if let Some(dept) = data.departments.iter_mut().find(|d| d.id == id) {
             dept.name = update.name;
@@ -95,8 +144,17 @@ impl CueStore {
         self.data.read().await.cues.iter().find(|c| c.id == id).cloned()
     }
 
+    /// Sanitize all string fields and timecode on a cue.
+    fn sanitize_cue(cue: &mut Cue) {
+        clamp_string(&mut cue.label);
+        clamp_string(&mut cue.cue_number);
+        clamp_string(&mut cue.notes);
+        sanitize_timecode(&mut cue.trigger_tc);
+    }
+
     pub async fn create_cue(&self, mut cue: Cue) -> Cue {
         cue.id = Uuid::new_v4();
+        Self::sanitize_cue(&mut cue);
         if cue.cue_number.is_empty() {
             let data = self.data.read().await;
             let next = data.cues.len() + 1;
@@ -134,6 +192,7 @@ impl CueStore {
                 continue;
             }
             cue.id = Uuid::new_v4();
+            Self::sanitize_cue(&mut cue);
             valid_cues.push(cue);
             imported += 1;
         }
@@ -149,7 +208,13 @@ impl CueStore {
 
     /// Replace the entire show (departments + cues) atomically.
     pub async fn replace_show(&self, departments: Vec<Department>, cues: Vec<Cue>) -> CueImportResult {
-        let dept_ids: std::collections::HashSet<Uuid> = departments.iter().map(|d| d.id).collect();
+        let mut sanitized_depts = departments;
+        for dept in &mut sanitized_depts {
+            clamp_string(&mut dept.name);
+            dept.color = sanitize_color(&dept.color);
+        }
+
+        let dept_ids: std::collections::HashSet<Uuid> = sanitized_depts.iter().map(|d| d.id).collect();
 
         let mut imported = 0;
         let mut errors = Vec::new();
@@ -167,12 +232,13 @@ impl CueStore {
                 continue;
             }
             cue.id = Uuid::new_v4();
+            Self::sanitize_cue(&mut cue);
             valid_cues.push(cue);
             imported += 1;
         }
 
         let mut data = self.data.write().await;
-        data.departments = departments;
+        data.departments = sanitized_depts;
         data.cues = valid_cues;
         drop(data);
         self.persist().await;
@@ -180,7 +246,8 @@ impl CueStore {
         CueImportResult { imported, errors }
     }
 
-    pub async fn update_cue(&self, id: Uuid, update: Cue) -> Option<Cue> {
+    pub async fn update_cue(&self, id: Uuid, mut update: Cue) -> Option<Cue> {
+        Self::sanitize_cue(&mut update);
         let mut data = self.data.write().await;
         if let Some(cue) = data.cues.iter_mut().find(|c| c.id == id) {
             cue.department_id = update.department_id;

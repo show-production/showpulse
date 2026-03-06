@@ -18,5 +18,5 @@ pub async fn set_source(
     Json(body): Json<SourceUpdate>,
 ) -> StatusCode {
     state.tc_manager.set_source(body.source).await;
-    StatusCode::OK
+    StatusCode::NO_CONTENT
 }
