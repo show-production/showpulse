@@ -48,9 +48,9 @@ pub fn api_router() -> Router<AppState> {
         // Departments
         .route("/api/departments", get(api::departments::list))
         .route("/api/departments", post(api::departments::create))
-        .route("/api/departments/:id", put(api::departments::update))
+        .route("/api/departments/{id}", put(api::departments::update))
         .route(
-            "/api/departments/:id",
+            "/api/departments/{id}",
             delete(api::departments::delete),
         )
         // Cues
@@ -58,9 +58,9 @@ pub fn api_router() -> Router<AppState> {
         .route("/api/cues", post(api::cues::create))
         .route("/api/cues/import", post(api::cues::import))
         .route("/api/show/import", post(api::cues::import_show))
-        .route("/api/cues/:id", get(api::cues::get))
-        .route("/api/cues/:id", put(api::cues::update))
-        .route("/api/cues/:id", delete(api::cues::delete))
+        .route("/api/cues/{id}", get(api::cues::get))
+        .route("/api/cues/{id}", put(api::cues::update))
+        .route("/api/cues/{id}", delete(api::cues::delete))
         // LTC
         .route("/api/ltc/devices", get(api::ltc::list_devices))
         .route("/api/ltc/device", put(api::ltc::set_device))
