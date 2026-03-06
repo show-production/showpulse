@@ -441,6 +441,10 @@
 .readygo-digit.shake {
   animation: readygo-pop 0.35s ease-out, readygo-shake 0.4s ease-in-out;
 }
+.flow-readygo.go-steady {
+  background: rgba(0, 255, 136, 0.15);
+  border-color: var(--accent);
+}
 .flow-readygo.go-flash {
   animation: readygo-flash 1.5s ease-out;
 }

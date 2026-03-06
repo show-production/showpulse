@@ -293,7 +293,7 @@ function readygoProgressPct(cue) {
 function renderReadyGo(container, cue) {
   if (!cue) {
     if (readygoGoTimer) return; // still showing GO!
-    container.classList.remove('visible');
+    container.classList.remove('visible', 'go-steady');
     container.innerHTML = '';
     readygoCueInZone = null;
     return;
@@ -302,6 +302,13 @@ function renderReadyGo(container, cue) {
   container.classList.add('visible');
   const cd = Math.ceil(cue.countdown_sec);
   let statusText, statusColor, digitText, digitColor, progressColor;
+
+  // Apply steady green tint when at GO (cd <= 0), matching renderGoFlash style
+  if (cd <= 0) {
+    container.classList.add('go-steady');
+  } else {
+    container.classList.remove('go-steady');
+  }
 
   const readyLabel = `READY${CONST.EMDASH}${cue.department}`;
   if (cd > 3) {
