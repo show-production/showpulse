@@ -115,6 +115,12 @@
   min-height: calc(100vh - 48px);
 }
 
+.flow-spacer {
+  flex-shrink: 0;
+  height: calc(30vh - 48px);
+  min-height: 2rem;
+}
+
 /* ── TimecodeDisplay ── */
 .flow-timecode {
   display: flex;
@@ -405,7 +411,7 @@
 .flow-card.tier-distant .card-dept { display: none; }
 
 /* Tier: Passed */
-.flow-card.tier-passed { opacity: 0.3; border-color: transparent; }
+.flow-card.tier-passed { opacity: 0.45; border-color: transparent; }
 .flow-card.tier-passed .card-countdown { color: var(--text-dim); }
 .flow-card.tier-passed .progress-fill { background: var(--text-dim); width: 100% !important; }
 
