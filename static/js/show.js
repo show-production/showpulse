@@ -4,8 +4,8 @@
    Handles all Show view logic: flow rendering, sidebar, transport controls,
    prev/next cue navigation, and department filters.
    Dependencies: state.js, api.js
-   Components: ShowView, Sidebar, FlowArea, PassedBadge, ActiveStrips,
-               TimecodeDisplay, ReadyGoZone, UpcomingList, FlowCard
+   Components: ShowView, Sidebar, FlowArea,
+               TimecodeDisplay, ReadyGoZone, CueList, FlowCard
    ══════════════════════════════════════════ */
 
 // ── Sidebar ────────────────────────────────
@@ -111,13 +111,11 @@ function getTier(c) {
 
 /**
  * Render all flow sections from WebSocket cue data.
- * Splits cues into passed/active/readygo/upcoming and renders each section.
+ * All cues go to a single unified list; ReadyGo zone shows the nearest warning/go cue.
  * @param {Array<Object>} wsCues - Cue array from WebSocket message.
  */
 function renderFlowCues(wsCues) {
   if (!wsCues || wsCues.length === 0) {
-    renderPassedBadge(DOM.flowPassed, []);
-    renderActiveStrips(DOM.flowTriggered, []);
     renderReadyGo(DOM.flowReadygo, null);
     DOM.flowUpcoming.innerHTML = `<div class="flow-no-cues">${CONST.EMPTY_CUES_MSG}</div>`;
     return;
@@ -129,141 +127,25 @@ function renderFlowCues(wsCues) {
     filtered = wsCues.filter(c => activeDeptFilters.has(c.department_id));
   }
 
-  // 4-way split
-  const passed = showPassedCues ? filtered.filter(c => c.state === 'passed') : [];
-  const triggered = filtered.filter(c => c.state === 'active');
-
   // Ready/Go: find the cue in "go" state first, then closest "warning" cue
   const goCues = filtered.filter(c => c.state === 'go');
   const warningCues = filtered.filter(c => c.state === 'warning');
   let readygoCue = null;
   if (goCues.length > 0) {
-    readygoCue = goCues[0]; // go state takes priority
+    readygoCue = goCues[0];
   } else if (warningCues.length > 0) {
     readygoCue = warningCues.reduce((a, b) => a.countdown_sec < b.countdown_sec ? a : b);
   }
 
-  // Coming cues: everything not in the other containers
-  const coming = filtered.filter(c =>
-    c.state !== 'passed' && c.state !== 'active' && c.state !== 'go' &&
-    !(readygoCue && c.id === readygoCue.id)
-  );
+  // All cues in one list (except the readygo cue which has its own zone)
+  const allCues = filtered.filter(c => !(readygoCue && c.id === readygoCue.id));
 
-  // Render each section
-  renderPassedBadge(DOM.flowPassed, passed);
-  renderActiveStrips(DOM.flowTriggered, triggered);
   renderReadyGo(DOM.flowReadygo, readygoCue);
-  diffCueList(DOM.flowUpcoming, coming);
+  diffCueList(DOM.flowUpcoming, allCues);
 
-  if (coming.length === 0 && passed.length === 0 && triggered.length === 0 && !readygoCue) {
+  if (allCues.length === 0 && !readygoCue) {
     DOM.flowUpcoming.innerHTML = `<div class="flow-no-cues">${CONST.NO_MATCH_MSG}</div>`;
   }
-}
-
-// ── PassedBadge ────────────────────────────
-
-/**
- * Render the passed cue count badge with expandable dropdown.
- * @param {HTMLElement} container - The #flow-passed element.
- * @param {Array<Object>} passedCues - Array of passed cue objects.
- */
-function renderPassedBadge(container, passedCues) {
-  if (passedCues.length === 0) {
-    container.innerHTML = '';
-    passedDropdownOpen = false;
-    return;
-  }
-
-  const existingBtn = container.querySelector('.passed-count-btn');
-  const existingCount = existingBtn ? parseInt(existingBtn.dataset.count) : -1;
-
-  if (existingCount !== passedCues.length) {
-    const dropdownHtml = passedCues.map(c => {
-      const deptColor = getDeptColor(c.department_id);
-      const label = formatCueLabel(c);
-      return `<div class="passed-item" data-tc="${fmtTC(c.trigger_tc)}" onclick="DOM.gotoTc.value=this.dataset.tc">` +
-        `<span class="passed-bar" style="background:${deptColor}"></span>` +
-        `<span class="passed-label">${esc(label)}</span>` +
-        `<span class="passed-tc">${fmtTC(c.trigger_tc)}</span>` +
-        `</div>`;
-    }).join('');
-
-    container.innerHTML = `<button class="passed-count-btn" data-count="${passedCues.length}" onclick="togglePassedDropdown(event)">` +
-      `<span class="passed-dot"></span>${passedCues.length} passed` +
-      `</button>` +
-      `<div class="passed-dropdown${passedDropdownOpen ? ' open' : ''}" id="passed-dropdown">${dropdownHtml}</div>`;
-  }
-}
-
-/**
- * Toggle the passed cues dropdown.
- * @param {Event} e - Click event.
- */
-function togglePassedDropdown(e) {
-  e.stopPropagation();
-  passedDropdownOpen = !passedDropdownOpen;
-  const dd = document.getElementById('passed-dropdown');
-  if (dd) dd.classList.toggle('open', passedDropdownOpen);
-}
-
-// ── ActiveStrips ───────────────────────────
-
-/**
- * Render compact strips for currently-active cues (DOM-diffed).
- * @param {HTMLElement} container - The #flow-triggered element.
- * @param {Array<Object>} activeCues - Array of active cue objects.
- */
-function renderActiveStrips(container, activeCues) {
-  if (activeCues.length === 0) {
-    container.innerHTML = '';
-    return;
-  }
-
-  const existing = {};
-  container.querySelectorAll('.active-strip').forEach(el => {
-    existing[el.dataset.cueId] = el;
-  });
-
-  const wantedIds = new Set(activeCues.map(c => c.id));
-
-  // Remove strips no longer active
-  Object.keys(existing).forEach(id => {
-    if (!wantedIds.has(id)) existing[id].remove();
-  });
-
-  // Update or create each strip in order
-  let prevNode = null;
-  activeCues.forEach(c => {
-    let strip = existing[c.id];
-    if (!strip) {
-      strip = document.createElement('div');
-      strip.className = 'active-strip';
-      strip.dataset.cueId = c.id;
-      strip.dataset.triggerTc = fmtTC(c.trigger_tc);
-      strip.addEventListener('click', () => {
-        DOM.gotoTc.value = strip.dataset.triggerTc;
-      });
-
-      const deptColor = getDeptColor(c.department_id);
-      strip.style.borderInlineStartColor = deptColor;
-
-      const labelText = formatCueLabel(c);
-      strip.innerHTML = `<span class="strip-check">${CONST.CHECKMARK}</span>` +
-        `<span class="strip-label">${esc(labelText)}</span>` +
-        `<span class="strip-dept">${CONST.EMDASH}${esc(c.department)}</span>`;
-    } else {
-      const labelText = formatCueLabel(c);
-      const labelEl = strip.querySelector('.strip-label');
-      if (labelEl && labelEl.textContent !== labelText) labelEl.textContent = labelText;
-    }
-
-    if (prevNode) {
-      if (prevNode.nextElementSibling !== strip) prevNode.after(strip);
-    } else if (container.firstElementChild !== strip) {
-      container.prepend(strip);
-    }
-    prevNode = strip;
-  });
 }
 
 // ── ReadyGo zone ───────────────────────────
@@ -568,12 +450,3 @@ function clearDeptFilters() {
   renderDeptFilters();
 }
 
-/**
- * Toggle passed cues visibility.
- */
-function togglePassedCues() {
-  showPassedCues = !showPassedCues;
-  const btn = document.getElementById('toggle-passed');
-  btn.classList.toggle('active', showPassedCues);
-  btn.textContent = showPassedCues ? 'Show Passed' : 'Hide Passed';
-}

@@ -43,22 +43,6 @@
 - **HTML**: `<div class="flow-area">`
 - **CSS**: `show.css` — flex column, `calc(100vh - 48px)` height
 
-### PassedBadge
-- **Visual**: "N passed" pill badge with expandable dropdown
-- **HTML**: `<div id="flow-passed">`
-- **JS**: `renderPassedBadge()`, `togglePassedDropdown()` in `show.js`
-- **CSS**: `show.css` — `.flow-passed-badge`, `.passed-dropdown`
-- **State**: `passedDropdownOpen`, `showPassedCues`
-- **Scroll-fold**: Collapses to 0 height when upcoming list scrolls
-
-### ActiveStrips
-- **Visual**: Compact 28px strips with dept-color border for triggered cues
-- **HTML**: `<div id="flow-triggered">`
-- **JS**: `renderActiveStrips()` in `show.js` (DOM-diffed)
-- **CSS**: `show.css` — `.active-strip`
-- **Interaction**: Click to load trigger TC into goto field
-- **Scroll-fold**: Collapses to 0 height when upcoming list scrolls
-
 ### TimecodeDisplay
 - **Visual**: Large TC digits with source label, transport buttons, goto field
 - **HTML**: `<div id="flow-timecode">` with `.tc-row` and `.tc-controls`

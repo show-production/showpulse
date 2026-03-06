@@ -107,14 +107,13 @@ Global variables in `state.js`:
 - `activeDeptFilters` — Set of selected department IDs
 - `ws`, `wsConnected` — WebSocket state
 - `cueTableSort` — current sort column + direction
-- `showPassedCues` — toggle for passed cue visibility
 - `DOM` — cached element references (populated by `initDOM()`)
 
 ### Real-time Updates
 1. `connectWS()` opens WebSocket to `/ws`
 2. Server sends JSON messages at 10Hz with timecode + cue states
 3. `ws.onmessage` updates TC display and calls `renderFlowCues()`
-4. `renderFlowCues()` splits cues into 4 groups and renders each section
+4. `renderFlowCues()` renders unified cue list with ReadyGo zone
 5. DOM diffing prevents flicker on rapid updates
 
 ## Cue State Machine
