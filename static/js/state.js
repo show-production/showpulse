@@ -64,9 +64,6 @@ let wsConnected = false;
 /** Current sort configuration for the cue table. */
 let cueTableSort = { key: 'trigger_tc', asc: true };
 
-/** Whether passed cues are visible in the Show view. */
-let showPassedCues = true;
-
 /** Resolve function for the confirm modal promise. */
 let confirmResolve = null;
 
@@ -75,9 +72,6 @@ let sidebarOpen = localStorage.getItem('sidebarOpen') === 'true';
 
 /** Tracks the last Ready/Go countdown value to detect transitions. */
 let readygoLastValue = null;
-
-/** Whether the passed cues dropdown is open. */
-let passedDropdownOpen = false;
 
 // ── DOM cache ──────────────────────────────
 
@@ -94,8 +88,6 @@ function initDOM() {
   DOM.wsDot = document.getElementById('ws-dot');
   DOM.disconnectBanner = document.getElementById('disconnect-banner');
   DOM.flowTimecode = document.getElementById('flow-timecode');
-  DOM.flowPassed = document.getElementById('flow-passed');
-  DOM.flowTriggered = document.getElementById('flow-triggered');
   DOM.flowReadygo = document.getElementById('flow-readygo');
   DOM.flowUpcoming = document.getElementById('flow-upcoming');
   DOM.toastContainer = document.getElementById('toast-container');

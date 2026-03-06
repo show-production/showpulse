@@ -93,15 +93,6 @@ document.getElementById('dept-color-text').addEventListener('input', (e) => {
   document.getElementById('dept-color').value = e.target.value;
 });
 
-// Close passed dropdown when clicking outside
-document.addEventListener('click', (e) => {
-  if (passedDropdownOpen && !e.target.closest('.flow-passed-badge')) {
-    passedDropdownOpen = false;
-    const dd = document.getElementById('passed-dropdown');
-    if (dd) dd.classList.remove('open');
-  }
-});
-
 // ── Keyboard shortcuts ─────────────────────
 
 document.addEventListener('keydown', (e) => {

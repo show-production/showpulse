@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════
-   show.css — ShowView: Sidebar, FlowArea, PassedBadge, ActiveStrips,
-              TimecodeDisplay, ReadyGoZone, UpcomingList, FlowCard
+   show.css — ShowView: Sidebar, FlowArea,
+              TimecodeDisplay, ReadyGoZone, CueList, FlowCard
    ══════════════════════════════════════════
    Live operator dashboard styles.
    Dependencies: variables.css, base.css
@@ -94,8 +94,6 @@
   justify-content: flex-start;
 }
 
-.sidebar-options { display: flex; flex-direction: column; gap: 0.4rem; }
-
 .sidebar-backdrop {
   display: none;
   position: fixed;
@@ -104,30 +102,6 @@
   background: var(--overlay-medium);
 }
 .sidebar-backdrop.visible { display: block; }
-
-/* ── Passed cues toggle ── */
-.cue-controls {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  margin-bottom: var(--gap-md);
-  gap: var(--gap-md);
-}
-.toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.7rem;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text-dim);
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: var(--font-size-xs);
-  transition: var(--transition-fast);
-}
-.toggle-btn.active { border-color: var(--text-dim); color: var(--text-primary); }
-.toggle-btn:hover { border-color: var(--text-dim); }
 
 /* ── FlowArea ── */
 #view-show.view { padding: 0; max-width: none; overflow-y: auto; height: calc(100vh - 48px); }
@@ -139,133 +113,6 @@
   margin: 0 auto;
   padding: 0 1rem 2rem;
   min-height: calc(100vh - 48px);
-}
-
-/* ── PassedBadge ── */
-.flow-passed-badge {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  padding: 0.25rem 0;
-  position: relative;
-  transition: opacity 0.25s ease, max-height 0.25s ease, padding 0.25s ease;
-  overflow: hidden;
-}
-.flow-passed-badge:empty { display: none; }
-.passed-count-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.7rem;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text-dim);
-  border-radius: 14px;
-  cursor: pointer;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  transition: var(--transition-fast);
-  user-select: none;
-}
-.passed-count-btn:hover { border-color: var(--text-dim); color: var(--text-primary); }
-.passed-count-btn .passed-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--text-dim);
-}
-.passed-dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  inset-inline-start: 0;
-  z-index: 15;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 0.35rem;
-  max-height: 40vh;
-  overflow-y: auto;
-  min-width: 300px;
-  max-width: 100%;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-.passed-dropdown.open { display: block; }
-.passed-item {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-sm);
-  padding: 0.3rem 0.5rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  color: var(--text-dim);
-  transition: background 0.1s;
-}
-.passed-item:hover { background: var(--bg-surface); color: var(--text-primary); }
-.passed-item .passed-bar {
-  width: 3px; height: 16px;
-  border-radius: 1px;
-  flex-shrink: 0;
-}
-.passed-item .passed-label {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.passed-item .passed-tc {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  flex-shrink: 0;
-}
-
-/* ── ActiveStrips ── */
-.flow-active-strips {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  flex-shrink: 0;
-  padding-bottom: 0.25rem;
-  transition: opacity 0.25s ease, max-height 0.25s ease, padding 0.25s ease;
-  overflow: hidden;
-}
-.flow-active-strips:empty { display: none; }
-.active-strip {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-sm);
-  height: 28px;
-  padding: 0 0.6rem;
-  background: var(--bg-card);
-  border-radius: var(--radius-sm);
-  border-inline-start: 3px solid var(--accent);
-  cursor: pointer;
-  transition: background 0.15s;
-  overflow: hidden;
-}
-.active-strip:hover { background: var(--bg-surface); }
-.active-strip .strip-check {
-  color: var(--accent);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  flex-shrink: 0;
-}
-.active-strip .strip-label {
-  flex: 1;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.active-strip .strip-dept {
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  flex-shrink: 0;
 }
 
 /* ── TimecodeDisplay ── */

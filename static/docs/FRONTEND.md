@@ -30,8 +30,6 @@
 | ToastContainer | `#toast-container` | shell.css |
 | Sidebar | `#show-sidebar` | show.css |
 | FlowArea | `.flow-area` | show.css |
-| PassedBadge | `#flow-passed` | show.css |
-| ActiveStrips | `#flow-triggered` | show.css |
 | TimecodeDisplay | `#flow-timecode` | show.css |
 | ReadyGoZone | `#flow-readygo` | show.css |
 | UpcomingList | `#flow-upcoming` | show.css |
