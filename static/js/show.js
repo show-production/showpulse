@@ -137,8 +137,10 @@ function renderFlowCues(wsCues) {
     readygoCue = warningCues.reduce((a, b) => a.countdown_sec < b.countdown_sec ? a : b);
   }
 
-  // All cues in one list (except the readygo cue which has its own zone)
-  const allCues = filtered.filter(c => !(readygoCue && c.id === readygoCue.id));
+  // All cues in one list (except the readygo cue which has its own zone), sorted by time
+  const allCues = filtered
+    .filter(c => !(readygoCue && c.id === readygoCue.id))
+    .sort((a, b) => tcObjToSeconds(a.trigger_tc) - tcObjToSeconds(b.trigger_tc));
 
   renderReadyGo(DOM.flowReadygo, readygoCue);
   diffCueList(DOM.flowUpcoming, allCues);
@@ -401,10 +403,15 @@ function updateFlowCard(card, c) {
   const labelText = formatCueLabel(c);
   if (labelEl.textContent !== labelText) labelEl.textContent = labelText;
 
-  // Countdown
+  // Countdown text + color
   const cdEl = card.querySelector('.card-countdown');
   const cdText = (c.state === 'passed' || c.state === 'active') ? CONST.CHECKMARK : (c.state === 'go' ? 'GO!' : fmtCountdown(c.countdown_sec));
   if (cdEl.textContent !== cdText) cdEl.textContent = cdText;
+  if (c.state === 'active') {
+    cdEl.style.color = 'var(--accent)';
+  } else {
+    cdEl.style.color = '';
+  }
 
   // Progress bar — fills from 0% → 100% over the warn window
   const fillEl = card.querySelector('.progress-fill');
