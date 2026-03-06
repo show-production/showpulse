@@ -1,18 +1,20 @@
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
-
 use axum::{
     extract::{DefaultBodyLimit, State, WebSocketUpgrade},
     http::{HeaderValue, StatusCode},
+    middleware,
     response::IntoResponse,
     routing::get,
 };
+use tower::limit::ConcurrencyLimitLayer;
 use tower_http::cors::{AllowOrigin, CorsLayer};
 use tower_http::services::ServeDir;
 use tower_http::set_header::SetResponseHeaderLayer;
-use tracing::info;
+use tracing::{info, warn};
 
+use showpulse::auth::SessionStore;
 use showpulse::cue::store::CueStore;
 use showpulse::timecode::TimecodeManager;
 use showpulse::ws::hub::WsHub;
@@ -34,12 +36,19 @@ async fn ws_handler(
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let config = showpulse::config::Config::default();
+    let config = showpulse::config::Config::from_env();
 
     let store = Arc::new(CueStore::new(PathBuf::from(&config.data_file)));
     store.seed_if_empty().await;
     let tc_manager = Arc::new(TimecodeManager::new());
     let ws_hub = Arc::new(WsHub::new());
+    let sessions = SessionStore::new(config.pin.clone());
+
+    if sessions.auth_enabled() {
+        info!("Authentication enabled — mutation endpoints require PIN");
+    } else {
+        warn!("No SHOWPULSE_PIN set — all endpoints are open (no authentication)");
+    }
 
     // Start countdown engine
     let engine_tc = tc_manager.clone();
@@ -53,6 +62,7 @@ async fn main() {
         tc_manager,
         store,
         ws_hub,
+        sessions: sessions.clone(),
     };
 
     // CORS: only allow same-origin requests
@@ -65,7 +75,14 @@ async fn main() {
     let app = api_router()
         // WebSocket
         .route("/ws", get(ws_handler))
+        // Auth middleware — protects POST/PUT/DELETE when PIN is set
+        .route_layer(middleware::from_fn_with_state(
+            sessions,
+            showpulse::auth::require_auth,
+        ))
         .with_state(state)
+        // Concurrency limit: max 50 in-flight requests
+        .layer(ConcurrencyLimitLayer::new(50))
         // Request body size limit (1MB — generous for JSON cue imports)
         .layer(DefaultBodyLimit::max(1024 * 1024))
         // CORS
@@ -82,7 +99,12 @@ async fn main() {
         // Static files (UI)
         .fallback_service(ServeDir::new("static"));
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
+    let addr = SocketAddr::from((config.bind_address, config.port));
+
+    if config.bind_address.is_unspecified() {
+        warn!("Listening on all interfaces ({}) — accessible from the network", addr);
+    }
+
     info!("ShowPulse starting on http://{}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();

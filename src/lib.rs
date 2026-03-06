@@ -1,4 +1,5 @@
 pub mod api;
+pub mod auth;
 pub mod config;
 pub mod cue;
 pub mod engine;
@@ -7,9 +8,11 @@ pub mod ws;
 
 use std::sync::Arc;
 
+use axum::extract::FromRef;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 
+use auth::SessionStore;
 use cue::store::CueStore;
 use timecode::TimecodeManager;
 use ws::hub::WsHub;
@@ -19,6 +22,13 @@ pub struct AppState {
     pub tc_manager: Arc<TimecodeManager>,
     pub store: Arc<CueStore>,
     pub ws_hub: Arc<WsHub>,
+    pub sessions: SessionStore,
+}
+
+impl FromRef<AppState> for SessionStore {
+    fn from_ref(state: &AppState) -> Self {
+        state.sessions.clone()
+    }
 }
 
 /// Build the API routes (without WebSocket or static file serving).
@@ -59,4 +69,10 @@ pub fn api_router() -> Router<AppState> {
         .route("/api/mtc/devices", get(api::mtc::list_devices))
         .route("/api/mtc/device", put(api::mtc::set_device))
         .route("/api/mtc/stop", post(api::mtc::stop))
+        // QR
+        .route("/api/qr", get(api::qr::qr_svg))
+        // Auth
+        .route("/api/auth/status", get(auth::auth_status))
+        .route("/api/auth/login", post(auth::login))
+        .route("/api/auth/logout", post(auth::logout))
 }
