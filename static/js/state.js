@@ -25,7 +25,6 @@ const CONST = {
   // Thresholds
   TIER_NEAR_SEC: 120,
   TIER_FAR_SEC: 600,
-  SCROLL_FOLD_PX: 30,
   DEFAULT_WARN_SEC: 10,
 
   // Colors (countdown traffic light)

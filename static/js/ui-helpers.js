@@ -135,12 +135,6 @@ loadTheme();
   }
   // Restore sidebar state
   if (sidebarOpen) toggleSidebar(true);
-  // Scroll fold: collapse above-timer sections when scrolling down in upcoming
-  DOM.flowUpcoming.addEventListener('scroll', () => {
-    const folded = DOM.flowUpcoming.scrollTop > CONST.SCROLL_FOLD_PX;
-    DOM.flowPassed.classList.toggle('folded', folded);
-    DOM.flowTriggered.classList.toggle('folded', folded);
-  });
   // Hide loading overlay
   DOM.loadingOverlay.classList.add('hidden');
   setTimeout(() => DOM.loadingOverlay.remove(), 500);
