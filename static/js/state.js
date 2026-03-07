@@ -1,9 +1,15 @@
 /* ══════════════════════════════════════════
    state.js — Constants, global state, DOM cache, shared utilities
    ══════════════════════════════════════════
-   Loaded first. Provides CONST, DOM cache, and helpers used by all modules.
-   Dependencies: none
-   Components: All
+   Loaded first. No dependencies.
+   Sections:
+     CONST           — all magic values (thresholds, colors, timings, symbols)
+     Global state    — departments, cues, acts, showName, filters, auth, WS
+     DOM cache       — initDOM() populates DOM.* for frequently accessed elements
+     Shared helpers  — formatCueLabel, parseTC, fmtTC, fmtCountdown,
+                       tcToSeconds, tcObjToSeconds, hexToRgba, getDeptColor,
+                       getCueWarnMax, esc
+     CRUD helpers    — apiSave, apiDelete (generic save/delete with toast feedback)
    ══════════════════════════════════════════ */
 
 // ── Constants ──────────────────────────────
@@ -144,6 +150,11 @@ function initDOM() {
   DOM.navTabs = document.querySelectorAll('.tab');
   DOM.logoutBtn = document.getElementById('logout-btn');
   DOM.authUserLabel = document.getElementById('auth-user-label');
+  // Transport (for role gating)
+  DOM.tcTransport = document.querySelector('.tc-transport');
+  DOM.tcGotoGroup = document.querySelector('.tc-goto-group');
+  // Act list (manage view)
+  DOM.actList = document.getElementById('act-list');
 }
 
 // ── Shared helpers ─────────────────────────
@@ -255,4 +266,48 @@ function esc(s) {
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
+}
+
+/**
+ * Generic save helper: create or update a resource via API.
+ * @param {string} endpoint - Base API path (e.g. "/departments").
+ * @param {string} id - Resource ID (empty string for create).
+ * @param {Object} body - Request body.
+ * @param {string} label - Human-readable resource name for toasts (e.g. "Department").
+ * @returns {Promise<boolean>} True if successful.
+ */
+async function apiSave(endpoint, id, body, label) {
+  try {
+    if (id) {
+      await api(`${endpoint}/${id}`, { method: 'PUT', body });
+    } else {
+      await api(endpoint, { method: 'POST', body });
+    }
+    showToast(id ? `${label} updated` : `${label} created`, 'success');
+    return true;
+  } catch (e) {
+    showToast(`Failed to save ${label.toLowerCase()}: ${e.message}`, 'error');
+    return false;
+  }
+}
+
+/**
+ * Generic delete helper: confirm then delete a resource via API.
+ * @param {string} endpoint - Full API path with ID (e.g. "/departments/uuid").
+ * @param {string} title - Confirm dialog title.
+ * @param {string} message - Confirm dialog message.
+ * @param {string} label - Human-readable resource name for toast.
+ * @returns {Promise<boolean>} True if deleted.
+ */
+async function apiDelete(endpoint, title, message, label) {
+  const ok = await showConfirm(title, message);
+  if (!ok) return false;
+  try {
+    await api(endpoint, { method: 'DELETE' });
+    showToast(`${label} deleted`, 'success');
+    return true;
+  } catch (e) {
+    showToast(`Failed to delete ${label.toLowerCase()}: ${e.message}`, 'error');
+    return false;
+  }
 }

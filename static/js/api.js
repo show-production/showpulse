@@ -64,13 +64,14 @@ function connectWS() {
   ws.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
+      if (!data || typeof data.timecode !== 'string') return;
       DOM.tcValue.textContent = data.timecode;
-      DOM.tcState.textContent = data.status.toUpperCase();
-      DOM.tcState.className = data.status;
-      DOM.tcFps.textContent = `${data.frame_rate} fps`;
-      renderFlowCues(data.cues);
+      DOM.tcState.textContent = (data.status || 'stopped').toUpperCase();
+      DOM.tcState.className = data.status || 'stopped';
+      DOM.tcFps.textContent = `${data.frame_rate || '?'} fps`;
+      if (Array.isArray(data.cues)) renderFlowCues(data.cues);
     } catch (e) {
-      console.error('Invalid WS message:', e);
+      // Silently ignore malformed WS messages
     }
   };
 }

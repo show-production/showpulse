@@ -1,11 +1,18 @@
 /* ══════════════════════════════════════════
-   show.js — ShowView: rendering, sidebar, transport, cue navigation
+   show.js — Show view: flow rendering, transport, cue navigation
    ══════════════════════════════════════════
-   Handles all Show view logic: flow rendering, sidebar, transport controls,
-   prev/next cue navigation, and department filters.
+   Sections:
+     Sidebar         — toggle, dept filter chips
+     Transport       — play/pause/stop, goto, timer-lock guard
+     Cue navigation  — prev/next, goto cue info display
+     Tier + color    — tier classification, traffic-light colors
+     Flow rendering  — act-grouped DOM-diff, card create/update
+     Warning row     — inline READY/3/2/1/GO countdown on cards
+     Progress bar    — fill animation per cue state
+     AutoPulse       — auto-scroll + jump-to-current
+     Collapse/expand — act group folding
+     Dept filters    — sidebar filter chips
    Dependencies: state.js, api.js
-   Components: ShowView, Sidebar, FlowArea,
-               TimecodeDisplay, CueList, FlowCard
    ══════════════════════════════════════════ */
 
 // ── Sidebar ────────────────────────────────
@@ -24,23 +31,28 @@ function toggleSidebar(forceState) {
 // ── Transport controls ─────────────────────
 
 /**
+ * Check if the current user is allowed to control the timer.
+ * Managers must hold the timer lock; others pass through.
+ * @returns {boolean} True if allowed.
+ */
+function canControlTimer() {
+  if (authEnabled && authRole === 'manager' && !hasTimerLock) {
+    showToast('Acquire timer control first', 'error');
+    return false;
+  }
+  return true;
+}
+
+/**
  * Send a generator transport command (play/pause/stop).
  * @param {string} cmd - Command name.
  */
 async function genCmd(cmd) {
-  // Manager without timer lock — prompt to acquire
-  if (authEnabled && authRole === 'manager' && !hasTimerLock) {
-    showToast('Acquire timer control first', 'error');
-    return;
-  }
+  if (!canControlTimer()) return;
   try {
     await api(`/generator/${cmd}`, { method: 'POST' });
   } catch (e) {
-    if (e.message.includes('Forbidden') || e.message.includes('403')) {
-      showToast('Timer control required', 'error');
-    } else {
-      showToast(`Command failed: ${e.message}`, 'error');
-    }
+    showToast(e.message.includes('403') ? 'Timer control required' : `Command failed: ${e.message}`, 'error');
   }
 }
 
@@ -48,20 +60,11 @@ async function genCmd(cmd) {
  * Jump to the timecode entered in the goto input field.
  */
 async function gotoTC() {
-  if (authEnabled && authRole === 'manager' && !hasTimerLock) {
-    showToast('Acquire timer control first', 'error');
-    return;
-  }
-  const val = DOM.gotoTc.value;
-  const tc = parseTC(val);
+  if (!canControlTimer()) return;
   try {
-    await api('/generator/goto', { method: 'POST', body: { timecode: tc } });
+    await api('/generator/goto', { method: 'POST', body: { timecode: parseTC(DOM.gotoTc.value) } });
   } catch (e) {
-    if (e.message.includes('Forbidden') || e.message.includes('403')) {
-      showToast('Timer control required', 'error');
-    } else {
-      showToast(`Goto failed: ${e.message}`, 'error');
-    }
+    showToast(e.message.includes('403') ? 'Timer control required' : `Goto failed: ${e.message}`, 'error');
   }
 }
 
@@ -247,11 +250,10 @@ function diffCueListWithActs(container, cueList) {
     }
   }
 
-  // If no acts exist, fall back to flat list
+  // If no acts exist, treat all cues as ungrouped
   if (grouped.size === 0) {
-    diffCueList(container, cueList);
     container.querySelectorAll('.act-group').forEach(g => g.remove());
-    return;
+    // Fall through — ungrouped array has all cues
   }
 
   // Build ordered act groups (sorted by earliest cue time)
@@ -372,12 +374,17 @@ function diffCueListWithActs(container, cueList) {
 
 // ── Act group collapse/expand ─────────────
 
+/**
+ * Toggle collapse state of a single act group.
+ * @param {HTMLElement} group - The .act-group element.
+ */
 function toggleActGroup(group) {
   const collapsed = group.classList.toggle('collapsed');
   const header = group.querySelector('.act-header');
   if (header) header.classList.toggle('collapsed', collapsed);
 }
 
+/** Collapse all act groups, hiding their cue cards. */
 function collapseAllActs() {
   DOM.flowUpcoming.querySelectorAll('.act-group').forEach(g => {
     g.classList.add('collapsed');
@@ -386,59 +393,13 @@ function collapseAllActs() {
   });
 }
 
+/** Expand all act groups, showing their cue cards. */
 function expandAllActs() {
   DOM.flowUpcoming.querySelectorAll('.act-group').forEach(g => {
     g.classList.remove('collapsed');
     const h = g.querySelector('.act-header');
     if (h) h.classList.remove('collapsed');
   });
-}
-
-// ── FlowCard list (DOM-diffed) ─────────────
-
-/**
- * DOM-diff the upcoming cue list — update, add, or remove cards as needed.
- * @param {HTMLElement} container - The #flow-upcoming element.
- * @param {Array<Object>} cueList - Array of cue objects to display.
- */
-function diffCueList(container, cueList) {
-  const existingCards = container.querySelectorAll('.flow-card');
-  const existingMap = {};
-  existingCards.forEach(card => { existingMap[card.dataset.cueId] = card; });
-
-  const wantedIds = new Set(cueList.map(c => c.id));
-
-  // Remove cards no longer wanted
-  existingCards.forEach(card => {
-    if (!wantedIds.has(card.dataset.cueId)) card.remove();
-  });
-
-  // Update or create in order
-  let prevNode = null;
-  cueList.forEach(c => {
-    let card = existingMap[c.id];
-    if (card) {
-      updateFlowCard(card, c);
-      if (prevNode) {
-        if (prevNode.nextElementSibling !== card) prevNode.after(card);
-      } else if (container.firstElementChild !== card) {
-        container.prepend(card);
-      }
-    } else {
-      card = createFlowCard(c);
-      if (prevNode) {
-        prevNode.after(card);
-      } else {
-        container.prepend(card);
-      }
-    }
-    prevNode = card;
-  });
-
-  // Remove trailing non-card elements
-  while (prevNode && prevNode.nextElementSibling) {
-    prevNode.nextElementSibling.remove();
-  }
 }
 
 /**
@@ -484,114 +445,121 @@ function createFlowCard(c) {
 }
 
 /**
- * Update an existing flow card's tier, label, countdown, progress bar,
- * and inline READY/GO countdown row for warning/go cues.
+ * Update the inline READY/3/2/1/GO countdown row on a warning-tier card.
+ * @param {HTMLElement} card - The card DOM element.
+ * @param {Object} c - Cue object.
+ */
+function updateWarningRow(card, c) {
+  const statusEl = card.querySelector('.card-status');
+  const digitEl = card.querySelector('.card-digit');
+  const tl = getTrafficLight(c);
+
+  const escapedStatus = esc(tl.statusText);
+  if (statusEl.innerHTML !== escapedStatus) statusEl.innerHTML = escapedStatus;
+  statusEl.style.color = tl.statusColor;
+
+  if (tl.digitText) {
+    digitEl.style.display = '';
+    if (digitEl.textContent !== tl.digitText) {
+      digitEl.textContent = tl.digitText;
+      digitEl.className = 'card-digit' + (Math.ceil(c.countdown_sec) === 1 ? ' shake' : '');
+      void digitEl.offsetWidth;
+    }
+    digitEl.style.color = tl.digitColor;
+  } else {
+    digitEl.style.display = 'none';
+    digitEl.textContent = '';
+  }
+
+  // GO flash animation
+  const currentCd = c.state === 'go' ? 'GO' : (tl.digitText || 'READY');
+  const lastCd = card.dataset.lastCd || '';
+  if (lastCd !== currentCd) {
+    if (c.state === 'go' && lastCd !== 'GO') {
+      card.classList.remove('go-flash');
+      void card.offsetWidth;
+      card.classList.add('go-flash');
+    } else if (c.state !== 'go') {
+      card.classList.remove('go-flash');
+    }
+  }
+  card.dataset.lastCd = currentCd;
+}
+
+/**
+ * Clear the countdown row state when a card leaves warning tier.
+ * @param {HTMLElement} card - The card DOM element.
+ */
+function clearWarningRow(card) {
+  const statusEl = card.querySelector('.card-status');
+  const digitEl = card.querySelector('.card-digit');
+  if (statusEl.textContent) statusEl.textContent = '';
+  if (digitEl.textContent) { digitEl.textContent = ''; digitEl.style.display = 'none'; }
+  if (card.dataset.lastCd) delete card.dataset.lastCd;
+  card.classList.remove('go-flash');
+}
+
+/**
+ * Update the progress bar fill on a flow card.
+ * @param {HTMLElement} card - The card DOM element.
+ * @param {Object} c - Cue object.
+ */
+function updateProgressBar(card, c) {
+  const fillEl = card.querySelector('.progress-fill');
+  if (c.state === 'passed' || c.state === 'active' || c.state === 'go') {
+    fillEl.style.width = '100%';
+    fillEl.style.background = (c.state === 'go') ? 'var(--accent)' : '';
+  } else {
+    const warnMax = getCueWarnMax(c.department_id, c.id);
+    const pct = Math.max(0, Math.min(100, (1 - c.countdown_sec / warnMax) * 100));
+    fillEl.style.width = pct + '%';
+    fillEl.style.background = c.state === 'warning' ? getTrafficLight(c).progressColor : '';
+  }
+}
+
+/**
+ * Update an existing flow card's tier, label, countdown, and progress.
  * @param {HTMLElement} card - The card DOM element.
  * @param {Object} c - Updated cue object.
  */
 function updateFlowCard(card, c) {
   const tier = getTier(c);
-  const isWarningTier = (tier === 'tier-warning');
+  const isWarning = (tier === 'tier-warning');
 
-  // Preserve go-flash class during animation, otherwise sync tier
+  // Sync tier class (preserve go-flash during animation)
   const hasGoFlash = card.classList.contains('go-flash');
   const newClass = `flow-card ${tier}${hasGoFlash ? ' go-flash' : ''}`;
   if (card.className !== newClass) card.className = newClass;
   card.dataset.triggerTc = fmtTC(c.trigger_tc);
 
-  // Dept tint for warning only (active is dimmed, no tint)
-  const deptColor = getDeptColor(c.department_id);
-  if (isWarningTier) {
-    card.style.background = hexToRgba(deptColor, CONST.TINT_ALPHA);
-  } else {
-    card.style.background = '';
-  }
+  // Dept tint for warning tier only
+  card.style.background = isWarning ? hexToRgba(getDeptColor(c.department_id), CONST.TINT_ALPHA) : '';
 
   // Label
   const labelEl = card.querySelector('.card-label');
   const labelText = formatCueLabel(c);
   if (labelEl.textContent !== labelText) labelEl.textContent = labelText;
 
-  // Countdown text (top-right of card)
+  // Countdown badge (top-right)
   const cdEl = card.querySelector('.card-countdown');
-  let cdText, cdColor = '';
   if (c.state === 'passed' || c.state === 'active') {
-    cdText = CONST.CHECKMARK;
-    cdColor = c.state === 'active' ? 'var(--accent)' : '';
-  } else if (isWarningTier) {
-    // Hide the small countdown — the inline row shows READY/digit/GO instead
-    cdText = '';
-    cdColor = '';
+    cdEl.textContent = CONST.CHECKMARK;
+    cdEl.style.color = c.state === 'active' ? 'var(--accent)' : '';
+  } else if (isWarning) {
+    cdEl.textContent = '';
+    cdEl.style.color = '';
   } else {
-    cdText = fmtCountdown(c.countdown_sec);
-  }
-  if (cdEl.textContent !== cdText) cdEl.textContent = cdText;
-  cdEl.style.color = cdColor;
-
-  // Inline countdown row (READY / 3 / 2 / 1 / GO!) — visible only for warning tier
-  const statusEl = card.querySelector('.card-status');
-  const digitEl = card.querySelector('.card-digit');
-  if (isWarningTier) {
-    const tl = getTrafficLight(c);
-
-    // Status text + color
-    const escapedStatus = esc(tl.statusText);
-    if (statusEl.innerHTML !== escapedStatus) statusEl.innerHTML = escapedStatus;
-    statusEl.style.color = tl.statusColor;
-
-    // Digit (3/2/1) with pop/shake animation
-    if (tl.digitText) {
-      digitEl.style.display = '';
-      if (digitEl.textContent !== tl.digitText) {
-        digitEl.textContent = tl.digitText;
-        const cd = Math.ceil(c.countdown_sec);
-        digitEl.className = 'card-digit' + (cd === 1 ? ' shake' : '');
-        void digitEl.offsetWidth; // re-trigger animation
-      }
-      digitEl.style.color = tl.digitColor;
-    } else {
-      digitEl.style.display = 'none';
-      digitEl.textContent = '';
-    }
-
-    // GO flash animation on card
-    const isGo = c.state === 'go';
-    const lastCd = card.dataset.lastCd || '';
-    const currentCd = isGo ? 'GO' : (tl.digitText || 'READY');
-    if (lastCd !== currentCd) {
-      if (isGo && lastCd !== 'GO') {
-        card.classList.remove('go-flash');
-        void card.offsetWidth;
-        card.classList.add('go-flash');
-      } else if (!isGo) {
-        card.classList.remove('go-flash');
-      }
-    }
-    card.dataset.lastCd = currentCd;
-  } else {
-    // Not warning — clear countdown row state
-    if (statusEl.textContent) statusEl.textContent = '';
-    if (digitEl.textContent) { digitEl.textContent = ''; digitEl.style.display = 'none'; }
-    if (card.dataset.lastCd) delete card.dataset.lastCd;
-    card.classList.remove('go-flash');
+    const text = fmtCountdown(c.countdown_sec);
+    if (cdEl.textContent !== text) cdEl.textContent = text;
+    cdEl.style.color = '';
   }
 
-  // Progress bar — fills from 0% → 100% over the warn window
-  const fillEl = card.querySelector('.progress-fill');
-  if (c.state === 'passed' || c.state === 'active' || c.state === 'go') {
-    fillEl.style.width = '100%';
-    fillEl.style.background = (c.state === 'go') ? 'var(--accent)' : '';
-  } else if (c.state === 'warning') {
-    const warnMax = getCueWarnMax(c.department_id, c.id);
-    const pct = Math.max(0, Math.min(100, (1 - c.countdown_sec / warnMax) * 100));
-    fillEl.style.width = pct + '%';
-    fillEl.style.background = getTrafficLight(c).progressColor;
-  } else {
-    const warnMax = getCueWarnMax(c.department_id, c.id);
-    const pct = Math.max(0, Math.min(100, (1 - c.countdown_sec / warnMax) * 100));
-    fillEl.style.width = pct + '%';
-    fillEl.style.background = '';
-  }
+  // Warning row (READY/3/2/1/GO!)
+  if (isWarning) updateWarningRow(card, c);
+  else clearWarningRow(card);
+
+  // Progress bar
+  updateProgressBar(card, c);
 }
 
 // ── AutoPulse + Jump to current ─────────────

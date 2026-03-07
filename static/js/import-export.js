@@ -12,7 +12,7 @@
  * Export the current show (departments + cues) as a JSON file download.
  */
 function exportShow() {
-  const data = JSON.stringify({ departments, cues }, null, 2);
+  const data = JSON.stringify({ departments, cues, acts, show_name: showName }, null, 2);
   const blob = new Blob([data], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);

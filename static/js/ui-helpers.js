@@ -1,10 +1,14 @@
 /* ══════════════════════════════════════════
-   ui-helpers.js — Toasts, modals, keyboard shortcuts, view switching, init
+   ui-helpers.js — App bootstrap, toasts, modals, keyboard shortcuts
    ══════════════════════════════════════════
-   Cross-cutting UI concerns and application initialization.
-   Loaded last — calls initDOM() and wires up all event listeners.
-   Dependencies: state.js, api.js, show.js, manage.js, settings.js, import-export.js
-   Components: ToastContainer, ConfirmModal, TopNav (view switching)
+   Sections:
+     View switching   — tab click handlers
+     Toasts           — showToast (success/error/info)
+     Confirm modal    — showConfirm / closeConfirm (Promise-based)
+     Modal helpers    — closeModal, overlay click-to-close, color picker sync
+     Keyboard         — global shortcuts (Space/Esc/P/S/G/N/B/A/C)
+     Initialization   — initDOM, initAuth, data load, WS connect, fallback poll
+   Loaded last. Dependencies: all other JS files.
    ══════════════════════════════════════════ */
 
 // ── View switching ─────────────────────────
