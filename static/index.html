@@ -140,7 +140,7 @@
       <div class="panel-header">
         <h3>Cue List</h3>
         <div class="inline-row">
-          <select id="manage-dept-filter" class="filter-select" onchange="renderCueTable()">
+          <select id="manage-dept-filter" class="filter-select" onchange="renderCueList()">
             <option value="">All Departments</option>
           </select>
           <button class="add-btn" onclick="document.getElementById('import-cues-file').click()">&#x21E7; Import</button>
@@ -149,21 +149,7 @@
         </div>
       </div>
       <div class="panel-body panel-body--flush">
-        <div class="cue-table-wrap">
-        <table class="cue-table">
-          <thead>
-            <tr>
-              <th class="sortable" onclick="sortCueTable('cue_number')" id="sort-cue_number">#</th>
-              <th class="sortable" onclick="sortCueTable('trigger_tc')" id="sort-trigger_tc">Timecode &#x25B2;</th>
-              <th class="sortable" onclick="sortCueTable('label')" id="sort-label">Label</th>
-              <th class="sortable" onclick="sortCueTable('department')" id="sort-department">Department</th>
-              <th class="sortable" onclick="sortCueTable('warn_seconds')" id="sort-warn_seconds" title="Warning lead time in seconds before cue trigger">Lead Time</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="cue-table-body"></tbody>
-        </table>
-        </div>
+        <div class="cue-list" id="cue-list-body"></div>
       </div>
     </div>
   </div>

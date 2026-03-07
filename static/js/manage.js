@@ -18,7 +18,7 @@
 async function refreshManageView() {
   await Promise.all([loadDepartments(), loadCues(), loadActs()]);
   renderDeptList();
-  renderCueTable();
+  renderCueList();
   renderDeptFilters();
   renderActList();
 }
@@ -73,12 +73,15 @@ function renderDeptList() {
   `).join('');
 }
 
-// ── CueTable ───────────────────────────────
+// ── Cue List (act-grouped) ─────────────────
+
+/** Set of act IDs collapsed in the editor cue list. */
+const cueListCollapsed = new Set();
 
 /**
- * Render the cue table with current filter and sort settings.
+ * Render the cue list grouped by act with collapsible headers.
  */
-function renderCueTable() {
+function renderCueList() {
   // Populate department filter dropdown
   const curFilter = DOM.manageDeptFilter.value;
   DOM.manageDeptFilter.innerHTML = '<option value="">All Departments</option>' +
@@ -90,61 +93,125 @@ function renderCueTable() {
     filtered = cues.filter(c => c.department_id === curFilter);
   }
 
-  // Sort
-  const getDeptName = (c) => {
-    const d = departments.find(d => d.id === c.department_id);
-    return d ? d.name.toLowerCase() : '';
-  };
-  const sortFns = {
-    cue_number: (a, b) => (a.cue_number || '').localeCompare(b.cue_number || '', undefined, { numeric: true }),
-    trigger_tc: (a, b) => fmtTC(a.trigger_tc).localeCompare(fmtTC(b.trigger_tc)),
-    label: (a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()),
-    department: (a, b) => getDeptName(a).localeCompare(getDeptName(b)),
-    warn_seconds: (a, b) => a.warn_seconds - b.warn_seconds,
-  };
-  const fn = sortFns[cueTableSort.key] || sortFns.trigger_tc;
-  filtered = [...filtered].sort((a, b) => cueTableSort.asc ? fn(a, b) : fn(b, a));
-
-  // Update sort indicators
-  ['cue_number', 'trigger_tc', 'label', 'department', 'warn_seconds'].forEach(k => {
-    const th = document.getElementById(`sort-${k}`);
-    if (!th) return;
-    const base = { cue_number: '#', trigger_tc: 'Timecode', label: 'Label', department: 'Department', warn_seconds: 'Lead Time' }[k];
-    th.textContent = k === cueTableSort.key ? `${base} ${cueTableSort.asc ? '\u25B2' : '\u25BC'}` : base;
-  });
+  // Sort by timecode
+  filtered = [...filtered].sort((a, b) => tcObjToSeconds(a.trigger_tc) - tcObjToSeconds(b.trigger_tc));
 
   if (filtered.length === 0) {
-    DOM.cueTableBody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:var(--text-dim)">No cues yet.</td></tr>';
+    DOM.cueListBody.innerHTML = '<div class="cue-list-empty">No cues yet.</div>';
     return;
   }
-  DOM.cueTableBody.innerHTML = filtered.map(c => {
-    const dept = departments.find(d => d.id === c.department_id);
-    return `<tr>
-      <td style="color:var(--text-dim);font-size:0.8rem">${esc(c.cue_number || '')}</td>
-      <td class="tc-cell">${fmtTC(c.trigger_tc)}</td>
-      <td>${esc(c.label)}</td>
-      <td><div class="dept-cell"><span class="dot" style="background:${dept ? dept.color : CONST.DEFAULT_DEPT_COLOR}"></span>${dept ? esc(dept.name) : '?'}</div></td>
-      <td>${c.warn_seconds}s</td>
-      <td><div class="actions-cell">
-        <button class="icon-btn" onclick="openCueModal('${c.id}')" title="Edit">&#9998;</button>
-        <button class="icon-btn danger" onclick="deleteCue('${c.id}')" title="Delete">&times;</button>
-      </div></td>
-    </tr>`;
-  }).join('');
+
+  // Group by act
+  const actGroups = new Map();
+  const ungrouped = [];
+  for (const c of filtered) {
+    if (c.act_id) {
+      if (!actGroups.has(c.act_id)) actGroups.set(c.act_id, []);
+      actGroups.get(c.act_id).push(c);
+    } else {
+      ungrouped.push(c);
+    }
+  }
+
+  // Sort act groups by act sort_order
+  const sortedActs = acts.slice().sort((a, b) => a.sort_order - b.sort_order);
+
+  let html = '';
+
+  for (const act of sortedActs) {
+    const actCues = actGroups.get(act.id);
+    if (!actCues || actCues.length === 0) continue;
+
+    const span = cueListActSpan(actCues);
+    const collapsed = cueListCollapsed.has(act.id) ? ' collapsed' : '';
+
+    html += `<div class="cue-act-group${collapsed}" data-act-id="${act.id}">`;
+    html += `<div class="cue-act-header" onclick="toggleCueActGroup('${act.id}')">
+      <span class="cue-act-chevron">&#x25BE;</span>
+      <span class="cue-act-title">${esc(act.name)}</span>
+      <span class="cue-act-meta">${actCues.length} cue${actCues.length !== 1 ? 's' : ''}${span ? ' \u00b7 ' + span : ''}</span>
+    </div>`;
+
+    for (const c of actCues) {
+      html += renderCueItem(c);
+    }
+
+    html += '</div>';
+  }
+
+  // Ungrouped cues
+  if (ungrouped.length > 0) {
+    if (actGroups.size > 0) {
+      html += '<div class="cue-act-group">';
+      html += `<div class="cue-act-header cue-act-header--dim">
+        <span class="cue-act-title">Ungrouped</span>
+        <span class="cue-act-meta">${ungrouped.length} cue${ungrouped.length !== 1 ? 's' : ''}</span>
+      </div>`;
+    }
+    for (const c of ungrouped) {
+      html += renderCueItem(c);
+    }
+    if (actGroups.size > 0) html += '</div>';
+  }
+
+  DOM.cueListBody.innerHTML = html;
 }
 
 /**
- * Change the cue table sort column and direction.
- * @param {string} key - Column key to sort by.
+ * Render a single cue item row.
+ * @param {Object} c - Cue object.
+ * @returns {string} HTML string.
  */
-function sortCueTable(key) {
-  if (cueTableSort.key === key) {
-    cueTableSort.asc = !cueTableSort.asc;
+function renderCueItem(c) {
+  const dept = departments.find(d => d.id === c.department_id);
+  const deptColor = dept ? dept.color : CONST.DEFAULT_DEPT_COLOR;
+  const deptName = dept ? esc(dept.name) : '?';
+  const cueNum = c.cue_number ? `<span class="cue-num">${esc(c.cue_number)}</span>` : '';
+
+  return `<div class="cue-item" data-cue-id="${c.id}">
+    <span class="cue-grip" title="Drag to reorder">&#x283F;</span>
+    <span class="cue-bar" style="background:${deptColor}"></span>
+    <span class="cue-tc">${fmtTC(c.trigger_tc)}</span>
+    ${cueNum}
+    <span class="cue-label">${esc(c.label)}</span>
+    <span class="cue-dept"><span class="cue-dot" style="background:${deptColor}"></span>${deptName}</span>
+    <span class="cue-warn">${c.warn_seconds}s</span>
+    <span class="cue-actions">
+      <button class="icon-btn" onclick="openCueModal('${c.id}')" title="Edit">&#9998;</button>
+      <button class="icon-btn danger" onclick="deleteCue('${c.id}')" title="Delete">&times;</button>
+    </span>
+  </div>`;
+}
+
+/**
+ * Toggle collapse state of an act group in the cue list.
+ * @param {string} actId - Act UUID.
+ */
+function toggleCueActGroup(actId) {
+  const group = DOM.cueListBody.querySelector(`.cue-act-group[data-act-id="${actId}"]`);
+  if (!group) return;
+  if (cueListCollapsed.has(actId)) {
+    cueListCollapsed.delete(actId);
+    group.classList.remove('collapsed');
   } else {
-    cueTableSort.key = key;
-    cueTableSort.asc = true;
+    cueListCollapsed.add(actId);
+    group.classList.add('collapsed');
   }
-  renderCueTable();
+}
+
+/**
+ * Compute the time span of an act's cues (first TC to last TC).
+ * @param {Array<Object>} actCues - Array of cues in one act.
+ * @returns {string} Formatted duration or empty string.
+ */
+function cueListActSpan(actCues) {
+  if (actCues.length < 2) return '';
+  const times = actCues.map(c => tcObjToSeconds(c.trigger_tc)).sort((a, b) => a - b);
+  const span = times[times.length - 1] - times[0];
+  if (span <= 0) return '';
+  const m = Math.floor(span / 60);
+  const s = Math.floor(span % 60);
+  return m > 0 ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
 }
 
 // ── Department CRUD ────────────────────────

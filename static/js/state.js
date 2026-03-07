@@ -126,7 +126,7 @@ function initDOM() {
   DOM.flowUpcoming = document.getElementById('flow-upcoming');
   DOM.toastContainer = document.getElementById('toast-container');
   DOM.deptList = document.getElementById('dept-list');
-  DOM.cueTableBody = document.getElementById('cue-table-body');
+  DOM.cueListBody = document.getElementById('cue-list-body');
   DOM.manageDeptFilter = document.getElementById('manage-dept-filter');
   DOM.deptFilters = document.getElementById('dept-filters');
   DOM.showSidebar = document.getElementById('show-sidebar');
