@@ -65,8 +65,8 @@
 - **HTML**: Created dynamically via `createFlowCard()` in `show.js`
 - **JS**: `createFlowCard()`, `updateFlowCard()`, `getTrafficLight()` in `show.js`
 - **CSS**: `show.css` — `.flow-card` with tier classes
-- **Tiers**: `.tier-active` (glow), `.tier-warning` (pulse), `.tier-near`, `.tier-far` (dim), `.tier-distant` (very dim), `.tier-passed` (faded)
-- **Inline countdown**: Warning/go cues expand with `.card-countdown-row` showing READY/3/2/1/GO! text with traffic-light colors (red → orange → yellow → green). Includes digit pop/shake animations and GO flash on the card.
+- **Tiers**: `.tier-active` (dimmed, no glow — focus stays on upcoming), `.tier-warning` (pulse), `.tier-near`, `.tier-far` (dim), `.tier-distant` (very dim), `.tier-passed` (faded)
+- **Inline countdown**: Warning/go cues expand with `.card-countdown-row` showing READY/3/2/1/GO! text with traffic-light colors (red → orange → yellow → green). Space allocates instantly, content fades in (0.3s opacity). Includes digit pop/shake animations and GO flash on the card.
 - **Progress bar**: Fills 0% → 100% with traffic-light color matching countdown state
 - **Interaction**: Click to load trigger TC into goto field
 
