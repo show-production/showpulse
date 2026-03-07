@@ -1,9 +1,13 @@
 /* ══════════════════════════════════════════
-   manage.js — ManageView: CRUD operations, table rendering, dept list
+   manage.js — Manage view: departments, cues, acts, show name
    ══════════════════════════════════════════
-   Handles department and cue management (create, edit, delete, sort, filter).
-   Dependencies: state.js, api.js, ui-helpers.js (showToast, showConfirm, closeModal)
-   Components: ManageView, DeptPanel, CuePanel, CueTable
+   Sections:
+     Data loading    — loadDepartments, loadCues, loadActs, loadShowName
+     Dept panel      — renderDeptList, openDeptModal, saveDept, deleteDept
+     Cue table       — renderCueTable, sortCueTable, openCueModal, saveCue, deleteCue
+     Act panel       — renderActList, openActModal, saveAct, deleteAct
+     Show name       — saveShowName
+   Dependencies: state.js, api.js (apiSave, apiDelete, showToast, closeModal)
    ══════════════════════════════════════════ */
 
 // ── Data loading ───────────────────────────
@@ -33,10 +37,12 @@ async function loadCues() {
   cues = await api('/cues');
 }
 
+/** Load acts from the API into the global state. */
 async function loadActs() {
   acts = await api('/acts');
 }
 
+/** Load and display the show name from the API. */
 async function loadShowName() {
   const res = await api('/show/name');
   showName = res.name || '';
@@ -176,17 +182,7 @@ async function saveDept() {
     name: document.getElementById('dept-name').value,
     color: document.getElementById('dept-color').value,
   };
-  try {
-    if (id) {
-      await api(`/departments/${id}`, { method: 'PUT', body });
-    } else {
-      await api('/departments', { method: 'POST', body });
-    }
-    closeModal('dept-modal');
-    showToast(id ? 'Department updated' : 'Department created', 'success');
-  } catch (e) {
-    showToast(`Failed to save department: ${e.message}`, 'error');
-  }
+  if (await apiSave('/departments', id, body, 'Department')) closeModal('dept-modal');
   refreshManageView();
 }
 
@@ -195,15 +191,9 @@ async function saveDept() {
  * @param {string} id - Department UUID.
  */
 async function deleteDept(id) {
-  const ok = await showConfirm('Delete Department', 'Delete this department and all its cues?');
-  if (!ok) return;
-  try {
-    await api(`/departments/${id}`, { method: 'DELETE' });
-    showToast('Department deleted', 'success');
-  } catch (e) {
-    showToast('Failed to delete department', 'error');
+  if (await apiDelete(`/departments/${id}`, 'Delete Department', 'Delete this department and all its cues?', 'Department')) {
+    refreshManageView();
   }
-  refreshManageView();
 }
 
 // ── Cue CRUD ───────────────────────────────
@@ -254,7 +244,7 @@ function openCueModal(editId) {
  */
 async function saveCue() {
   const id = document.getElementById('cue-edit-id').value;
-  const actVal = document.getElementById('cue-act') ? document.getElementById('cue-act').value : '';
+  const actSel = document.getElementById('cue-act');
   const body = {
     id: id || CONST.NULL_UUID,
     department_id: document.getElementById('cue-dept').value,
@@ -263,19 +253,9 @@ async function saveCue() {
     trigger_tc: parseTC(document.getElementById('cue-trigger-tc').value),
     warn_seconds: parseInt(document.getElementById('cue-warn').value) || CONST.DEFAULT_WARN_SEC,
     notes: document.getElementById('cue-notes').value,
-    act_id: actVal || null,
+    act_id: (actSel && actSel.value) || null,
   };
-  try {
-    if (id) {
-      await api(`/cues/${id}`, { method: 'PUT', body });
-    } else {
-      await api('/cues', { method: 'POST', body });
-    }
-    closeModal('cue-modal');
-    showToast(id ? 'Cue updated' : 'Cue created', 'success');
-  } catch (e) {
-    showToast(`Failed to save cue: ${e.message}`, 'error');
-  }
+  if (await apiSave('/cues', id, body, 'Cue')) closeModal('cue-modal');
   refreshManageView();
 }
 
@@ -284,22 +264,17 @@ async function saveCue() {
  * @param {string} id - Cue UUID.
  */
 async function deleteCue(id) {
-  const ok = await showConfirm('Delete Cue', 'Delete this cue?');
-  if (!ok) return;
-  try {
-    await api(`/cues/${id}`, { method: 'DELETE' });
-    showToast('Cue deleted', 'success');
-  } catch (e) {
-    showToast('Failed to delete cue', 'error');
+  if (await apiDelete(`/cues/${id}`, 'Delete Cue', 'Delete this cue?', 'Cue')) {
+    refreshManageView();
   }
-  refreshManageView();
 }
 
 // ── Act CRUD ────────────────────────────────
 
+/** Render the act list in the Manage view sidebar. */
 function renderActList() {
-  const el = document.getElementById('act-list');
-  if (!el) return;
+  if (!DOM.actList) return;
+  const el = DOM.actList;
   if (acts.length === 0) {
     el.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem;padding:0.5rem">No acts yet.</div>';
     return;
@@ -316,6 +291,10 @@ function renderActList() {
   }).join('');
 }
 
+/**
+ * Open the act modal for create or edit.
+ * @param {string} [editId] - Act ID to edit, or omit for create.
+ */
 function openActModal(editId) {
   const modal = document.getElementById('act-modal');
   document.getElementById('act-edit-id').value = editId || '';
@@ -333,6 +312,7 @@ function openActModal(editId) {
   document.getElementById('act-name').focus();
 }
 
+/** Save an act (create or update) from the modal form. */
 async function saveAct() {
   const id = document.getElementById('act-edit-id').value;
   const body = {
@@ -340,32 +320,21 @@ async function saveAct() {
     name: document.getElementById('act-name').value,
     sort_order: parseInt(document.getElementById('act-sort-order').value) || 1,
   };
-  try {
-    if (id) {
-      await api(`/acts/${id}`, { method: 'PUT', body });
-    } else {
-      await api('/acts', { method: 'POST', body });
-    }
-    closeModal('act-modal');
-    showToast(id ? 'Act updated' : 'Act created', 'success');
-  } catch (e) {
-    showToast(`Failed to save act: ${e.message}`, 'error');
-  }
+  if (await apiSave('/acts', id, body, 'Act')) closeModal('act-modal');
   refreshManageView();
 }
 
+/**
+ * Delete an act after confirmation. Cues are unassigned, not deleted.
+ * @param {string} id - Act UUID.
+ */
 async function deleteAct(id) {
-  const ok = await showConfirm('Delete Act', 'Delete this act? Cues will be unassigned.');
-  if (!ok) return;
-  try {
-    await api(`/acts/${id}`, { method: 'DELETE' });
-    showToast('Act deleted', 'success');
-  } catch (e) {
-    showToast('Failed to delete act', 'error');
+  if (await apiDelete(`/acts/${id}`, 'Delete Act', 'Delete this act? Cues will be unassigned.', 'Act')) {
+    refreshManageView();
   }
-  refreshManageView();
 }
 
+/** Save the show name from the Settings view input. */
 async function saveShowName() {
   const name = document.getElementById('show-name-input').value;
   try {

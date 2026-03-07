@@ -1,9 +1,15 @@
 /* ══════════════════════════════════════════
    auth.js — Authentication, role gating, timer lock, user management
    ══════════════════════════════════════════
-   Handles login/logout, role-based UI visibility, timer lock acquire/release,
-   and user CRUD (admin only).
-   Dependencies: state.js, api.js
+   Sections:
+     Role hierarchy  — ROLE_LEVELS, ROLE_LABELS, roleLevel, roleLabel
+     Auth state      — saveAuth, clearAuth
+     Login overlay   — showLoginOverlay, hideLoginOverlay, handleLogin, handleLogout
+     Auth init       — initAuth (token validation, open-access fallback)
+     Role gating     — applyRole (tab/transport/lock visibility per role)
+     Timer lock      — refreshTimerLock, updateTimerLockUI, acquire, release
+     User management — loadUsers, renderUserList, openUserModal, saveUser, deleteUser
+   Dependencies: state.js, api.js (apiSave, apiDelete, showToast, closeModal)
    ══════════════════════════════════════════ */
 
 // ── Role hierarchy ──────────────────────────
@@ -147,10 +153,8 @@ function applyRole() {
   });
 
   // Transport controls: Manager+ only
-  const transport = document.querySelector('.tc-transport');
-  const gotoGroup = document.querySelector('.tc-goto-group');
-  if (transport) transport.style.display = (isAuth && level >= ROLE_LEVELS.manager) ? '' : 'none';
-  if (gotoGroup) gotoGroup.style.display = (isAuth && level >= ROLE_LEVELS.manager) ? '' : 'none';
+  if (DOM.tcTransport) DOM.tcTransport.style.display = (isAuth && level >= ROLE_LEVELS.manager) ? '' : 'none';
+  if (DOM.tcGotoGroup) DOM.tcGotoGroup.style.display = (isAuth && level >= ROLE_LEVELS.manager) ? '' : 'none';
 
   // Timer lock: visible for Manager (Admin bypasses)
   if (DOM.timerLockBtn) {
@@ -187,15 +191,8 @@ async function refreshTimerLock() {
   if (!authEnabled || roleLevel(authRole) < ROLE_LEVELS.manager) return;
   try {
     const status = await api('/timer-lock');
-    hasTimerLock = status.locked && status.holder && status.holder.user_id === getMyUserId();
     updateTimerLockUI(status);
   } catch (e) { /* ignore */ }
-}
-
-function getMyUserId() {
-  // Decode from token isn't possible, so we'll track it via login response
-  // For now, compare by name (unique per user)
-  return null; // We'll use name-based matching
 }
 
 function updateTimerLockUI(status) {
@@ -337,41 +334,17 @@ async function saveUser() {
     departments: depts,
   };
 
-  if (!body.name) {
-    showToast('Name is required', 'error');
-    return;
-  }
-  if (!id && !body.pin) {
-    showToast('PIN is required for new users', 'error');
-    return;
-  }
+  if (!body.name) { showToast('Name is required', 'error'); return; }
+  if (!id && !body.pin) { showToast('PIN is required for new users', 'error'); return; }
 
-  try {
-    if (id) {
-      await api(`/users/${id}`, { method: 'PUT', body });
-    } else {
-      await api('/users', { method: 'POST', body });
-    }
+  if (await apiSave('/users', id, body, 'User')) {
     closeModal('user-modal');
-    showToast(id ? 'User updated' : 'User created', 'success');
     loadUsers();
-  } catch (e) {
-    showToast(`Failed: ${e.message}`, 'error');
   }
 }
 
 async function deleteUser(id, name) {
-  const ok = await showConfirm('Delete User', `Delete user "${name}"?`);
-  if (!ok) return;
-  try {
-    await api(`/users/${id}`, { method: 'DELETE' });
-    showToast('User deleted', 'success');
+  if (await apiDelete(`/users/${id}`, 'Delete User', `Delete user "${name}"?`, 'User')) {
     loadUsers();
-  } catch (e) {
-    if (e.message.includes('403') || e.message.includes('Forbidden')) {
-      showToast('Cannot delete yourself', 'error');
-    } else {
-      showToast(`Failed: ${e.message}`, 'error');
-    }
   }
 }
