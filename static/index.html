@@ -353,7 +353,7 @@
 
 <!-- CueModal -->
 <div class="modal-overlay" id="cue-modal">
-  <div class="modal">
+  <div class="modal modal--wide">
     <div class="modal-header">
       <h3 id="cue-modal-title">Add Cue</h3>
       <button class="icon-btn" onclick="closeModal('cue-modal')">&times;</button>
@@ -361,36 +361,91 @@
     <div class="modal-body">
       <input type="hidden" id="cue-edit-id">
       <div class="form-group">
-        <label>Cue Number</label>
-        <input type="text" id="cue-number" placeholder="e.g. Q1 (auto-generated if empty)">
-      </div>
-      <div class="form-group">
         <label>Label</label>
         <input type="text" id="cue-label" placeholder="e.g. House lights down">
       </div>
-      <div class="form-group">
-        <label>Department</label>
-        <select id="cue-dept"></select>
+      <div class="form-row">
+        <div class="form-group form-group--flex">
+          <label>Department</label>
+          <div class="select-with-dot">
+            <span class="select-dot" id="cue-dept-dot"></span>
+            <select id="cue-dept" onchange="updateCueDeptDot()"></select>
+          </div>
+        </div>
+        <div class="form-group form-group--flex form-group--highlight">
+          <label>Act</label>
+          <select id="cue-act"><option value="">— No Act —</option></select>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Act</label>
-        <select id="cue-act"><option value="">-- No Act --</option></select>
+      <div class="form-row">
+        <div class="form-group form-group--flex">
+          <label>Trigger Timecode</label>
+          <div class="tc-input-group">
+            <input type="number" id="cue-tc-hh" min="0" max="23" value="0" class="tc-field" data-next="cue-tc-mm">
+            <span class="tc-sep">:</span>
+            <input type="number" id="cue-tc-mm" min="0" max="59" value="0" class="tc-field" data-next="cue-tc-ss">
+            <span class="tc-sep">:</span>
+            <input type="number" id="cue-tc-ss" min="0" max="59" value="0" class="tc-field" data-next="cue-tc-ff">
+            <span class="tc-sep">:</span>
+            <input type="number" id="cue-tc-ff" min="0" max="29" value="0" class="tc-field">
+          </div>
+        </div>
+        <div class="form-group form-group--sm">
+          <label>Warning</label>
+          <div class="input-suffix">
+            <input type="number" id="cue-warn" value="10" min="0" max="999">
+            <span>sec</span>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Trigger Timecode</label>
-        <input type="text" id="cue-trigger-tc" placeholder="HH:MM:SS:FF" value="00:00:00:00">
-      </div>
-      <div class="form-group">
-        <label>Warning Time (seconds)</label>
-        <input type="number" id="cue-warn" value="10" min="0">
-      </div>
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea id="cue-notes" placeholder="Optional notes..."></textarea>
-      </div>
+      <details class="cue-advanced" id="cue-advanced">
+        <summary>Advanced</summary>
+        <div class="form-row">
+          <div class="form-group form-group--sm">
+            <label>Cue #</label>
+            <input type="text" id="cue-number" placeholder="Auto">
+          </div>
+          <div class="form-group form-group--sm">
+            <label>Duration</label>
+            <div class="input-suffix">
+              <input type="number" id="cue-duration" min="0" placeholder="—">
+              <span>sec</span>
+            </div>
+          </div>
+          <div class="form-group form-group--sm">
+            <label>Armed</label>
+            <label class="toggle-label">
+              <input type="checkbox" id="cue-armed" checked>
+              <span class="toggle-text" id="cue-armed-label">Yes</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group form-group--flex">
+            <label>Continue Mode</label>
+            <select id="cue-continue" onchange="togglePostWait()">
+              <option value="stop">Stop</option>
+              <option value="auto_continue">Auto Continue</option>
+              <option value="auto_follow">Auto Follow</option>
+            </select>
+          </div>
+          <div class="form-group form-group--sm" id="cue-postwait-group" style="display:none">
+            <label>Post Wait</label>
+            <div class="input-suffix">
+              <input type="number" id="cue-postwait" min="0" step="0.5" value="0">
+              <span>sec</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="cue-notes" placeholder="Optional notes..." rows="2"></textarea>
+        </div>
+      </details>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('cue-modal')">Cancel</button>
+      <button class="btn-save" id="cue-save-another-btn" onclick="saveCue(true)" style="display:none">Save &amp; Add Another</button>
       <button class="btn-save" onclick="saveCue()">Save</button>
     </div>
   </div>

@@ -91,6 +91,27 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   });
 });
 
+// TC fields: auto-advance on 2-digit input
+document.querySelectorAll('.tc-field').forEach(field => {
+  field.addEventListener('input', () => {
+    const val = field.value;
+    if (val.length >= 2 && field.dataset.next) {
+      const next = document.getElementById(field.dataset.next);
+      if (next) { next.focus(); next.select(); }
+    }
+  });
+  // Select all on focus for easy overwrite
+  field.addEventListener('focus', () => field.select());
+});
+
+// Armed toggle label sync
+const armedCb = document.getElementById('cue-armed');
+if (armedCb) {
+  armedCb.addEventListener('change', () => {
+    document.getElementById('cue-armed-label').textContent = armedCb.checked ? 'Yes' : 'No';
+  });
+}
+
 // Sync color picker with text input
 document.getElementById('dept-color').addEventListener('input', (e) => {
   document.getElementById('dept-color-text').value = e.target.value;

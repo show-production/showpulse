@@ -210,53 +210,158 @@ function openCueModal(editId) {
   ).join('');
 
   const actSel = document.getElementById('cue-act');
-  if (actSel) {
-    actSel.innerHTML = '<option value="">— No Act —</option>' +
-      acts.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
-  }
+  actSel.innerHTML = '<option value="">— No Act —</option>' +
+    acts.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
 
+  const isEdit = !!editId;
   document.getElementById('cue-edit-id').value = editId || '';
-  if (editId) {
+  document.getElementById('cue-modal-title').textContent = isEdit ? 'Edit Cue' : 'Add Cue';
+
+  // "Save & Add Another" only in create mode
+  const anotherBtn = document.getElementById('cue-save-another-btn');
+  if (anotherBtn) anotherBtn.style.display = isEdit ? 'none' : '';
+
+  updateCueDeptDot();
+
+  if (isEdit) {
     const c = cues.find(c => c.id === editId);
-    document.getElementById('cue-modal-title').textContent = 'Edit Cue';
-    document.getElementById('cue-number').value = c.cue_number || '';
     document.getElementById('cue-label').value = c.label;
     sel.value = c.department_id;
-    if (actSel) actSel.value = c.act_id || '';
-    document.getElementById('cue-trigger-tc').value = fmtTC(c.trigger_tc);
+    updateCueDeptDot();
+    actSel.value = c.act_id || '';
+    setCueTC(c.trigger_tc);
     document.getElementById('cue-warn').value = c.warn_seconds;
-    document.getElementById('cue-notes').value = c.notes;
+    // Advanced fields
+    document.getElementById('cue-number').value = c.cue_number || '';
+    document.getElementById('cue-duration').value = c.duration != null ? c.duration : '';
+    document.getElementById('cue-armed').checked = c.armed !== false;
+    document.getElementById('cue-armed-label').textContent = c.armed !== false ? 'Yes' : 'No';
+    document.getElementById('cue-continue').value = c.continue_mode || 'stop';
+    document.getElementById('cue-postwait').value = c.post_wait || 0;
+    document.getElementById('cue-notes').value = c.notes || '';
+    togglePostWait();
+    // Open advanced if any non-default values
+    const adv = document.getElementById('cue-advanced');
+    const hasAdvanced = c.cue_number || c.duration != null || c.armed === false
+      || (c.continue_mode && c.continue_mode !== 'stop') || c.notes;
+    adv.open = !!hasAdvanced;
   } else {
-    document.getElementById('cue-modal-title').textContent = 'Add Cue';
-    document.getElementById('cue-number').value = '';
-    document.getElementById('cue-label').value = '';
-    if (actSel) actSel.value = '';
-    document.getElementById('cue-trigger-tc').value = CONST.DEFAULT_TC;
-    document.getElementById('cue-warn').value = String(CONST.DEFAULT_WARN_SEC);
-    document.getElementById('cue-notes').value = '';
+    resetCueForm();
   }
   modal.classList.add('open');
   document.getElementById('cue-label').focus();
 }
 
+/** Reset cue form to defaults for new cue creation. */
+function resetCueForm() {
+  document.getElementById('cue-edit-id').value = '';
+  document.getElementById('cue-label').value = '';
+  document.getElementById('cue-number').value = '';
+  document.getElementById('cue-warn').value = String(CONST.DEFAULT_WARN_SEC);
+  document.getElementById('cue-duration').value = '';
+  document.getElementById('cue-armed').checked = true;
+  document.getElementById('cue-armed-label').textContent = 'Yes';
+  document.getElementById('cue-continue').value = 'stop';
+  document.getElementById('cue-postwait').value = '0';
+  document.getElementById('cue-notes').value = '';
+  document.getElementById('cue-advanced').open = false;
+  togglePostWait();
+
+  // Smart defaults: remember last department + act
+  const lastDept = localStorage.getItem('cue-last-dept');
+  const lastAct = localStorage.getItem('cue-last-act');
+  const sel = document.getElementById('cue-dept');
+  const actSel = document.getElementById('cue-act');
+  if (lastDept && [...sel.options].some(o => o.value === lastDept)) sel.value = lastDept;
+  if (lastAct && [...actSel.options].some(o => o.value === lastAct)) actSel.value = lastAct;
+  updateCueDeptDot();
+
+  // Smart TC: use current timecode if running, else 00:00:00:00
+  const curTC = DOM.tcValue ? DOM.tcValue.textContent : null;
+  const tcState = DOM.tcState ? DOM.tcState.textContent : '';
+  if (curTC && curTC !== CONST.DEFAULT_TC && tcState === 'RUNNING') {
+    setCueTC(parseTC(curTC));
+  } else {
+    setCueTC({ hours: 0, minutes: 0, seconds: 0, frames: 0 });
+  }
+}
+
+/** Set TC fields from a timecode object. */
+function setCueTC(tc) {
+  document.getElementById('cue-tc-hh').value = tc.hours || 0;
+  document.getElementById('cue-tc-mm').value = tc.minutes || 0;
+  document.getElementById('cue-tc-ss').value = tc.seconds || 0;
+  document.getElementById('cue-tc-ff').value = tc.frames || 0;
+}
+
+/** Read TC fields into a timecode object. */
+function getCueTC() {
+  return {
+    hours: parseInt(document.getElementById('cue-tc-hh').value) || 0,
+    minutes: parseInt(document.getElementById('cue-tc-mm').value) || 0,
+    seconds: parseInt(document.getElementById('cue-tc-ss').value) || 0,
+    frames: parseInt(document.getElementById('cue-tc-ff').value) || 0,
+  };
+}
+
+/** Update the department color dot next to the select. */
+function updateCueDeptDot() {
+  const sel = document.getElementById('cue-dept');
+  const dot = document.getElementById('cue-dept-dot');
+  if (!dot || !sel.value) return;
+  const dept = departments.find(d => d.id === sel.value);
+  dot.style.background = dept ? dept.color : 'var(--text-dim)';
+}
+
+/** Show/hide post-wait field based on continue mode. */
+function togglePostWait() {
+  const mode = document.getElementById('cue-continue').value;
+  const group = document.getElementById('cue-postwait-group');
+  if (group) group.style.display = mode === 'auto_continue' ? '' : 'none';
+}
+
 /**
  * Save a cue (create or update) from the modal form.
+ * @param {boolean} [addAnother] - If true, reset form for another cue instead of closing.
  */
-async function saveCue() {
+async function saveCue(addAnother) {
   const id = document.getElementById('cue-edit-id').value;
-  const actSel = document.getElementById('cue-act');
+  const deptVal = document.getElementById('cue-dept').value;
+  const actVal = document.getElementById('cue-act').value;
+  const durVal = document.getElementById('cue-duration').value;
+  const contMode = document.getElementById('cue-continue').value;
+
   const body = {
     id: id || CONST.NULL_UUID,
-    department_id: document.getElementById('cue-dept').value,
+    department_id: deptVal,
     cue_number: document.getElementById('cue-number').value,
-    label: document.getElementById('cue-label').value,
-    trigger_tc: parseTC(document.getElementById('cue-trigger-tc').value),
+    label: document.getElementById('cue-label').value || 'Untitled Cue',
+    trigger_tc: getCueTC(),
     warn_seconds: parseInt(document.getElementById('cue-warn').value) || CONST.DEFAULT_WARN_SEC,
     notes: document.getElementById('cue-notes').value,
-    act_id: (actSel && actSel.value) || null,
+    act_id: actVal || null,
+    duration: durVal !== '' ? parseInt(durVal) : null,
+    armed: document.getElementById('cue-armed').checked,
+    continue_mode: contMode,
+    post_wait: contMode === 'auto_continue' ? (parseFloat(document.getElementById('cue-postwait').value) || 0) : null,
   };
-  if (await apiSave('/cues', id, body, 'Cue')) closeModal('cue-modal');
-  refreshManageView();
+
+  if (await apiSave('/cues', id, body, 'Cue')) {
+    // Remember last-used dept + act for next cue
+    localStorage.setItem('cue-last-dept', deptVal);
+    if (actVal) localStorage.setItem('cue-last-act', actVal);
+
+    if (addAnother && !id) {
+      // Reset for another cue, keep dept + act
+      await refreshManageView();
+      resetCueForm();
+      document.getElementById('cue-modal-title').textContent = 'Add Cue';
+      document.getElementById('cue-label').focus();
+    } else {
+      closeModal('cue-modal');
+      refreshManageView();
+    }
+  }
 }
 
 /**
