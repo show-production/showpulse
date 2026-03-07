@@ -1,6 +1,6 @@
 # ShowPulse Security Review
 
-**Date:** 2026-03-07 (updated after commit 4993c03)
+**Date:** 2026-03-07 (updated after commits 4993c03, ccf9d4f)
 **Scope:** Full codebase review — Rust/Axum backend, JavaScript frontend, configuration, dependencies
 
 ---
@@ -30,6 +30,12 @@ ShowPulse is a Rust/Axum web application for live show cue management with WebSo
 **Fix:** Sessions now carry a `created_at: Instant` timestamp and expire after 8 hours (`SESSION_TTL_SECS`). `get_session()` checks expiry on access and removes expired tokens. A background purge task runs every 10 minutes (`src/main.rs:103-113`).
 
 **Assessment:** Clean implementation. The 8-hour TTL is reasonable for a show day.
+
+### ~~MEDIUM — X-Forwarded-For IP Spoofing~~ → RESOLVED (ccf9d4f)
+
+**Fix:** `extract_client_ip()` now uses only `ConnectInfo<SocketAddr>` — the actual TCP peer address (`src/auth.rs:436-441`). The `X-Forwarded-For` and `X-Real-IP` header trust has been completely removed, eliminating the spoofing vector.
+
+**Assessment:** Clean fix. The rate limiter is now unspoofable for direct connections. Note: if deployed behind a reverse proxy, all requests will appear from the proxy's IP (typically `127.0.0.1`), meaning rate limiting would apply to all clients collectively. This is acceptable since a reverse proxy would handle its own rate limiting.
 
 ### ~~MEDIUM — Non-Atomic File Writes~~ → RESOLVED
 
@@ -82,26 +88,6 @@ The server only supports plain HTTP. Auth tokens, PINs, and WebSocket traffic ar
 **Risk:** On shared networks (common in live event venues), traffic can be sniffed. Session tokens in `Authorization` headers and login PINs are visible.
 
 **Recommendation:** Document that a reverse proxy (nginx, Caddy) should be used for production deployments requiring TLS. Alternatively, add optional `rustls` support.
-
----
-
-### MEDIUM — X-Forwarded-For IP Spoofing in Rate Limiter
-
-**Location:** `src/auth.rs:435-455`
-
-The `extract_client_ip()` function trusts `X-Forwarded-For` and `X-Real-IP` headers unconditionally:
-
-```rust
-req.headers()
-    .get("x-forwarded-for")
-    .and_then(|v| v.to_str().ok())
-    .and_then(|v| v.split(',').next())
-    .and_then(|s| s.trim().parse().ok())
-```
-
-**Risk:** Without a reverse proxy, any client can set `X-Forwarded-For` to an arbitrary IP, bypassing the rate limiter entirely. An attacker could rotate fake IPs to avoid the 5-attempt lockout.
-
-**Recommendation:** Only trust proxy headers when behind a known reverse proxy. When running standalone (the default), prefer `ConnectInfo<SocketAddr>` as the primary source. Consider adding a `SHOWPULSE_TRUST_PROXY` env var to control this behavior.
 
 ---
 
@@ -178,7 +164,7 @@ The following security measures are well-implemented:
 | ~~P1~~ | ~~Login rate limiting~~ | **RESOLVED** | — |
 | ~~P1~~ | ~~Session expiry/TTL~~ | **RESOLVED** | — |
 | ~~P2~~ | ~~Atomic file writes~~ | **RESOLVED** | — |
-| **P2** | Fix X-Forwarded-For trust (rate limiter bypass) | Open | Low |
+| ~~P2~~ | ~~Fix X-Forwarded-For trust~~ | **RESOLVED** | — |
 | **P2** | Document HTTPS/reverse proxy requirement | Open | Low |
 | **P2** | Document GET-without-auth as intentional design | Open | Low |
 | **P3** | Add minimum PIN length validation | Open | Low |
