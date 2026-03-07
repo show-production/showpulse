@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::net::IpAddr;
 use std::sync::Arc;
 
 use axum::extract::State;
@@ -8,7 +9,48 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
+use tokio::time::Instant;
 use uuid::Uuid;
+
+// ── Constants ────────────────────────────────
+
+/// Session lifetime: 8 hours.
+const SESSION_TTL_SECS: u64 = 8 * 3600;
+
+/// Max failed login attempts per IP before lockout.
+const MAX_LOGIN_ATTEMPTS: usize = 5;
+
+/// Window for counting failed login attempts (seconds).
+const LOGIN_WINDOW_SECS: u64 = 60;
+
+// ── PIN hashing ──────────────────────────────
+
+/// Hash a plaintext PIN using argon2 with a random salt.
+pub fn hash_pin(pin: &str) -> String {
+    use argon2::password_hash::{rand_core::OsRng, SaltString};
+    use argon2::{Argon2, PasswordHasher};
+    let salt = SaltString::generate(&mut OsRng);
+    Argon2::default()
+        .hash_password(pin.as_bytes(), &salt)
+        .expect("argon2 hash failed")
+        .to_string()
+}
+
+/// Verify a plaintext PIN against an argon2 hash.
+pub fn verify_pin(pin: &str, hash: &str) -> bool {
+    use argon2::{Argon2, PasswordHash, PasswordVerifier};
+    let Ok(parsed) = PasswordHash::new(hash) else {
+        return false;
+    };
+    Argon2::default()
+        .verify_password(pin.as_bytes(), &parsed)
+        .is_ok()
+}
+
+/// Check if a stored PIN is already hashed (argon2 hashes start with `$argon2`).
+pub fn is_hashed(pin: &str) -> bool {
+    pin.starts_with("$argon2")
+}
 
 // ── Role & User types ───────────────────────
 
@@ -58,15 +100,77 @@ pub fn new_timer_lock() -> TimerLockState {
     Arc::new(RwLock::new(None))
 }
 
+// ── Login rate limiter ──────────────────────
+
+/// Tracks failed login attempts per IP to prevent brute-force attacks.
+#[derive(Clone)]
+pub struct LoginLimiter {
+    /// Maps IP -> list of failed attempt timestamps.
+    attempts: Arc<RwLock<HashMap<IpAddr, Vec<Instant>>>>,
+}
+
+impl LoginLimiter {
+    pub fn new() -> Self {
+        Self {
+            attempts: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
+
+    /// Check if an IP is currently rate-limited.
+    pub async fn is_limited(&self, ip: IpAddr) -> bool {
+        let attempts = self.attempts.read().await;
+        if let Some(times) = attempts.get(&ip) {
+            let cutoff = Instant::now() - std::time::Duration::from_secs(LOGIN_WINDOW_SECS);
+            let recent = times.iter().filter(|t| **t > cutoff).count();
+            recent >= MAX_LOGIN_ATTEMPTS
+        } else {
+            false
+        }
+    }
+
+    /// Record a failed login attempt for an IP.
+    pub async fn record_failure(&self, ip: IpAddr) {
+        let mut attempts = self.attempts.write().await;
+        let entry = attempts.entry(ip).or_default();
+        entry.push(Instant::now());
+        // Prune old entries
+        let cutoff = Instant::now() - std::time::Duration::from_secs(LOGIN_WINDOW_SECS);
+        entry.retain(|t| *t > cutoff);
+    }
+
+    /// Clear failures for an IP on successful login.
+    pub async fn clear(&self, ip: IpAddr) {
+        self.attempts.write().await.remove(&ip);
+    }
+
+    /// Periodic cleanup of stale entries (call from a background task).
+    pub async fn cleanup(&self) {
+        let cutoff = Instant::now() - std::time::Duration::from_secs(LOGIN_WINDOW_SECS);
+        let mut attempts = self.attempts.write().await;
+        attempts.retain(|_, times| {
+            times.retain(|t| *t > cutoff);
+            !times.is_empty()
+        });
+    }
+}
+
 // ── Session store ───────────────────────────
 
-/// Session info stored per token — carries identity and role.
+/// Session info stored per token — carries identity, role, and expiry.
 #[derive(Debug, Clone)]
 pub struct Session {
     pub user_id: Uuid,
     pub user_name: String,
     pub role: Role,
     pub departments: Vec<Uuid>,
+    pub created_at: Instant,
+}
+
+impl Session {
+    /// Check if this session has expired.
+    pub fn is_expired(&self) -> bool {
+        self.created_at.elapsed().as_secs() > SESSION_TTL_SECS
+    }
 }
 
 /// In-memory session store — maps tokens to sessions.
@@ -103,14 +207,25 @@ impl SessionStore {
             user_name: user.name.clone(),
             role: user.role,
             departments: user.departments.clone(),
+            created_at: Instant::now(),
         };
         self.sessions.write().await.insert(token.clone(), session);
         token
     }
 
-    /// Get the session for a token.
+    /// Get the session for a token. Returns None if expired or not found.
     pub async fn get_session(&self, token: &str) -> Option<Session> {
-        self.sessions.read().await.get(token).cloned()
+        let sessions = self.sessions.read().await;
+        match sessions.get(token) {
+            Some(session) if !session.is_expired() => Some(session.clone()),
+            Some(_) => {
+                // Expired — will be cleaned up by purge task
+                drop(sessions);
+                self.sessions.write().await.remove(token);
+                None
+            }
+            None => None,
+        }
     }
 
     pub async fn logout(&self, token: &str) {
@@ -120,6 +235,11 @@ impl SessionStore {
     /// Remove all sessions for a specific user (e.g. when user is deleted).
     pub async fn remove_user_sessions(&self, user_id: Uuid) {
         self.sessions.write().await.retain(|_, s| s.user_id != user_id);
+    }
+
+    /// Purge all expired sessions. Called periodically from a background task.
+    pub async fn purge_expired(&self) {
+        self.sessions.write().await.retain(|_, s| !s.is_expired());
     }
 }
 
@@ -152,16 +272,37 @@ pub async fn auth_status(State(sessions): State<SessionStore>) -> Json<AuthStatu
 
 pub async fn login(
     State(state): State<crate::AppState>,
-    Json(body): Json<LoginRequest>,
+    req: Request<axum::body::Body>,
 ) -> Result<Json<LoginResponse>, StatusCode> {
     if !state.sessions.auth_enabled() {
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    // Find user by name + pin
-    let user = state.store.find_user_by_credentials(&body.name, &body.pin).await;
+    // Extract client IP for rate limiting
+    let ip = extract_client_ip(&req);
+
+    // Check rate limit
+    if let Some(ip) = ip {
+        if state.login_limiter.is_limited(ip).await {
+            return Err(StatusCode::TOO_MANY_REQUESTS);
+        }
+    }
+
+    // Parse body
+    let body_bytes = axum::body::to_bytes(req.into_body(), 1024)
+        .await
+        .map_err(|_| StatusCode::BAD_REQUEST)?;
+    let body: LoginRequest =
+        serde_json::from_slice(&body_bytes).map_err(|_| StatusCode::BAD_REQUEST)?;
+
+    // Find user by name, then verify PIN hash
+    let user = state.store.find_user_by_name(&body.name).await;
     match user {
-        Some(u) => {
+        Some(u) if verify_pin(&body.pin, &u.pin) => {
+            // Success — clear rate limit
+            if let Some(ip) = ip {
+                state.login_limiter.clear(ip).await;
+            }
             let token = state.sessions.create_session(&u).await;
             Ok(Json(LoginResponse {
                 token,
@@ -170,7 +311,13 @@ pub async fn login(
                 departments: u.departments,
             }))
         }
-        None => Err(StatusCode::UNAUTHORIZED),
+        _ => {
+            // Failure — record attempt
+            if let Some(ip) = ip {
+                state.login_limiter.record_failure(ip).await;
+            }
+            Err(StatusCode::UNAUTHORIZED)
+        }
     }
 }
 
@@ -283,3 +430,28 @@ pub fn extract_token<B>(req: &Request<B>) -> Option<String> {
                 .map(|s| s.to_string())
         })
 }
+
+/// Extract client IP from request headers or connection info.
+fn extract_client_ip<B>(req: &Request<B>) -> Option<IpAddr> {
+    // Try X-Forwarded-For first (reverse proxy)
+    req.headers()
+        .get("x-forwarded-for")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.split(',').next())
+        .and_then(|s| s.trim().parse().ok())
+        // Fallback: try X-Real-IP
+        .or_else(|| {
+            req.headers()
+                .get("x-real-ip")
+                .and_then(|v| v.to_str().ok())
+                .and_then(|s| s.trim().parse().ok())
+        })
+        // Fallback: ConnectInfo if available
+        .or_else(|| {
+            req.extensions()
+                .get::<axum::extract::ConnectInfo<SocketAddr>>()
+                .map(|ci| ci.0.ip())
+        })
+}
+
+use std::net::SocketAddr;

@@ -86,12 +86,18 @@ impl CueStore {
         }
     }
 
+    /// Atomic persist: write to .tmp file then rename to avoid corruption.
     async fn persist(&self) {
         let data = self.data.read().await;
         match serde_json::to_string_pretty(&*data) {
             Ok(json) => {
-                if let Err(e) = tokio::fs::write(&self.file_path, json).await {
-                    tracing::error!("Failed to write data file {:?}: {}", self.file_path, e);
+                let tmp_path = self.file_path.with_extension("json.tmp");
+                if let Err(e) = tokio::fs::write(&tmp_path, &json).await {
+                    tracing::error!("Failed to write temp file {:?}: {}", tmp_path, e);
+                    return;
+                }
+                if let Err(e) = tokio::fs::rename(&tmp_path, &self.file_path).await {
+                    tracing::error!("Failed to rename {:?} -> {:?}: {}", tmp_path, self.file_path, e);
                 }
             }
             Err(e) => {
@@ -534,9 +540,10 @@ impl CueStore {
         self.data.read().await.users.clone()
     }
 
-    pub async fn find_user_by_credentials(&self, name: &str, pin: &str) -> Option<User> {
+    /// Find a user by name (PIN verification is done by the caller).
+    pub async fn find_user_by_name(&self, name: &str) -> Option<User> {
         let data = self.data.read().await;
-        data.users.iter().find(|u| u.name == name && u.pin == pin).cloned()
+        data.users.iter().find(|u| u.name == name).cloned()
     }
 
     pub async fn get_user(&self, id: Uuid) -> Option<User> {
@@ -545,8 +552,13 @@ impl CueStore {
     }
 
     pub async fn create_user(&self, mut user: User) -> User {
+        use crate::auth::{hash_pin, is_hashed};
         user.id = Uuid::new_v4();
         clamp_string(&mut user.name);
+        // Hash PIN if not already hashed
+        if !is_hashed(&user.pin) {
+            user.pin = hash_pin(&user.pin);
+        }
         let mut data = self.data.write().await;
         data.users.push(user.clone());
         drop(data);
@@ -555,12 +567,18 @@ impl CueStore {
     }
 
     pub async fn update_user(&self, id: Uuid, mut update: User) -> Option<User> {
+        use crate::auth::{hash_pin, is_hashed};
         clamp_string(&mut update.name);
         let mut data = self.data.write().await;
         if let Some(user) = data.users.iter_mut().find(|u| u.id == id) {
             user.name = update.name;
             if !update.pin.is_empty() {
-                user.pin = update.pin;
+                // Hash PIN if not already hashed
+                user.pin = if is_hashed(&update.pin) {
+                    update.pin
+                } else {
+                    hash_pin(&update.pin)
+                };
             }
             user.role = update.role;
             user.departments = update.departments;
@@ -586,12 +604,14 @@ impl CueStore {
     }
 
     /// Create a default admin user from SHOWPULSE_PIN if no users exist yet.
+    /// The PIN is hashed before storage.
     pub async fn seed_admin_user(&self, pin: &str) {
         let data = self.data.read().await;
         if !data.users.is_empty() {
             return;
         }
         drop(data);
+        // create_user will hash the PIN
         self.create_user(User {
             id: Uuid::new_v4(),
             name: "admin".to_string(),
@@ -600,6 +620,24 @@ impl CueStore {
             departments: Vec::new(),
         }).await;
         tracing::info!("Seeded default admin user from SHOWPULSE_PIN");
+    }
+
+    /// Migrate any plaintext PINs to argon2 hashes. Called once at startup.
+    pub async fn migrate_plaintext_pins(&self) {
+        use crate::auth::{hash_pin, is_hashed};
+        let mut data = self.data.write().await;
+        let mut migrated = 0;
+        for user in data.users.iter_mut() {
+            if !is_hashed(&user.pin) {
+                user.pin = hash_pin(&user.pin);
+                migrated += 1;
+            }
+        }
+        if migrated > 0 {
+            drop(data);
+            self.persist().await;
+            tracing::info!("Migrated {} plaintext PIN(s) to argon2 hashes", migrated);
+        }
     }
 }
 

@@ -17,6 +17,7 @@ cpal = "0.15"
 midir = "0.10"
 qrcode = { version = "0.14", default-features = false, features = ["svg"] }
 tower = { version = "0.5", features = ["util", "limit", "load-shed"] }
+argon2 = "0.5"
 
 [dev-dependencies]
 tempfile = "3"

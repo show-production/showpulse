@@ -11,7 +11,7 @@ use showpulse::cue::types::{Cue, CueImportResult, Department};
 use showpulse::timecode::types::Timecode;
 use showpulse::timecode::TimecodeManager;
 use showpulse::ws::hub::WsHub;
-use showpulse::auth::SessionStore;
+use showpulse::auth::{LoginLimiter, SessionStore};
 use showpulse::{api_router, AppState};
 
 fn test_state() -> (AppState, NamedTempFile) {
@@ -21,12 +21,14 @@ fn test_state() -> (AppState, NamedTempFile) {
     let timer_lock = showpulse::auth::new_timer_lock();
     let ws_hub = Arc::new(WsHub::new(timer_lock.clone()));
     let sessions = SessionStore::new(true);
+    let login_limiter = LoginLimiter::new();
     let state = AppState {
         tc_manager,
         store,
         ws_hub,
         sessions,
         timer_lock,
+        login_limiter,
     };
     (state, tmp)
 }
