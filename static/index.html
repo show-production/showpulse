@@ -55,6 +55,8 @@
       <kbd>N</kbd> Next Cue<br>
       <kbd>B</kbd> Prev Cue<br>
       <kbd>G</kbd> Goto TC<br>
+      <kbd>A</kbd> Auto-scroll<br>
+      <kbd>C</kbd> Jump to current<br>
       <kbd>S</kbd> Sidebar
     </div>
   </aside>
@@ -81,6 +83,8 @@
           <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF">
           <button class="tc-btn" onclick="gotoTC()" title="Goto (G)">Go</button>
         </div>
+        <button class="tc-btn active" id="autopulse-btn" onclick="toggleAutoPulse()" title="Auto-scroll (A)">Auto</button>
+        <button class="tc-btn" onclick="jumpToCurrent()" title="Jump to current (C)">&#x2907; Now</button>
       </div>
     </div>
     <div class="flow-upcoming" id="flow-upcoming"></div>

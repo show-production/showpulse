@@ -121,6 +121,7 @@
   flex-direction: column;
   align-items: center;
   padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
   flex-shrink: 0;
   gap: 0.25rem;
   background: var(--bg-card);
@@ -180,6 +181,7 @@
   white-space: nowrap;
 }
 .tc-btn:hover { background: var(--bg-input); border-color: var(--accent); }
+.tc-btn.active { border-color: var(--accent); color: var(--accent); }
 .tc-goto-group {
   display: flex;
   gap: var(--gap-xs);

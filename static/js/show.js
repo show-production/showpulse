@@ -136,6 +136,8 @@ function renderFlowCues(wsCues) {
   if (allCues.length === 0) {
     DOM.flowUpcoming.innerHTML = `<div class="flow-no-cues">${CONST.NO_MATCH_MSG}</div>`;
   }
+
+  autoScrollCueList();
 }
 
 // ── Traffic-light color helper ──────────────
@@ -359,6 +361,70 @@ function updateFlowCard(card, c) {
     const pct = Math.max(0, Math.min(100, (1 - c.countdown_sec / warnMax) * 100));
     fillEl.style.width = pct + '%';
     fillEl.style.background = '';
+  }
+}
+
+// ── AutoPulse + Jump to current ─────────────
+
+/**
+ * Toggle AutoPulse auto-scroll on/off.
+ * @param {boolean} [forceState] - Force on (true) or off (false).
+ */
+function toggleAutoPulse(forceState) {
+  autoPulse = forceState !== undefined ? forceState : !autoPulse;
+  localStorage.setItem('autoPulse', autoPulse);
+  DOM.autoPulseBtn.classList.toggle('active', autoPulse);
+  if (autoPulse) autoScrollCueList();
+}
+
+/** Block user scroll on the cue list when AutoPulse is on. */
+function initAutoPulseScrollBlock() {
+  DOM.flowUpcoming.addEventListener('wheel', (e) => {
+    if (autoPulse) e.preventDefault();
+  }, { passive: false });
+  DOM.flowUpcoming.addEventListener('touchmove', (e) => {
+    if (autoPulse) e.preventDefault();
+  }, { passive: false });
+}
+
+/**
+ * Find the "current action" card: first warning/go cue (counting down),
+ * or first upcoming cue if none are in warning/go state.
+ * @returns {HTMLElement|null}
+ */
+function findCurrentCard() {
+  const warm = DOM.flowUpcoming.querySelector('.flow-card.tier-warning');
+  if (warm) return warm;
+  const cards = DOM.flowUpcoming.querySelectorAll('.flow-card');
+  for (const card of cards) {
+    if (!card.classList.contains('tier-passed') && !card.classList.contains('tier-active')) {
+      return card;
+    }
+  }
+  return null;
+}
+
+/**
+ * Auto-scroll cue list so the warm/next cue is at the top.
+ * Only runs when AutoPulse is enabled. Uses instant scroll (called at 10Hz).
+ */
+function autoScrollCueList() {
+  if (!autoPulse) return;
+  const target = findCurrentCard();
+  if (target) {
+    const containerTop = DOM.flowUpcoming.getBoundingClientRect().top;
+    const targetTop = target.getBoundingClientRect().top;
+    DOM.flowUpcoming.scrollTop += (targetTop - containerTop);
+  }
+}
+
+/**
+ * Smooth-scroll the cue list to the warm/next cue.
+ */
+function jumpToCurrent() {
+  const target = findCurrentCard();
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 

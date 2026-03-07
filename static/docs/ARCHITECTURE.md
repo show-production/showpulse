@@ -107,6 +107,7 @@ Global variables in `state.js`:
 - `activeDeptFilters` — Set of selected department IDs
 - `ws`, `wsConnected` — WebSocket state
 - `cueTableSort` — current sort column + direction
+- `autoPulse` — auto-scroll toggle (persisted to localStorage, default true)
 - `DOM` — cached element references (populated by `initDOM()`)
 
 ### Real-time Updates
