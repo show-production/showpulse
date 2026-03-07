@@ -20,6 +20,150 @@ function exportShow() {
   a.click();
 }
 
+// ── CSV export ────────────────────────────
+
+/**
+ * Export cues as a professional CSV file, sorted by act then timecode.
+ */
+function exportCSV() {
+  const deptMap = {};
+  departments.forEach(d => { deptMap[d.id] = d.name; });
+  const actMap = {};
+  acts.forEach(a => { actMap[a.id] = a.name; });
+
+  const sorted = [...cues].sort((a, b) => {
+    const actA = a.act_id ? (acts.find(x => x.id === a.act_id)?.sort_order ?? 999) : 999;
+    const actB = b.act_id ? (acts.find(x => x.id === b.act_id)?.sort_order ?? 999) : 999;
+    if (actA !== actB) return actA - actB;
+    return tcObjToSeconds(a.trigger_tc) - tcObjToSeconds(b.trigger_tc);
+  });
+
+  const headers = ['Cue #', 'Label', 'Department', 'Act', 'Timecode', 'Warning (s)', 'Duration (s)', 'Armed', 'Continue', 'Notes'];
+  const rows = sorted.map(c => [
+    csvCell(c.cue_number || ''),
+    csvCell(c.label || ''),
+    csvCell(deptMap[c.department_id] || ''),
+    csvCell(c.act_id ? (actMap[c.act_id] || '') : ''),
+    fmtTC(c.trigger_tc),
+    c.warn_seconds ?? '',
+    c.duration ?? '',
+    c.armed ? 'Yes' : 'No',
+    c.continue_mode || 'stop',
+    csvCell(c.notes || ''),
+  ].join(','));
+
+  const name = showName || 'ShowPulse';
+  const csv = [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${name.replace(/[^a-zA-Z0-9_-]/g, '_')}-cuesheet.csv`;
+  a.click();
+}
+
+function csvCell(value) {
+  const s = String(value);
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+// ── Print cue sheet ──────────────────────────
+
+/**
+ * Generate a professional print-friendly cue sheet and open the browser print dialog.
+ */
+function printCueSheet() {
+  const deptMap = {};
+  departments.forEach(d => { deptMap[d.id] = d; });
+  const actMap = {};
+  acts.forEach(a => { actMap[a.id] = a.name; });
+
+  const sorted = [...cues].sort((a, b) => {
+    const actA = a.act_id ? (acts.find(x => x.id === a.act_id)?.sort_order ?? 999) : 999;
+    const actB = b.act_id ? (acts.find(x => x.id === b.act_id)?.sort_order ?? 999) : 999;
+    if (actA !== actB) return actA - actB;
+    return tcObjToSeconds(a.trigger_tc) - tcObjToSeconds(b.trigger_tc);
+  });
+
+  // Group by act
+  const groups = [];
+  let currentActId = null;
+  for (const c of sorted) {
+    const actId = c.act_id || '__none__';
+    if (actId !== currentActId) {
+      currentActId = actId;
+      groups.push({ act: c.act_id ? (actMap[c.act_id] || 'Unknown Act') : 'Unassigned', cues: [] });
+    }
+    groups[groups.length - 1].cues.push(c);
+  }
+
+  const name = showName || 'ShowPulse';
+  const now = new Date().toLocaleString();
+
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(name)} — Cue Sheet</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10pt; color: #111; padding: 0.5in; }
+  .header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 3px solid #111; padding-bottom: 8px; margin-bottom: 16px; }
+  .header h1 { font-size: 18pt; font-weight: 700; }
+  .header .meta { font-size: 8pt; color: #666; text-align: right; }
+  .act-title { font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin: 16px 0 6px; padding: 4px 8px; background: #f0f0f0; border-left: 4px solid #333; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  th { text-align: left; font-size: 7pt; text-transform: uppercase; letter-spacing: 0.08em; color: #666; font-weight: 600; padding: 4px 6px; border-bottom: 2px solid #ccc; }
+  td { padding: 5px 6px; border-bottom: 1px solid #ddd; font-size: 9pt; vertical-align: top; }
+  tr:nth-child(even) { background: #fafafa; }
+  .tc { font-family: 'Courier New', monospace; font-size: 9pt; }
+  .dept-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+  .notes { color: #555; font-size: 8pt; max-width: 200px; }
+  .disarmed { opacity: 0.4; }
+  .footer { margin-top: 20px; font-size: 7pt; color: #999; text-align: center; border-top: 1px solid #ddd; padding-top: 6px; }
+  @media print {
+    body { padding: 0; }
+    .act-title { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tr:nth-child(even) { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .dept-dot { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  @page { margin: 0.5in; size: landscape; }
+</style></head><body>`;
+
+  html += `<div class="header"><h1>${esc(name)}</h1><div class="meta">Cue Sheet<br>${esc(now)}<br>${cues.length} cues &middot; ${departments.length} departments &middot; ${acts.length} acts</div></div>`;
+
+  for (const group of groups) {
+    html += `<div class="act-title">${esc(group.act)}</div>`;
+    html += `<table><thead><tr><th style="width:60px">Cue #</th><th>Label</th><th style="width:100px">Department</th><th style="width:90px">Timecode</th><th style="width:50px">Warn</th><th style="width:55px">Duration</th><th style="width:45px">Armed</th><th>Notes</th></tr></thead><tbody>`;
+    for (const c of group.cues) {
+      const dept = deptMap[c.department_id];
+      const deptName = dept ? dept.name : '';
+      const deptColor = dept ? dept.color : '#888';
+      const armed = c.armed !== false;
+      const rowClass = armed ? '' : ' class="disarmed"';
+      const dur = c.duration != null ? `${c.duration}s` : '—';
+      html += `<tr${rowClass}>`;
+      html += `<td>${esc(c.cue_number || '')}</td>`;
+      html += `<td>${esc(c.label || '')}</td>`;
+      html += `<td><span class="dept-dot" style="background:${deptColor}"></span>${esc(deptName)}</td>`;
+      html += `<td class="tc">${fmtTC(c.trigger_tc)}</td>`;
+      html += `<td>${c.warn_seconds ?? ''}s</td>`;
+      html += `<td>${dur}</td>`;
+      html += `<td>${armed ? '✓' : '—'}</td>`;
+      html += `<td class="notes">${esc(c.notes || '')}</td>`;
+      html += `</tr>`;
+    }
+    html += `</tbody></table>`;
+  }
+
+  html += `<div class="footer">Generated by ShowPulse &middot; ${esc(now)}</div>`;
+  html += `</body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+}
+
 // ── Show import ────────────────────────────
 
 /**

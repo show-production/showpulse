@@ -164,14 +164,9 @@ function applyRole() {
     DOM.timerLockStatus.style.display = (isAuth && level >= ROLE_LEVELS.manager) ? '' : 'none';
   }
 
-  // Dashboard panel: Admin only
+  // Admin dashboard panel (users + active connections)
   if (DOM.dashboardPanel) {
     DOM.dashboardPanel.style.display = (isAuth && level >= ROLE_LEVELS.admin) ? '' : 'none';
-  }
-
-  // User panel: Admin only
-  if (DOM.userPanel) {
-    DOM.userPanel.style.display = (isAuth && level >= ROLE_LEVELS.admin) ? '' : 'none';
   }
 
   // Logout button + user label
@@ -258,32 +253,13 @@ async function releaseTimerLock() {
 
 // ── User management (Admin) ─────────────────
 
+let _cachedUsers = [];
+
 async function loadUsers() {
   if (roleLevel(authRole) < ROLE_LEVELS.admin) return;
   try {
-    const users = await api('/users');
-    renderUserList(users);
+    _cachedUsers = await api('/users');
   } catch (e) { /* ignore */ }
-}
-
-function renderUserList(users) {
-  if (!DOM.userList) return;
-  if (!users || users.length === 0) {
-    DOM.userList.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem;padding:0.5rem">No users configured.</div>';
-    return;
-  }
-  DOM.userList.innerHTML = users.map(u => `
-    <div class="user-item">
-      <div class="user-info">
-        <span class="user-name">${esc(u.name)}</span>
-        <span class="user-role">${roleLabel(u.role)}</span>
-      </div>
-      <div class="user-actions">
-        <button class="icon-btn" onclick="openUserModal('${u.id}')" title="Edit">&#9998;</button>
-        <button class="icon-btn danger" onclick="deleteUser('${u.id}', '${esc(u.name)}')" title="Delete">&times;</button>
-      </div>
-    </div>
-  `).join('');
 }
 
 function openUserModal(editId) {
@@ -344,17 +320,17 @@ async function saveUser() {
 
   if (await apiSave('/users', id, body, 'User')) {
     closeModal('user-modal');
-    loadUsers();
+    loadDashboard();
   }
 }
 
 async function deleteUser(id, name) {
   if (await apiDelete(`/users/${id}`, 'Delete User', `Delete user "${name}"?`, 'User')) {
-    loadUsers();
+    loadDashboard();
   }
 }
 
-// ── Admin dashboard ────────────────────────
+// ── Admin dashboard (unified) ──────────────
 
 let dashboardInterval = null;
 
@@ -376,8 +352,12 @@ function stopDashboardPolling() {
 async function loadDashboard() {
   if (roleLevel(authRole) < ROLE_LEVELS.admin) return;
   try {
-    const data = await api('/admin/dashboard');
-    renderDashboard(data);
+    const [data, users] = await Promise.all([
+      api('/admin/dashboard'),
+      api('/users'),
+    ]);
+    _cachedUsers = users;
+    renderDashboard(data, users);
   } catch (e) { /* ignore */ }
 }
 
@@ -389,40 +369,81 @@ function fmtDuration(totalSec) {
   return `${m}m`;
 }
 
-function renderDashboard(data) {
+function renderDashboard(data, users) {
   if (!DOM.dashboardBody) return;
 
-  const lockLine = data.timer_lock.locked && data.timer_lock.holder
-    ? `<span class="dash-lock-holder">${esc(data.timer_lock.holder.user_name)}</span>`
-    : '<span class="dash-lock-none">Unlocked</span>';
+  // Build a map of online users: name -> { role, duration }
+  const onlineMap = new Map();
+  let anonCount = 0;
+  for (const c of data.clients) {
+    if (c.is_authenticated && c.user_name) {
+      const prev = onlineMap.get(c.user_name);
+      // Keep the longest session if same user has multiple connections
+      if (!prev || c.connected_seconds > prev.connected_seconds) {
+        onlineMap.set(c.user_name, c);
+      }
+    } else {
+      anonCount++;
+    }
+  }
 
-  const clientRows = data.clients
-    .sort((a, b) => b.connected_seconds - a.connected_seconds)
-    .map(c => {
-      const name = c.is_authenticated
-        ? esc(c.user_name)
-        : '<span class="text-dim">Anonymous</span>';
-      const role = c.role ? roleLabel(c.role) : '';
-      const dur = fmtDuration(c.connected_seconds);
-      return `<tr>
-        <td>${name}</td>
-        <td>${role}</td>
-        <td>${dur}</td>
-      </tr>`;
-    }).join('');
+  const lockHolder = data.timer_lock.locked && data.timer_lock.holder
+    ? data.timer_lock.holder.user_name : null;
+
+  // Stat cards
+  const stats = `
+    <div class="dash-stats">
+      <div class="dash-stat">
+        <span class="dash-stat-value">${data.total_connections}</span>
+        <span class="dash-stat-label">Connected</span>
+      </div>
+      <div class="dash-stat">
+        <span class="dash-stat-value">${onlineMap.size}</span>
+        <span class="dash-stat-label">Users Online</span>
+      </div>
+      <div class="dash-stat">
+        <span class="dash-stat-value">${users.length}</span>
+        <span class="dash-stat-label">Registered</span>
+      </div>
+      <div class="dash-stat">
+        <span class="dash-stat-value dash-stat-lock">${lockHolder ? esc(lockHolder) : '—'}</span>
+        <span class="dash-stat-label">Timer Control</span>
+      </div>
+    </div>`;
+
+  // User rows — registered users with online status
+  const userRows = users.map(u => {
+    const online = onlineMap.get(u.name);
+    const statusDot = online
+      ? `<span class="dash-dot dash-dot--on" title="Online ${fmtDuration(online.connected_seconds)}"></span>`
+      : '<span class="dash-dot dash-dot--off" title="Offline"></span>';
+    const duration = online ? fmtDuration(online.connected_seconds) : '';
+    const isLockHolder = lockHolder === u.name;
+    const lockBadge = isLockHolder ? '<span class="dash-badge">CONTROL</span>' : '';
+    return `<tr class="${online ? 'dash-row--online' : ''}">
+      <td>${statusDot} ${esc(u.name)}</td>
+      <td>${roleLabel(u.role)}${lockBadge}</td>
+      <td class="dash-dur">${duration}</td>
+      <td class="dash-actions">
+        <button class="icon-btn" onclick="openUserModal('${u.id}')" title="Edit">&#9998;</button>
+        <button class="icon-btn danger" onclick="deleteUser('${u.id}', '${esc(u.name)}')" title="Delete">&times;</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Anonymous connections row
+  const anonRow = anonCount > 0
+    ? `<tr><td><span class="dash-dot dash-dot--anon"></span> <span class="text-dim">Anonymous</span></td><td class="text-dim" colspan="3">${anonCount} connection${anonCount > 1 ? 's' : ''}</td></tr>`
+    : '';
 
   DOM.dashboardBody.innerHTML = `
-    <div class="dash-summary">
-      <span>${data.total_connections} connected</span>
-      <span class="dash-sep">&middot;</span>
-      <span>${data.authenticated_connections} authenticated</span>
-      <span class="dash-sep">&middot;</span>
-      <span>Timer: ${lockLine}</span>
-    </div>
-    ${data.clients.length > 0 ? `
+    ${stats}
+    <div class="dash-table-wrap">
     <table class="dash-table">
-      <thead><tr><th>User</th><th>Role</th><th>Duration</th></tr></thead>
-      <tbody>${clientRows}</tbody>
-    </table>` : '<div class="text-dim" style="padding:0.5rem">No active connections.</div>'}
+      <thead><tr><th>User</th><th>Role</th><th>Online</th><th></th></tr></thead>
+      <tbody>${userRows}${anonRow}</tbody>
+    </table>
+    </div>
+    ${users.length === 0 ? '<div class="text-dim" style="padding:0.75rem">No users configured. Click + Add User to create one.</div>' : ''}
   `;
 }
