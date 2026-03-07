@@ -29,9 +29,9 @@ body {
 
 /** Vertical department color bar (4px wide, stretches to parent height). */
 .dept-bar {
-  width: 4px;
+  width: 6px;
   align-self: stretch;
-  border-radius: 2px;
+  border-radius: 3px;
   flex-shrink: 0;
 }
 

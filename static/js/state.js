@@ -203,6 +203,19 @@ function fmtCountdown(sec) {
 }
 
 /**
+ * Format elapsed seconds as "T+Xs" or "T+Xm XXs".
+ * @param {number} sec - Elapsed seconds since trigger.
+ * @returns {string}
+ */
+function fmtElapsed(sec) {
+  if (sec <= 0) return 'T+0s';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  if (m > 0) return `T+${m}m ${String(s).padStart(2, '0')}s`;
+  return `T+${s}s`;
+}
+
+/**
  * Convert a timecode string to total seconds.
  * @param {string} str - Timecode string "HH:MM:SS:FF".
  * @returns {number}
