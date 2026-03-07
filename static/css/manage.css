@@ -324,7 +324,13 @@
   cursor: pointer;
   transition: transform 0.1s;
 }
-.tl-cue:hover { transform: scaleX(2.5); z-index: 1; }
+.tl-cue:hover { transform: scaleX(2.5); z-index: 3; }
+.tl-cue--selected {
+  transform: scaleX(2.5);
+  z-index: 1;
+  box-shadow: 0 0 6px currentColor;
+}
+.tl-cue--selected:hover { z-index: 3; }
 .tl-playhead {
   position: absolute;
   top: 0;
@@ -379,6 +385,29 @@
   border-radius: 2px;
   box-sizing: border-box;
 }
+
+/* ── Timeline tooltip ── */
+.tl-tooltip {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+}
+.tl-tooltip.visible { opacity: 1; }
+.tl-tip-label { font-weight: var(--font-weight-medium); margin-bottom: 2px; }
+.tl-tip-tc { font-family: var(--font-mono); color: var(--text-label); font-size: var(--font-size-xs); }
+.tl-tip-dept { display: flex; align-items: center; gap: 4px; color: var(--text-dim); font-size: var(--font-size-xs); margin-top: 2px; }
+.tl-tip-dot { width: 6px; height: 6px; border-radius: 2px; flex-shrink: 0; }
+.tl-tip-warn { color: var(--text-dim); font-size: var(--font-size-xs); margin-top: 1px; }
 
 /* ── Cue highlight flash ── */
 .cue-item.cue-highlight { animation: cue-flash 1.5s; }
