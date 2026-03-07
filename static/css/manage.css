@@ -286,6 +286,74 @@
 }
 .cue-item:hover .cue-actions { opacity: 1; }
 
+/* ── Multi-select ── */
+.cue-check, .cue-act-check {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.cue-check input, .cue-act-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  margin: 0;
+}
+.cue-item.selected { background: var(--bg-surface); }
+
+/* ── Bulk action bar ── */
+.bulk-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: var(--bg-card);
+  border-top: 2px solid var(--accent);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+  z-index: 50;
+}
+.bulk-count {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--accent);
+  white-space: nowrap;
+}
+.bulk-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+.bulk-btn, .bulk-select {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  transition: var(--transition-fast);
+}
+.bulk-btn:hover { border-color: var(--accent); color: var(--accent); }
+.bulk-btn--danger:hover { border-color: var(--danger); color: var(--danger); }
+.bulk-close {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 1rem;
+}
+.bulk-close:hover { color: var(--text-primary); }
+
 /* ── Inline edit ── */
 .inline-edit {
   padding: 0.15rem 0.35rem;

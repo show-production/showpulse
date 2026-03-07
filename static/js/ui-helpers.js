@@ -149,6 +149,7 @@ loadTheme();
   initDOM();
   initCueDrag();
   initCueInlineEdit();
+  initCueBulkOps();
   // Auth check first
   await initAuth();
   try {
