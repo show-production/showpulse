@@ -52,6 +52,12 @@ let departments = [];
 /** @type {Array<Object>} */
 let cues = [];
 
+/** @type {Array<{id: string, name: string, sort_order: number}>} */
+let acts = [];
+
+/** @type {string} */
+let showName = '';
+
 /** Active department filter IDs — empty means show all. */
 let activeDeptFilters = new Set();
 
@@ -106,6 +112,8 @@ function initDOM() {
   DOM.tcFps = document.getElementById('tc-fps');
   DOM.tcSource = document.getElementById('tc-source');
   DOM.gotoTc = document.getElementById('goto-tc');
+  DOM.gotoInfo = document.getElementById('goto-info');
+  DOM.showNameLabel = document.getElementById('show-name-label');
   DOM.wsDot = document.getElementById('ws-dot');
   DOM.disconnectBanner = document.getElementById('disconnect-banner');
   DOM.flowTimecode = document.getElementById('flow-timecode');

@@ -16,7 +16,7 @@ document.querySelectorAll('.tab[data-view]').forEach(tab => {
     tab.classList.add('active');
     document.getElementById(`view-${tab.dataset.view}`).classList.add('active');
     if (tab.dataset.view === 'manage') refreshManageView();
-    if (tab.dataset.view === 'settings') { loadUsers(); refreshTimerLock(); }
+    if (tab.dataset.view === 'settings') { loadUsers(); refreshTimerLock(); loadShowName(); }
   });
 });
 
@@ -124,8 +124,7 @@ loadTheme();
   // Auth check first
   await initAuth();
   try {
-    await loadDepartments();
-    await loadCues();
+    await Promise.all([loadDepartments(), loadCues(), loadActs(), loadShowName()]);
     renderDeptFilters();
   } catch (e) {
     showToast('Failed to load initial data', 'error');

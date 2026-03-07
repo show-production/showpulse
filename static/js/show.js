@@ -77,7 +77,10 @@ function prevCue() {
   for (let i = sorted.length - 1; i >= 0; i--) {
     if (sorted[i].secs < currentSecs - 0.5) { best = sorted[i]; break; }
   }
-  if (best) DOM.gotoTc.value = best.tc;
+  if (best) {
+    DOM.gotoTc.value = best.tc;
+    showGotoCueInfo(best);
+  }
 }
 
 /**
@@ -90,12 +93,15 @@ function nextCue() {
   for (let i = 0; i < sorted.length; i++) {
     if (sorted[i].secs > currentSecs + 0.5) { best = sorted[i]; break; }
   }
-  if (best) DOM.gotoTc.value = best.tc;
+  if (best) {
+    DOM.gotoTc.value = best.tc;
+    showGotoCueInfo(best);
+  }
 }
 
 /**
  * Get all cue timecodes sorted by time, filtered by active dept filters.
- * @returns {Array<{tc: string, secs: number}>}
+ * @returns {Array<{tc: string, secs: number, department_id: string, department: string, label: string}>}
  */
 function getSortedCueTCs() {
   let list = cues;
@@ -103,8 +109,42 @@ function getSortedCueTCs() {
     list = cues.filter(c => activeDeptFilters.has(c.department_id));
   }
   return list
-    .map(c => ({ tc: fmtTC(c.trigger_tc), secs: tcObjToSeconds(c.trigger_tc) }))
+    .map(c => ({
+      tc: fmtTC(c.trigger_tc),
+      secs: tcObjToSeconds(c.trigger_tc),
+      department_id: c.department_id,
+      department: c.department,
+      label: formatCueLabel(c),
+    }))
     .sort((a, b) => a.secs - b.secs);
+}
+
+/**
+ * Display cue info (department + label) in the goto info area.
+ * @param {{department_id: string, department: string, label: string}} info
+ */
+function showGotoCueInfo(info) {
+  const color = getDeptColor(info.department_id);
+  DOM.gotoInfo.innerHTML =
+    `<span class="goto-dept-dot" style="background:${color}"></span>` +
+    `<span class="goto-dept-name">${esc(info.department)}</span>` +
+    `<span class="goto-cue-label">${esc(info.label)}</span>`;
+}
+
+/**
+ * Update goto cue info when user types in the goto input.
+ * Finds a cue matching the entered timecode and shows its info.
+ */
+function updateGotoCueInfo() {
+  const val = DOM.gotoTc.value.trim();
+  if (!val) { DOM.gotoInfo.innerHTML = ''; return; }
+  const sorted = getSortedCueTCs();
+  const match = sorted.find(c => c.tc === val);
+  if (match) {
+    showGotoCueInfo(match);
+  } else {
+    DOM.gotoInfo.innerHTML = '';
+  }
 }
 
 // ── Tier classification ────────────────────
@@ -148,7 +188,7 @@ function renderFlowCues(wsCues) {
     .slice()
     .sort((a, b) => tcObjToSeconds(a.trigger_tc) - tcObjToSeconds(b.trigger_tc));
 
-  diffCueList(DOM.flowUpcoming, allCues);
+  diffCueListWithActs(DOM.flowUpcoming, allCues);
 
   if (allCues.length === 0) {
     DOM.flowUpcoming.innerHTML = `<div class="flow-no-cues">${CONST.NO_MATCH_MSG}</div>`;
@@ -184,6 +224,174 @@ function getTrafficLight(c) {
   }
   // cd === 1
   return { statusText: readyLabel, statusColor: CONST.COLOR_COUNTDOWN_1, digitText: '1', digitColor: CONST.COLOR_COUNTDOWN_1, progressColor: CONST.COLOR_COUNTDOWN_1 };
+}
+
+// ── FlowCard list with act grouping ─────────
+
+/**
+ * Render cues grouped by act with sticky divider headers.
+ * Cues without an act go into an "ungrouped" section at the end.
+ * @param {HTMLElement} container - The #flow-upcoming element.
+ * @param {Array<Object>} cueList - Array of cue objects sorted by time.
+ */
+function diffCueListWithActs(container, cueList) {
+  // Group cues by act_id (preserving time order within each group)
+  const grouped = new Map();
+  const ungrouped = [];
+  for (const c of cueList) {
+    if (c.act_id && c.act_name) {
+      if (!grouped.has(c.act_id)) grouped.set(c.act_id, []);
+      grouped.get(c.act_id).push(c);
+    } else {
+      ungrouped.push(c);
+    }
+  }
+
+  // If no acts exist, fall back to flat list
+  if (grouped.size === 0) {
+    diffCueList(container, cueList);
+    container.querySelectorAll('.act-group').forEach(g => g.remove());
+    return;
+  }
+
+  // Build ordered act groups (sorted by earliest cue time)
+  const actOrder = [...grouped.entries()]
+    .map(([actId, actCues]) => ({
+      actId,
+      actName: actCues[0].act_name,
+      cues: actCues,
+      firstTime: tcObjToSeconds(actCues[0].trigger_tc),
+    }))
+    .sort((a, b) => a.firstTime - b.firstTime);
+
+  const wantedActIds = new Set(actOrder.map(a => a.actId));
+  const wantedCueIds = new Set(cueList.map(c => c.id));
+
+  // Index existing act-group wrappers
+  const existingGroups = {};
+  container.querySelectorAll('.act-group').forEach(g => {
+    if (wantedActIds.has(g.dataset.actId)) {
+      existingGroups[g.dataset.actId] = g;
+    } else {
+      g.remove();
+    }
+  });
+
+  // Remove stale orphan cards (outside groups)
+  container.querySelectorAll(':scope > .flow-card').forEach(card => {
+    if (!wantedCueIds.has(card.dataset.cueId)) card.remove();
+  });
+
+  let prevNode = null;
+
+  for (const act of actOrder) {
+    // Get or create act-group wrapper
+    let group = existingGroups[act.actId];
+    const wasCollapsed = group ? group.classList.contains('collapsed') : false;
+    if (!group) {
+      group = document.createElement('div');
+      group.className = 'act-group';
+      group.dataset.actId = act.actId;
+    }
+
+    // Get or create header inside group
+    let header = group.querySelector('.act-header');
+    if (!header) {
+      header = document.createElement('div');
+      header.className = 'act-header';
+      header.dataset.actId = act.actId;
+      header.addEventListener('dblclick', () => toggleActGroup(group));
+      group.prepend(header);
+    }
+    if (header.textContent !== act.actName) header.textContent = act.actName;
+
+    // Preserve collapsed state
+    if (wasCollapsed) {
+      group.classList.add('collapsed');
+      header.classList.add('collapsed');
+    }
+
+    // Position group in container
+    if (prevNode) {
+      if (prevNode.nextElementSibling !== group) prevNode.after(group);
+    } else if (container.firstElementChild !== group) {
+      container.prepend(group);
+    }
+
+    // Diff cards inside this group
+    const existingCards = {};
+    group.querySelectorAll('.flow-card').forEach(card => {
+      existingCards[card.dataset.cueId] = card;
+    });
+
+    let prevCard = header;
+    for (const c of act.cues) {
+      let card = existingCards[c.id];
+      if (card) {
+        updateFlowCard(card, c);
+        delete existingCards[c.id];
+        if (prevCard.nextElementSibling !== card) prevCard.after(card);
+      } else {
+        card = createFlowCard(c);
+        prevCard.after(card);
+      }
+      prevCard = card;
+    }
+    // Remove stale cards in this group
+    Object.values(existingCards).forEach(card => card.remove());
+
+    prevNode = group;
+  }
+
+  // Ungrouped cues after all groups
+  for (const c of ungrouped) {
+    let card = container.querySelector(`.flow-card[data-cue-id="${c.id}"]`);
+    if (card) {
+      updateFlowCard(card, c);
+      if (prevNode) {
+        if (prevNode.nextElementSibling !== card) prevNode.after(card);
+      } else if (container.firstElementChild !== card) {
+        container.prepend(card);
+      }
+    } else {
+      card = createFlowCard(c);
+      if (prevNode) {
+        prevNode.after(card);
+      } else {
+        container.prepend(card);
+      }
+    }
+    prevNode = card;
+  }
+
+  // Remove trailing stale elements
+  while (prevNode && prevNode.nextElementSibling) {
+    prevNode.nextElementSibling.remove();
+  }
+}
+
+// ── Act group collapse/expand ─────────────
+
+function toggleActGroup(group) {
+  const collapsed = group.classList.toggle('collapsed');
+  const header = group.querySelector('.act-header');
+  if (header) header.classList.toggle('collapsed', collapsed);
+}
+
+function collapseAllActs() {
+  DOM.flowUpcoming.querySelectorAll('.act-group').forEach(g => {
+    g.classList.add('collapsed');
+    const h = g.querySelector('.act-header');
+    if (h) h.classList.add('collapsed');
+  });
+}
+
+function expandAllActs() {
+  DOM.flowUpcoming.querySelectorAll('.act-group').forEach(g => {
+    g.classList.remove('collapsed');
+    const h = g.querySelector('.act-header');
+    if (h) h.classList.remove('collapsed');
+  });
 }
 
 // ── FlowCard list (DOM-diffed) ─────────────
@@ -248,6 +456,11 @@ function createFlowCard(c) {
 
   card.addEventListener('click', () => {
     DOM.gotoTc.value = card.dataset.triggerTc;
+    showGotoCueInfo({
+      department_id: c.department_id,
+      department: c.department,
+      label: formatCueLabel(c),
+    });
   });
 
   const tint = (tier === 'tier-warning') ? hexToRgba(deptColor, CONST.TINT_ALPHA) : '';

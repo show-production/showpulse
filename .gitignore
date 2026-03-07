@@ -1,2 +1,5 @@
 /target
 showpulse-data.json
+.claude/
+*.png
+*.pdf

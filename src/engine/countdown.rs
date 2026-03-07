@@ -137,6 +137,10 @@ pub async fn run(
                 .map(|d| d.name.clone())
                 .unwrap_or_else(|| "Unknown".to_string());
 
+            let act_name = cue.act_id.and_then(|aid| {
+                show.acts.iter().find(|a| a.id == aid).map(|a| a.name.clone())
+            });
+
             cue_statuses.push(CueStatus {
                 id: cue.id,
                 cue_number: cue.cue_number.clone(),
@@ -150,6 +154,8 @@ pub async fn run(
                 duration: cue.duration,
                 color: cue.color.clone(),
                 elapsed_sec: elapsed_since_trigger,
+                act_id: cue.act_id,
+                act_name,
             });
         }
 
@@ -168,6 +174,10 @@ pub async fn run(
                 .map(|d| d.name.clone())
                 .unwrap_or_else(|| "Unknown".to_string());
 
+            let act_name = cue.act_id.and_then(|aid| {
+                show.acts.iter().find(|a| a.id == aid).map(|a| a.name.clone())
+            });
+
             cue_statuses.push(CueStatus {
                 id: cue.id,
                 cue_number: cue.cue_number.clone(),
@@ -181,6 +191,8 @@ pub async fn run(
                 duration: cue.duration,
                 color: cue.color.clone(),
                 elapsed_sec: None,
+                act_id: cue.act_id,
+                act_name,
             });
         }
 

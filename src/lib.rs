@@ -81,6 +81,15 @@ pub fn api_router() -> Router<AppState> {
         .route("/api/timer-lock", get(api::timer_lock::status))
         .route("/api/timer-lock", post(api::timer_lock::acquire))
         .route("/api/timer-lock", delete(api::timer_lock::release))
+        // Acts
+        .route("/api/acts", get(api::acts::list))
+        .route("/api/acts", post(api::acts::create))
+        .route("/api/acts/:id", put(api::acts::update))
+        .route("/api/acts/:id", delete(api::acts::delete))
+        .route("/api/acts/:id/shift", post(api::acts::shift))
+        // Show name
+        .route("/api/show/name", get(api::show::get_name))
+        .route("/api/show/name", put(api::show::set_name))
         // Auth
         .route("/api/auth/status", get(auth::auth_status))
         .route("/api/auth/login", post(auth::login))

@@ -22,12 +22,11 @@
     <button class="tab" data-view="manage">Manage</button>
     <button class="tab" data-view="settings">Settings</button>
   </div>
+  <span class="show-name-label" id="show-name-label">ShowPulse</span>
   <div class="nav-right">
+    <span class="ws-dot" id="ws-dot"></span>
     <span class="auth-user-label" id="auth-user-label"></span>
     <button class="tab" id="logout-btn" style="display:none" onclick="handleLogout()">Logout</button>
-    <div class="brand">
-      ShowPulse <span class="dot" id="ws-dot"></span>
-    </div>
   </div>
 </nav>
 
@@ -88,37 +87,54 @@
       </div>
       <div class="tc-controls">
         <div class="tc-transport">
-          <button class="tc-btn" onclick="prevCue()" title="Previous cue (B)">&#9198;</button>
-          <button class="tc-btn" onclick="genCmd('play')" title="Play (Space)">&#9654;</button>
-          <button class="tc-btn" onclick="genCmd('pause')" title="Pause (P)">&#9646;&#9646;</button>
-          <button class="tc-btn" onclick="genCmd('stop')" title="Stop (Esc)">&#9632;</button>
-          <button class="tc-btn" onclick="nextCue()" title="Next cue (N)">&#9197;</button>
-        </div>
-        <div class="tc-goto-group">
-          <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF">
-          <button class="tc-btn" onclick="gotoTC()" title="Goto (G)">Go</button>
+          <button class="tc-btn tc-btn-sm" onclick="prevCue()" title="Previous cue (B)">&#9198;</button>
+          <button class="tc-btn tc-btn-sm" onclick="genCmd('play')" title="Play (Space)">&#9654;</button>
+          <button class="tc-btn tc-btn-sm" onclick="genCmd('pause')" title="Pause (P)">&#9646;&#9646;</button>
+          <button class="tc-btn tc-btn-sm" onclick="genCmd('stop')" title="Stop (Esc)">&#9632;</button>
+          <button class="tc-btn tc-btn-sm" onclick="nextCue()" title="Next cue (N)">&#9197;</button>
         </div>
         <span class="timer-lock-group">
-          <button class="tc-btn" id="timer-lock-btn" style="display:none" onclick="acquireTimerLock()">Take Control</button>
+          <button class="tc-btn tc-btn-sm" id="timer-lock-btn" style="display:none" onclick="acquireTimerLock()">Take Control</button>
           <span class="timer-lock-status" id="timer-lock-status"></span>
         </span>
-        <button class="tc-btn active" id="autopulse-btn" onclick="toggleAutoPulse()" title="Auto-scroll (A)">Auto</button>
-        <button class="tc-btn" onclick="jumpToCurrent()" title="Jump to current (C)">&#x2907; Now</button>
+      </div>
+      <div class="tc-goto-row">
+        <div class="tc-goto-group">
+          <button class="tc-btn" onclick="gotoTC()" title="Goto (G)">Go To</button>
+          <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF" oninput="updateGotoCueInfo()">
+        </div>
+        <span class="tc-goto-info" id="goto-info"></span>
       </div>
     </div>
     <div class="flow-upcoming" id="flow-upcoming"></div>
+    <div class="flow-controls" id="flow-controls">
+      <button class="fc-btn" onclick="jumpToCurrent()" title="Jump to current (C)">&#x2907; Now</button>
+      <button class="fc-btn active" id="autopulse-btn" onclick="toggleAutoPulse()" title="Auto-scroll (A)">Auto</button>
+      <span class="fc-sep"></span>
+      <button class="fc-btn" id="collapse-all-btn" onclick="collapseAllActs()" title="Collapse all acts">&#x25B4; Collapse</button>
+      <button class="fc-btn" id="expand-all-btn" onclick="expandAllActs()" title="Expand all acts">&#x25BE; Expand</button>
+    </div>
   </div>
 </div>
 
 <!-- ═══ MANAGE VIEW ═══ -->
 <div class="view" id="view-manage">
   <div class="manage-layout">
-    <div class="panel">
-      <div class="panel-header">
-        <h3>Departments</h3>
-        <button class="add-btn" onclick="openDeptModal()">+ Add</button>
+    <div class="manage-sidebar">
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Departments</h3>
+          <button class="add-btn" onclick="openDeptModal()">+ Add</button>
+        </div>
+        <div class="panel-body" id="dept-list"></div>
       </div>
-      <div class="panel-body" id="dept-list"></div>
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Acts</h3>
+          <button class="add-btn" onclick="openActModal()">+ Add</button>
+        </div>
+        <div class="panel-body" id="act-list"></div>
+      </div>
     </div>
     <div class="panel">
       <div class="panel-header">
@@ -156,6 +172,18 @@
 <!-- ═══ SETTINGS VIEW ═══ -->
 <div class="view" id="view-settings">
   <div class="settings-grid">
+    <div class="panel">
+      <div class="panel-header"><h3>Show</h3></div>
+      <div class="panel-body panel-body--padded">
+        <div class="setting-group">
+          <label>Show Name</label>
+          <div class="inline-row">
+            <input type="text" id="show-name-input" placeholder="My Show" class="flex-1">
+            <button class="btn-sm" onclick="saveShowName()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="panel">
       <div class="panel-header"><h3>Timecode</h3></div>
       <div class="panel-body panel-body--padded">
@@ -327,6 +355,10 @@
         <select id="cue-dept"></select>
       </div>
       <div class="form-group">
+        <label>Act</label>
+        <select id="cue-act"><option value="">-- No Act --</option></select>
+      </div>
+      <div class="form-group">
         <label>Trigger Timecode</label>
         <input type="text" id="cue-trigger-tc" placeholder="HH:MM:SS:FF" value="00:00:00:00">
       </div>
@@ -342,6 +374,31 @@
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('cue-modal')">Cancel</button>
       <button class="btn-save" onclick="saveCue()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ActModal -->
+<div class="modal-overlay" id="act-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="act-modal-title">Add Act</h3>
+      <button class="icon-btn" onclick="closeModal('act-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="act-edit-id">
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="act-name" placeholder="e.g. Act 1 — Opening">
+      </div>
+      <div class="form-group">
+        <label>Sort Order</label>
+        <input type="number" id="act-sort-order" value="1" min="1">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('act-modal')">Cancel</button>
+      <button class="btn-save" onclick="saveAct()">Save</button>
     </div>
   </div>
 </div>
