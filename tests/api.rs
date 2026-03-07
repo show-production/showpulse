@@ -18,13 +18,15 @@ fn test_state() -> (AppState, NamedTempFile) {
     let tmp = NamedTempFile::new().unwrap();
     let store = Arc::new(CueStore::new(tmp.path().to_path_buf()));
     let tc_manager = Arc::new(TimecodeManager::new());
-    let ws_hub = Arc::new(WsHub::new());
-    let sessions = SessionStore::new(None);
+    let timer_lock = showpulse::auth::new_timer_lock();
+    let ws_hub = Arc::new(WsHub::new(timer_lock.clone()));
+    let sessions = SessionStore::new(true);
     let state = AppState {
         tc_manager,
         store,
         ws_hub,
         sessions,
+        timer_lock,
     };
     (state, tmp)
 }

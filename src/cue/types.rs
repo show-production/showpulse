@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::auth::User;
 use crate::timecode::types::Timecode;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,6 +73,8 @@ fn default_true() -> bool {
 pub struct ShowData {
     pub departments: Vec<Department>,
     pub cues: Vec<Cue>,
+    #[serde(default)]
+    pub users: Vec<User>,
 }
 
 impl Default for ShowData {
@@ -79,6 +82,7 @@ impl Default for ShowData {
         Self {
             departments: Vec::new(),
             cues: Vec::new(),
+            users: Vec::new(),
         }
     }
 }

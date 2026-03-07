@@ -1,34 +1,64 @@
+use std::collections::HashSet;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
 use axum::{
-    extract::{DefaultBodyLimit, State, WebSocketUpgrade},
+    extract::{DefaultBodyLimit, Query, State, WebSocketUpgrade},
     http::{HeaderValue, StatusCode},
     middleware,
     response::IntoResponse,
     routing::get,
 };
+use serde::Deserialize;
 use tower::limit::ConcurrencyLimitLayer;
 use tower_http::cors::{AllowOrigin, CorsLayer};
 use tower_http::services::ServeDir;
 use tower_http::set_header::SetResponseHeaderLayer;
 use tracing::{info, warn};
 
-use showpulse::auth::SessionStore;
+use showpulse::auth::{Role, SessionStore};
 use showpulse::cue::store::CueStore;
 use showpulse::timecode::TimecodeManager;
-use showpulse::ws::hub::WsHub;
+use showpulse::ws::hub::{WsHub, WsSessionInfo};
 use showpulse::{api_router, AppState};
+
+#[derive(Deserialize)]
+struct WsQuery {
+    #[serde(default)]
+    token: Option<String>,
+}
 
 async fn ws_handler(
     ws: WebSocketUpgrade,
+    Query(query): Query<WsQuery>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse, StatusCode> {
     if state.ws_hub.client_count().await >= showpulse::config::MAX_WS_CLIENTS {
         return Err(StatusCode::SERVICE_UNAVAILABLE);
     }
+
+    // Resolve session from token query param
+    let session_info = if let Some(ref token) = query.token {
+        if let Some(session) = state.sessions.get_session(token).await {
+            let dept_filter = if session.role <= Role::CrewLead && !session.departments.is_empty() {
+                Some(session.departments.iter().cloned().collect::<HashSet<_>>())
+            } else {
+                None
+            };
+            Some(WsSessionInfo {
+                user_id: session.user_id,
+                user_name: session.user_name.clone(),
+                dept_filter,
+            })
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     Ok(ws.on_upgrade(move |socket| async move {
-        state.ws_hub.handle_connection(socket).await;
+        state.ws_hub.handle_connection(socket, session_info).await;
     }))
 }
 
@@ -40,14 +70,22 @@ async fn main() {
 
     let store = Arc::new(CueStore::new(PathBuf::from(&config.data_file)));
     store.seed_if_empty().await;
-    let tc_manager = Arc::new(TimecodeManager::new());
-    let ws_hub = Arc::new(WsHub::new());
-    let sessions = SessionStore::new(config.pin.clone());
 
-    if sessions.auth_enabled() {
-        info!("Authentication enabled — mutation endpoints require PIN");
+    // Seed admin user from SHOWPULSE_PIN env var if no users exist
+    if let Some(ref pin) = config.pin {
+        store.seed_admin_user(pin).await;
+    }
+
+    let has_users = store.has_users().await;
+    let tc_manager = Arc::new(TimecodeManager::new());
+    let timer_lock = showpulse::auth::new_timer_lock();
+    let ws_hub = Arc::new(WsHub::new(timer_lock.clone()));
+    let sessions = SessionStore::new(!has_users);
+
+    if has_users {
+        info!("Authentication enabled — {} user(s) configured", store.user_count().await);
     } else {
-        warn!("No SHOWPULSE_PIN set — all endpoints are open (no authentication)");
+        warn!("No users configured — all endpoints are open (no authentication)");
     }
 
     // Start countdown engine
@@ -63,6 +101,7 @@ async fn main() {
         store,
         ws_hub,
         sessions: sessions.clone(),
+        timer_lock,
     };
 
     // CORS: only allow same-origin requests

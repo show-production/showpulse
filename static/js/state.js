@@ -73,6 +73,26 @@ let sidebarOpen = localStorage.getItem('sidebarOpen') === 'true';
 /** Whether AutoPulse auto-scroll is enabled (persisted, default true). */
 let autoPulse = localStorage.getItem('autoPulse') !== 'false';
 
+// ── Auth state ──────────────────────────────
+
+/** Whether the server has auth enabled. */
+let authEnabled = false;
+
+/** Session token (persisted to localStorage). */
+let authToken = localStorage.getItem('authToken') || null;
+
+/** Current user's role (e.g. "admin", "manager"). */
+let authRole = localStorage.getItem('authRole') || null;
+
+/** Current user's display name. */
+let authName = localStorage.getItem('authName') || null;
+
+/** Department IDs this user is assigned to. */
+let authDepts = JSON.parse(localStorage.getItem('authDepts') || '[]');
+
+/** Whether current user holds the timer lock. */
+let hasTimerLock = false;
+
 
 // ── DOM cache ──────────────────────────────
 
@@ -99,6 +119,23 @@ function initDOM() {
   DOM.sidebarBackdrop = document.getElementById('sidebar-backdrop');
   DOM.loadingOverlay = document.getElementById('loading-overlay');
   DOM.autoPulseBtn = document.getElementById('autopulse-btn');
+  // Auth
+  DOM.loginOverlay = document.getElementById('login-overlay');
+  DOM.loginForm = document.getElementById('login-form');
+  DOM.loginName = document.getElementById('login-name');
+  DOM.loginPin = document.getElementById('login-pin');
+  DOM.loginError = document.getElementById('login-error');
+  DOM.loginBtn = document.getElementById('login-btn');
+  // Timer lock
+  DOM.timerLockBtn = document.getElementById('timer-lock-btn');
+  DOM.timerLockStatus = document.getElementById('timer-lock-status');
+  // User panel
+  DOM.userPanel = document.getElementById('user-panel');
+  DOM.userList = document.getElementById('user-list');
+  // Nav
+  DOM.navTabs = document.querySelectorAll('.tab');
+  DOM.logoutBtn = document.getElementById('logout-btn');
+  DOM.authUserLabel = document.getElementById('auth-user-label');
 }
 
 // ── Shared helpers ─────────────────────────

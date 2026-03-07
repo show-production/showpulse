@@ -4,8 +4,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::sync::Arc;
 use tokio::sync::{broadcast, RwLock};
+use tracing::info;
 use uuid::Uuid;
 
+use crate::auth::TimerLockState;
 use crate::cue::types::CueStatus;
 
 #[derive(Debug, Clone, Serialize)]
@@ -30,18 +32,29 @@ enum DeptFilter {
     Specific(Vec<Uuid>),   // ["uuid1", "uuid2"]
 }
 
+/// Optional session info attached to a WebSocket connection.
+#[derive(Clone)]
+pub struct WsSessionInfo {
+    pub user_id: Uuid,
+    pub user_name: String,
+    /// Pre-set department filter for Viewer/CrewLead users.
+    pub dept_filter: Option<HashSet<Uuid>>,
+}
+
 /// Tracks connected client count
 pub struct WsHub {
     tx: broadcast::Sender<BroadcastMessage>,
     client_count: Arc<RwLock<usize>>,
+    timer_lock: TimerLockState,
 }
 
 impl WsHub {
-    pub fn new() -> Self {
+    pub fn new(timer_lock: TimerLockState) -> Self {
         let (tx, _) = broadcast::channel(128);
         Self {
             tx,
             client_count: Arc::new(RwLock::new(0)),
+            timer_lock,
         }
     }
 
@@ -53,16 +66,18 @@ impl WsHub {
         *self.client_count.read().await
     }
 
-    pub async fn handle_connection(&self, socket: WebSocket) {
+    pub async fn handle_connection(&self, socket: WebSocket, session: Option<WsSessionInfo>) {
         let mut rx = self.tx.subscribe();
         let (mut sender, mut receiver) = socket.split();
         let client_count = self.client_count.clone();
+        let timer_lock = self.timer_lock.clone();
 
         *client_count.write().await += 1;
 
-        // Read the initial subscribe message
+        // Pre-set department filter from session (Viewer/CrewLead)
+        let initial_filter = session.as_ref().and_then(|s| s.dept_filter.clone());
         let sub_task_depts: Arc<RwLock<Option<HashSet<Uuid>>>> =
-            Arc::new(RwLock::new(None));
+            Arc::new(RwLock::new(initial_filter));
         let sub_depts_writer = sub_task_depts.clone();
 
         // Spawn reader task to handle incoming client messages
@@ -118,5 +133,16 @@ impl WsHub {
 
         read_task.abort();
         *client_count.write().await -= 1;
+
+        // Auto-release timer lock if disconnected user held it
+        if let Some(ref s) = session {
+            let mut lock = timer_lock.write().await;
+            if let Some(ref holder) = *lock {
+                if holder.user_id == s.user_id {
+                    info!("Timer lock auto-released — {} disconnected", s.user_name);
+                    *lock = None;
+                }
+            }
+        }
     }
 }

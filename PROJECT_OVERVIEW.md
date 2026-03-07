@@ -45,7 +45,9 @@ Single-page app served from `static/index.html` with three tabs:
 | **Manage** | Department CRUD (left panel), cue list table (right panel) with # column, department dropdown filter, sortable column headers, CSV/JSON bulk import, add/edit/delete modals with cue number field |
 | **Settings** | Timecode source selector (Generator/LTC/MTC) with device selectors, frame rate, generator mode, speed, start TC, theme colors (live preview), TC size slider, show data export/import JSON |
 
-**Keyboard shortcuts (Show tab):** Space = Play, P = Pause, Escape = Stop, N = Next cue, B = Previous cue, G = Focus goto input, S = Toggle sidebar
+| **Auth** | Login overlay (name+PIN), role-based tab gating, timer lock acquire/release for Managers, user management panel for Admins, logout button + user label in navbar |
+
+**Keyboard shortcuts (Show tab):** Space = Play, P = Pause, Escape = Stop, N = Next cue, B = Previous cue, G = Focus goto input, S = Toggle sidebar, A = Auto-scroll, C = Jump to current
 
 **WebSocket:** Auto-connects for real-time timecode updates. Green dot indicator in top-right. Falls back to 1s polling if WebSocket disconnects.
 
@@ -71,8 +73,10 @@ Single-page app served from `static/index.html` with three tabs:
 | WebSocket hub | `src/ws/hub.rs` | Full: Broadcast with per-client department filtering, subscribe protocol |
 | Countdown engine | `src/engine/countdown.rs` | Full: 10Hz tick with frame-accurate broadcast, per-department cue state tracking (active until replaced by next dept cue), disarmed cue filtering, duration-based Passed transition, elapsed_sec computation, backend-driven Go state (2s `GO_HOLD_SECONDS` hold before Active), cached cue states with second-boundary recomputation, 60s passed-cue cleanup |
 | Config | `src/config.rs` | Full: port, bind_address, data_file, optional PIN — all via env vars (`SHOWPULSE_PORT`, `SHOWPULSE_BIND`, `SHOWPULSE_DATA_FILE`, `SHOWPULSE_PIN`) |
-| Authentication | `src/auth.rs` | Full: PIN-based auth with `SessionStore`, `require_auth` middleware (protects POST/PUT/DELETE, passes GET), Bearer token or `?token=` query param |
-| Server entrypoint | `src/main.rs` | Full: Axum router with 25 API routes + WS, auth middleware, CORS (same-origin), body limit (1MB), concurrency limit (50), security headers, state wiring, seed on startup, static file fallback |
+| Authentication | `src/auth.rs` | Full: User-based auth with 5 roles (Viewer→Admin), `SessionStore` mapping tokens→sessions, `require_auth` middleware, `require_role()` + `require_timer_access()` guards, Bearer token or `?token=` query param |
+| User management | `src/api/users.rs` | Full: CRUD (Admin only), PINs stripped from list response, self-delete blocked |
+| Timer lock | `src/api/timer_lock.rs` | Full: Exclusive timer control — acquire (Manager+, 409 if taken), release, status |
+| Server entrypoint | `src/main.rs` | Full: Axum router with 32 API routes + WS, auth middleware, CORS (same-origin), body limit (1MB), concurrency limit (50), security headers, state wiring, user seeding from SHOWPULSE_PIN, seed on startup, static file fallback |
 | Web UI - Show view | `static/index.html` | Full: Clean dashboard with passed cues count badge (expandable dropdown), active cue strips (compact dept-colored rows), centered timer with 2-row transport + Prev/Next, animated Ready/Go zone (READY + digit two-element layout, fixed height, traffic-light colors on text+digits+progress bar, GO! with dept name, backend-driven Go state, in-place DOM updates for smooth transitions, progress bar fills 0%→100%), scrollable coming cues with uniform-size cards (color-only tier differentiation). Click-to-goto on cue cards/strips/passed items, Prev/Next cue navigation, scroll-fold collapses above-timer sections. Frame-accurate 10Hz timecode. DOM-diffed cards, department filters, passed cues toggle, disconnection banner |
 | Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with # column + sortable headers + department filter, bulk CSV/JSON import, add/edit/delete modals with cue number field |
 | Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show data export/import |
@@ -103,7 +107,7 @@ Single-page app served from `static/index.html` with three tabs:
 | Feature | Notes |
 |---------|-------|
 | Unit & integration tests | 73 tests: Timecode unit tests, CueStore unit tests, REST endpoint integration tests (`tests/api.rs`) |
-| PIN authentication | `src/auth.rs` — SessionStore, `require_auth` middleware, Bearer token / `?token=` query param. ENV: `SHOWPULSE_PIN` |
+| User management & roles | `src/auth.rs` — 5 roles (Viewer/CrewLead/Operator/Manager/Admin), user CRUD, timer lock, role-based UI gating. ENV: `SHOWPULSE_PIN` seeds admin user |
 | QR code onboarding | `GET /api/qr` — SVG QR code with server URL for crew devices |
 | Security hardening | CORS same-origin, body limit (1MB), concurrency limit (50), WS client limit (100), security headers |
 | Cue field expansion | Duration, armed/disarmed, per-cue color, continue mode (stop/auto-continue/auto-follow), post-wait |
@@ -117,7 +121,7 @@ Single-page app served from `static/index.html` with three tabs:
 | Print view | CSS print stylesheet for cue list |
 | Portable distribution | Single-folder plug-and-play with embedded static files |
 
-## API Endpoints (25 + WS)
+## API Endpoints (32 + WS)
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
@@ -147,8 +151,15 @@ Single-page app served from `static/index.html` with three tabs:
 | PUT | `/api/cues/:id` | Update cue |
 | DELETE | `/api/cues/:id` | Delete cue |
 | GET | `/api/qr` | Generate SVG QR code with server URL for crew onboarding |
-| GET | `/api/auth/status` | Check if auth is enabled and whether current session is authenticated |
-| POST | `/api/auth/login` | Authenticate with PIN, receive Bearer token |
+| GET | `/api/users` | List users (Admin only, PINs stripped) |
+| POST | `/api/users` | Create user (Admin only) |
+| PUT | `/api/users/:id` | Update user (Admin only) |
+| DELETE | `/api/users/:id` | Delete user (Admin only, self-delete blocked) |
+| GET | `/api/timer-lock` | Timer lock status (public) |
+| POST | `/api/timer-lock` | Acquire timer lock (Manager+, 409 if taken) |
+| DELETE | `/api/timer-lock` | Release timer lock (own or Admin override) |
+| GET | `/api/auth/status` | Check if auth is enabled |
+| POST | `/api/auth/login` | Authenticate with name+PIN, receive Bearer token + role |
 | POST | `/api/auth/logout` | Invalidate session token |
 | GET | `/ws` | WebSocket endpoint for live countdown data |
 

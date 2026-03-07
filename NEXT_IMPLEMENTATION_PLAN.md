@@ -128,15 +128,14 @@ Countdown engine: filters disarmed cues, duration-based Passed transition, elaps
 
 ---
 
-## Phase 11: Authentication ✅ Done
-**Goal:** PIN-based auth to protect admin operations while keeping crew view open.
+## Phase 11: Authentication ✅ Done (superseded by Phase 14)
+**Goal:** Auth to protect admin operations while keeping crew view open.
 
-Implemented in `src/auth.rs`:
-- `SessionStore` with `Arc<RwLock<HashSet<String>>>` tokens
-- `require_auth` middleware: skips auth if no PIN configured, allows GET freely, protects POST/PUT/DELETE
+Originally PIN-based, now replaced by user-based auth with 5 roles (see Phase 14).
+- `require_auth` middleware: skips auth if no users configured, allows GET freely, protects POST/PUT/DELETE
 - Token via `Authorization: Bearer <token>` header or `?token=` query param (for WebSocket)
 - Endpoints: `GET /api/auth/status`, `POST /api/auth/login`, `POST /api/auth/logout`
-- Config: `SHOWPULSE_PIN` env var (unset = open access)
+- Config: `SHOWPULSE_PIN` env var seeds admin user on first run (unset + no users = open access)
 
 ---
 
@@ -152,6 +151,57 @@ Implemented in `src/main.rs`:
 - Input validation in `src/cue/store.rs`: string clamping, color hex validation, timecode range validation, post_wait clamping
 
 Remaining: rate limiting on login endpoint, CSP headers
+
+---
+
+## Phase 14: User Management & Role-Based Access ✅ Done
+**Goal:** Multi-user authentication with 5 permission levels and exclusive timer control.
+
+### Role Hierarchy
+
+| Role | Level | Show | Manage | Settings | Timer Control | User CRUD |
+|------|-------|------|--------|----------|---------------|-----------|
+| Viewer | 1 | View (filtered to assigned depts) | — | — | — | — |
+| Crew Lead | 2 | View (filtered to assigned depts) | — | — | — | — |
+| Operator | 3 | View | Full | — | — | — |
+| Manager | 4 | View | Full | Full | Yes (must acquire lock) | — |
+| Admin | 5 | View | Full | Full | Yes (bypasses lock) | Full |
+
+### Timer Lock
+- Only one Manager can control the timer at a time (exclusive lock)
+- Admin always bypasses the lock
+- Lock acquired via `POST /api/timer-lock`, released via `DELETE /api/timer-lock`
+- Generator transport endpoints (play/pause/stop/goto/config) require Manager+ role AND timer lock
+
+### Implementation
+
+**Backend (`src/auth.rs`):**
+- `Role` enum: Viewer(1), CrewLead(2), Operator(3), Manager(4), Admin(5) with `level()` helper
+- `User` struct: id, name, pin, role, departments (persisted in `ShowData.users`)
+- `TimerLock` struct + `TimerLockState` (Arc<RwLock<Option<TimerLock>>>)
+- `Session` struct: carries user_id, name, role, departments per token
+- `SessionStore`: maps tokens → sessions, `open_access` mode for no-user setups
+- `require_role()`: extracts session from request extensions, checks minimum role
+- `require_timer_access()`: checks Admin or matching timer lock
+- Login: `{ name, pin }` → `{ token, role, name, departments }`
+
+**API endpoints:**
+- `GET/POST /api/users` — list (Admin, PINs stripped) / create (Admin)
+- `PUT/DELETE /api/users/:id` — update / delete (Admin, self-delete blocked)
+- `GET/POST/DELETE /api/timer-lock` — status / acquire (Manager+, 409 if taken) / release
+
+**Frontend (`static/js/auth.js`):**
+- Login overlay (z-index 310, above loading spinner)
+- Role-based tab gating: Viewer/CrewLead → Show only, Operator → +Manage, Manager → +Settings, Admin → +Users panel
+- Transport controls hidden for roles below Manager
+- Timer lock UI: "Take Control" / "Release" button for Managers
+- User management panel in Settings (Admin): list, add, edit, delete users with role + department assignment
+- Token persisted to localStorage, auto-login on refresh, 401 → re-show login
+
+**Migration path:**
+- `SHOWPULSE_PIN=xxxx` auto-creates admin user named "admin" on first run
+- No users configured → open access mode (all endpoints open, no login required)
+- `ShowData.users` field uses `#[serde(default)]` for backwards-compatible JSON
 
 ---
 
