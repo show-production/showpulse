@@ -1,189 +1,149 @@
 # ShowPulse Security Review
 
-**Date:** 2026-03-07
+**Date:** 2026-03-07 (updated after commit 4993c03)
 **Scope:** Full codebase review — Rust/Axum backend, JavaScript frontend, configuration, dependencies
 
 ---
 
 ## Executive Summary
 
-ShowPulse is a Rust/Axum web application for live show cue management with WebSocket real-time updates. The codebase demonstrates **solid security fundamentals** — input sanitization, role-based access control, CORS restrictions, and security headers are all present. However, several issues ranging from **critical to low** severity were identified.
+ShowPulse is a Rust/Axum web application for live show cue management with WebSocket real-time updates. After the security hardening in commit `4993c03`, the three most critical findings from the initial review have been **resolved**: PINs are now hashed with argon2, login rate limiting is in place, session tokens expire after 8 hours, and file writes are atomic. The remaining findings are **medium to low severity**.
 
 ---
 
-## Findings
+## Resolved Findings (commit 4993c03)
 
-### CRITICAL — Plaintext PIN Storage
+### ~~CRITICAL — Plaintext PIN Storage~~ → RESOLVED
 
-**Location:** `src/cue/store.rs:537-539`, `src/auth.rs:38`
+**Fix:** PINs are now hashed using argon2 (`src/auth.rs:29-48`). The `hash_pin()` function generates a random salt via `OsRng`, and `verify_pin()` uses argon2's constant-time verification. Existing plaintext PINs are auto-migrated at startup via `migrate_plaintext_pins()` (`src/cue/store.rs:626-641`). The `is_hashed()` check (`$argon2` prefix) prevents double-hashing.
 
-PINs are stored and compared as plaintext strings in the JSON data file. The `find_user_by_credentials` method does a direct string comparison:
+**Assessment:** Well implemented. The migration path is clean and handles the transition gracefully.
 
-```rust
-data.users.iter().find(|u| u.name == name && u.pin == pin).cloned()
-```
+### ~~HIGH — No Brute-Force Protection~~ → RESOLVED
 
-**Risk:** If the data file (`showpulse-data.json`) is exposed (backup leak, misconfigured file server, directory traversal), all user PINs are immediately compromised. Plaintext credential storage is an OWASP Top 10 violation (A02: Cryptographic Failures).
+**Fix:** `LoginLimiter` (`src/auth.rs:103-155`) tracks failed attempts per IP. After 5 failures within 60 seconds, the IP is locked out with `429 Too Many Requests`. Successful login clears the counter. A background task prunes stale entries every 10 minutes.
 
-**Recommendation:** Hash PINs using `argon2` or `bcrypt` before storage. Compare using constant-time comparison. The `pin` field in `User` should store the hash, not the raw value.
+**Assessment:** Solid implementation. One minor note: the limiter is IP-based, so all users behind a shared NAT/proxy share the same limit. This is acceptable for the typical deployment scenario (venue LAN).
 
----
+### ~~MEDIUM — No Session Expiry~~ → RESOLVED
 
-### HIGH — No Brute-Force Protection on Login
+**Fix:** Sessions now carry a `created_at: Instant` timestamp and expire after 8 hours (`SESSION_TTL_SECS`). `get_session()` checks expiry on access and removes expired tokens. A background purge task runs every 10 minutes (`src/main.rs:103-113`).
 
-**Location:** `src/auth.rs:153-175`
+**Assessment:** Clean implementation. The 8-hour TTL is reasonable for a show day.
 
-The login endpoint has no rate limiting, account lockout, or delay mechanism. An attacker can attempt unlimited PIN combinations.
+### ~~MEDIUM — Non-Atomic File Writes~~ → RESOLVED
 
-**Risk:** PINs are typically short numeric codes (4-6 digits). Without rate limiting, a brute-force attack could crack a 4-digit PIN in under 10,000 requests — trivially achievable in seconds.
+**Fix:** `persist()` now writes to a `.json.tmp` file and renames atomically (`src/cue/store.rs:89-107`). This prevents corruption if the process crashes mid-write.
 
-**Recommendation:** Implement per-IP or per-username rate limiting on `/api/auth/login`. Consider exponential backoff after failed attempts (e.g., 3 failures = 5s delay, 5 failures = 30s lockout).
+**Assessment:** Correct approach. `rename()` is atomic on most filesystems.
 
 ---
 
-### HIGH — GET Requests Bypass Authentication Entirely
+## Remaining Findings
 
-**Location:** `src/auth.rs:205-213`
+### MEDIUM — GET Requests Bypass Authentication
 
-The auth middleware unconditionally allows all GET requests without authentication:
+**Location:** `src/auth.rs:352-361`
+
+The auth middleware still allows all GET requests without a valid session:
 
 ```rust
 if req.method() == Method::GET {
-    // Still try to attach session if token is present
+    // Still try to attach session if token is present (for role-gated GETs)
     if let Some(token) = extract_token(&req) { ... }
     return next.run(req).await;
 }
 ```
 
-**Risk:** All read endpoints are accessible without authentication when auth is enabled. This means unauthenticated users can read:
-- All cues and show data (`GET /api/cues`)
-- All departments (`GET /api/departments`)
-- All acts (`GET /api/acts`)
-- Timer lock status (`GET /api/timer-lock`)
-- Timecode status (`GET /api/timecode`)
-- QR code with server URL (`GET /api/qr`)
+**Risk:** All read endpoints are accessible without authentication. This includes cue data, departments, acts, timecode status, and the QR code. While `GET /api/users` has a handler-level Admin role check, the middleware provides no defense-in-depth for read operations.
 
-While this may be intentional for crew viewers, it also exposes `GET /api/users` (though the handler requires Admin role). The blanket GET bypass means the auth middleware provides no defense-in-depth for read operations — it relies entirely on individual handler-level checks.
+**Mitigation:** This appears intentional for crew viewer access — crew members can view the show flow without logging in. However, it should be explicitly documented as a design decision. Consider whether `GET /api/users` should have middleware-level protection as an additional safeguard.
 
-**Recommendation:** Consider requiring at minimum a valid session for sensitive GET endpoints, or document this as an intentional design decision for crew access. At minimum, ensure all GET handlers that return sensitive data have explicit role checks.
-
----
-
-### MEDIUM — Session Tokens Have No Expiry
-
-**Location:** `src/auth.rs:72-124`
-
-Session tokens (UUIDs) are stored indefinitely in the in-memory `SessionStore` with no TTL or expiration mechanism. Tokens persist until:
-- Explicit logout
-- User deletion
-- Server restart
-
-The client stores tokens in `localStorage` (`static/js/state.js:94`), which also has no expiry.
-
-**Risk:** Stolen tokens remain valid indefinitely. If a device is compromised or a session token is leaked, there's no automatic expiration to limit the window of exposure.
-
-**Recommendation:** Add a `created_at` timestamp to sessions and implement a TTL (e.g., 24 hours). Periodically sweep expired sessions.
+**Severity:** Medium (intentional design, but worth documenting)
 
 ---
 
 ### MEDIUM — CORS Origin Only Allows localhost
 
-**Location:** `src/main.rs:108-112`
+**Location:** `src/main.rs:125-129`
 
-```rust
-let cors = CorsLayer::new()
-    .allow_origin(AllowOrigin::exact(
-        HeaderValue::from_str(&format!("http://localhost:{}", config.port))
-            .expect("valid origin"),
-    ));
-```
+CORS is hardcoded to `http://localhost:{port}`. Since the app serves its own static files, this doesn't affect normal operation (requests are same-origin). However, it blocks legitimate cross-origin integrations from other tools accessing the API.
 
-CORS is hardcoded to `http://localhost:{port}`. When deployed on a network (the app binds to `0.0.0.0` by default), clients accessing via IP address or hostname will be blocked by CORS for cross-origin API requests.
-
-**Risk:** This breaks legitimate usage when clients access via LAN IP (e.g., `http://192.168.1.50:8080`). Since the static files are served from the same origin, same-origin requests still work, but any external integrations or non-localhost access via browser JS will fail.
-
-**Note:** This may actually be a functional bug more than a security issue. The static files are served from the same host, so the browser treats API calls as same-origin. CORS only matters for cross-origin requests from external pages.
+**Impact:** Low for typical use — only affects external integrations, not the built-in UI.
 
 ---
 
 ### MEDIUM — No HTTPS / TLS Support
 
-**Location:** `src/main.rs:149-150`
+**Location:** `src/main.rs:166-172`
 
-The server only supports plain HTTP. Auth tokens, PINs, and session data are transmitted in cleartext.
+The server only supports plain HTTP. Auth tokens, PINs, and WebSocket traffic are transmitted in cleartext.
 
-**Risk:** On shared networks (common in live event venues), traffic can be intercepted. Session tokens in `Authorization` headers and login PINs are visible to network sniffers.
+**Risk:** On shared networks (common in live event venues), traffic can be sniffed. Session tokens in `Authorization` headers and login PINs are visible.
 
-**Recommendation:** Add optional TLS support via `axum-server` with `rustls`, or document that a reverse proxy (nginx, Caddy) should be used for production deployments.
+**Recommendation:** Document that a reverse proxy (nginx, Caddy) should be used for production deployments requiring TLS. Alternatively, add optional `rustls` support.
 
 ---
 
-### MEDIUM — Data File Has No Integrity Protection
+### MEDIUM — X-Forwarded-For IP Spoofing in Rate Limiter
 
-**Location:** `src/cue/store.rs:89-101`
+**Location:** `src/auth.rs:435-455`
 
-The JSON data file is read/written with no file locking, atomic writes, or integrity verification.
+The `extract_client_ip()` function trusts `X-Forwarded-For` and `X-Real-IP` headers unconditionally:
 
-**Risk:**
-1. **Corruption on crash:** If the process crashes during `tokio::fs::write`, the file could be truncated/corrupted.
-2. **Race condition:** Multiple instances could corrupt the file (unlikely for single-instance use, but no guard exists).
+```rust
+req.headers()
+    .get("x-forwarded-for")
+    .and_then(|v| v.to_str().ok())
+    .and_then(|v| v.split(',').next())
+    .and_then(|s| s.trim().parse().ok())
+```
 
-**Recommendation:** Use atomic write (write to temp file, then rename) to prevent corruption. The `tempfile` crate is already a dev-dependency.
+**Risk:** Without a reverse proxy, any client can set `X-Forwarded-For` to an arbitrary IP, bypassing the rate limiter entirely. An attacker could rotate fake IPs to avoid the 5-attempt lockout.
+
+**Recommendation:** Only trust proxy headers when behind a known reverse proxy. When running standalone (the default), prefer `ConnectInfo<SocketAddr>` as the primary source. Consider adding a `SHOWPULSE_TRUST_PROXY` env var to control this behavior.
 
 ---
 
 ### LOW — Client-Side Role Enforcement
 
-**Location:** `static/js/auth.js:139-186`
+**Location:** `static/js/auth.js`
 
-Role-based UI gating (hiding tabs, transport controls) is enforced purely in JavaScript via `applyRole()`. The `authRole` value is stored in `localStorage` and could be tampered with.
+Role-based UI gating is enforced in JavaScript via `applyRole()`. The `authRole` value in `localStorage` could be tampered with to reveal hidden UI elements.
 
-**Risk:** A user could modify `localStorage` to set `authRole = 'admin'` and see hidden UI elements. However, backend handlers enforce roles correctly (`require_role` checks), so this would only reveal UI — actual operations would fail with 401/403.
-
-**Impact:** Low — defense in depth is maintained by server-side checks. This is acceptable for a UI convenience layer.
+**Impact:** Low — server-side `require_role()` checks prevent unauthorized actions. This is a UI convenience layer only.
 
 ---
 
-### LOW — Token Passed in WebSocket Query Parameter
+### LOW — Token in WebSocket Query Parameter
 
-**Location:** `static/js/api.js:46`, `src/main.rs:41`
+**Location:** `static/js/api.js:46-47`
 
-```javascript
-const tokenParam = authToken ? `?token=${encodeURIComponent(authToken)}` : '';
-ws = new WebSocket(`${proto}//${location.host}/ws${tokenParam}`);
-```
+Auth tokens are passed as `?token=` query parameters for WebSocket connections. Tokens may appear in server logs or browser history.
 
-**Risk:** Tokens in URL query parameters may be logged in server access logs, proxy logs, or browser history. This is a standard limitation of WebSocket authentication since WebSocket doesn't support custom headers during the handshake.
-
-**Recommendation:** This is an accepted pattern for WebSocket auth. Ensure server access logs don't capture query parameters, or implement a short-lived ticket exchange mechanism.
+**Impact:** Low — this is a standard WebSocket authentication pattern. The 8-hour session TTL now limits exposure of logged tokens.
 
 ---
 
-### LOW — innerHTML Usage in Frontend
+### LOW — No PIN Complexity Requirements
 
-**Location:** Multiple files (manage.js, auth.js, show.js)
+**Location:** `src/cue/store.rs:554-567`
 
-The codebase uses `innerHTML` extensively for rendering lists. However, user-controlled data is consistently escaped via the `esc()` helper (`state.js:278-282`):
+PINs are accepted without any minimum length or complexity validation. A single-character PIN is valid.
 
-```javascript
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-```
+**Risk:** Even with rate limiting (5 attempts/60s), a weak PIN (e.g., "1234", "0000") is guessable. Argon2 hashing protects against offline attacks but doesn't help with online guessing.
 
-**Assessment:** The `esc()` function provides proper HTML entity encoding. All user-visible strings (names, labels, notes) are passed through `esc()` before insertion into `innerHTML`. The `d.color` values used in inline styles are sanitized server-side via `sanitize_color()`. **No XSS vulnerabilities were found.**
+**Recommendation:** Enforce a minimum PIN length (e.g., 4 digits) in `create_user()` and `update_user()`.
 
 ---
 
-### LOW — Unvalidated department_id References in Cue Mutations
+### LOW — Unvalidated department_id on Single Cue Create/Update
 
-**Location:** `src/cue/store.rs:185-197`, `src/cue/store.rs:279-302`
+**Location:** `src/cue/store.rs:191-203`, `src/cue/store.rs:285-308`
 
-When creating or updating a cue, the `department_id` is not validated against existing departments. Only bulk import (`import_cues`) validates department references.
+Creating or updating a single cue does not validate that `department_id` references an existing department. Only bulk import validates this.
 
-**Risk:** Orphaned cues could reference non-existent departments, causing UI display issues (department shows as "?"). This is a data integrity issue, not a security vulnerability.
+**Impact:** Data integrity issue only — orphaned cues show department as "?" in the UI but cause no security impact.
 
 ---
 
@@ -191,39 +151,35 @@ When creating or updating a cue, the `department_id` is not validated against ex
 
 The following security measures are well-implemented:
 
-1. **Input sanitization** — `clamp_string()` (500 char limit), `sanitize_color()`, `sanitize_timecode()` are consistently applied to all user input in the store layer.
-
-2. **Directory traversal prevention** — `CueStore::new()` rejects paths containing `..` segments and canonicalizes the data file path.
-
-3. **Request size limits** — 1MB body limit via `DefaultBodyLimit::max(1024 * 1024)`.
-
-4. **Concurrency limits** — 50 concurrent requests via `ConcurrencyLimitLayer`, 100 max WebSocket clients.
-
-5. **Security headers** — `X-Content-Type-Options: nosniff` and `X-Frame-Options: DENY` are set.
-
-6. **Server-side role enforcement** — All mutation endpoints check roles via `require_role()`. User management is Admin-only. Timer operations require Manager+ with lock.
-
-7. **PIN scrubbing on list** — `api/users.rs:18-19` clears PINs before returning user list.
-
-8. **Self-deletion prevention** — Admin cannot delete their own account (`api/users.rs:55-57`).
-
-9. **Session cleanup on user deletion** — Deleting a user revokes all their sessions (`api/users.rs:60`).
-
-10. **Timer lock auto-release** — WebSocket disconnect automatically releases timer lock (`ws/hub.rs:137-146`).
-
-11. **XSS prevention** — Consistent use of `esc()` helper for HTML escaping in frontend rendering.
-
-12. **UUID-based IDs** — Server generates all IDs server-side, ignoring client-provided IDs for create operations.
+1. **Argon2 PIN hashing** — Random salt per PIN, constant-time verification, automatic migration of legacy plaintext PINs
+2. **Login rate limiting** — Per-IP tracking with automatic lockout and periodic cleanup
+3. **Session TTL** — 8-hour expiry with background purge task
+4. **Atomic file writes** — Write-to-temp + rename prevents corruption
+5. **Input sanitization** — `clamp_string()` (500 char limit), `sanitize_color()`, `sanitize_timecode()` consistently applied
+6. **Directory traversal prevention** — `CueStore::new()` rejects `..` segments and canonicalizes paths
+7. **Request size limits** — 1MB body limit via `DefaultBodyLimit`
+8. **Concurrency limits** — 50 concurrent HTTP requests, 100 max WebSocket clients
+9. **Security headers** — `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`
+10. **Server-side role enforcement** — All mutation endpoints check roles via `require_role()`
+11. **PIN scrubbing** — PINs (hashes) cleared before returning user list to clients
+12. **Self-deletion prevention** — Admin cannot delete their own account
+13. **Session cleanup on user deletion** — All sessions revoked when a user is deleted
+14. **Timer lock auto-release** — WebSocket disconnect releases timer lock
+15. **XSS prevention** — Consistent `esc()` helper for HTML escaping in all frontend rendering
+16. **Server-generated UUIDs** — Client-provided IDs ignored on create operations
 
 ---
 
-## Priority Recommendations
+## Updated Priority Recommendations
 
-| Priority | Finding | Effort |
-|----------|---------|--------|
-| **P0** | Hash PINs (argon2/bcrypt) | Medium |
-| **P1** | Add login rate limiting | Low-Medium |
-| **P1** | Add session expiry/TTL | Low |
-| **P2** | Atomic file writes | Low |
-| **P2** | Document HTTPS/reverse proxy requirement | Low |
-| **P3** | Validate department_id on cue create/update | Low |
+| Priority | Finding | Status | Effort |
+|----------|---------|--------|--------|
+| ~~P0~~ | ~~Hash PINs (argon2)~~ | **RESOLVED** | — |
+| ~~P1~~ | ~~Login rate limiting~~ | **RESOLVED** | — |
+| ~~P1~~ | ~~Session expiry/TTL~~ | **RESOLVED** | — |
+| ~~P2~~ | ~~Atomic file writes~~ | **RESOLVED** | — |
+| **P2** | Fix X-Forwarded-For trust (rate limiter bypass) | Open | Low |
+| **P2** | Document HTTPS/reverse proxy requirement | Open | Low |
+| **P2** | Document GET-without-auth as intentional design | Open | Low |
+| **P3** | Add minimum PIN length validation | Open | Low |
+| **P3** | Validate department_id on cue create/update | Open | Low |
