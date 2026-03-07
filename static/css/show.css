@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════
    show.css — ShowView: Sidebar, FlowArea,
-              TimecodeDisplay, ReadyGoZone, CueList, FlowCard
+              TimecodeDisplay, CueList, FlowCard
    ══════════════════════════════════════════
    Live operator dashboard styles.
    Dependencies: variables.css, base.css
@@ -208,59 +208,20 @@
 }
 @keyframes blink { 50% { opacity: 0.1; } }
 
-/* ── ReadyGoZone ── */
-.flow-readygo {
-  flex-shrink: 0;
-  min-height: 70px;
-  overflow: hidden;
-  border-radius: var(--radius-lg);
-  border: 1px solid transparent;
-  transition: border-color 0.3s ease, background 0.3s ease;
-}
-.flow-readygo.visible {
-  background: var(--bg-card);
-  border-color: var(--border);
-}
-.readygo-info-row {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-md);
-  padding: var(--card-pad);
-  padding-bottom: 0.25rem;
-}
-.readygo-info-row .readygo-info {
-  flex: 1;
-  min-width: 0;
-}
-.readygo-info-row .readygo-label {
-  font-size: var(--card-label-size);
-  font-weight: var(--font-weight-medium);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.readygo-info-row .readygo-dept {
-  font-size: 0.7rem;
-  color: var(--text-dim);
-}
-.readygo-info-row .readygo-tc {
-  font-family: var(--font-mono);
-  font-size: var(--card-tc-size);
-  color: var(--text-dim);
-  text-align: end;
-  flex-shrink: 0;
-}
-.readygo-countdown-row {
-  display: flex;
+/* ── Inline countdown row (inside flow-card for warning/go cues) ── */
+.card-countdown-row {
+  display: none;
   align-items: center;
   justify-content: center;
   gap: var(--gap-md);
-  padding: 0.25rem var(--card-pad);
-  min-height: 2.2rem;
+  width: 100%;
+  padding-top: 0.25rem;
+  min-height: 2rem;
 }
-.readygo-status {
+.flow-card.tier-warning .card-countdown-row { display: flex; }
+.card-status {
   font-family: var(--font-mono);
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 800;
   line-height: 1;
   overflow: hidden;
@@ -268,43 +229,32 @@
   white-space: nowrap;
   min-width: 0;
 }
-.readygo-digit {
+.card-digit {
   font-family: var(--font-mono);
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 800;
   line-height: 1;
-  animation: readygo-pop 0.35s ease-out;
+  animation: card-pop 0.35s ease-out;
 }
-.readygo-digit.shake {
-  animation: readygo-pop 0.35s ease-out, readygo-shake 0.4s ease-in-out;
+.card-digit.shake {
+  animation: card-pop 0.35s ease-out, card-shake 0.4s ease-in-out;
 }
-.flow-readygo.go-flash {
-  animation: readygo-flash 1.5s ease-out;
+.flow-card.go-flash {
+  animation: card-flash 1.5s ease-out;
 }
-.readygo-progress {
-  height: 3px;
-  background: var(--bg-surface);
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  overflow: hidden;
-}
-.readygo-progress-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 1s linear;
-}
-@keyframes readygo-pop {
+@keyframes card-pop {
   0% { transform: scale(0.3); opacity: 0; }
   60% { transform: scale(1.12); }
   100% { transform: scale(1); opacity: 1; }
 }
-@keyframes readygo-shake {
+@keyframes card-shake {
   0%, 100% { transform: translateX(0); }
   20% { transform: translateX(-3px); }
   40% { transform: translateX(3px); }
   60% { transform: translateX(-2px); }
   80% { transform: translateX(2px); }
 }
-@keyframes readygo-flash {
+@keyframes card-flash {
   0% { background: rgba(0, 255, 136, 0.15); border-color: var(--accent); }
   100% { background: var(--bg-card); border-color: var(--border); }
 }
@@ -325,6 +275,7 @@
 .flow-card {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--gap-md);
   padding: var(--card-pad);
   background: var(--bg-card);
@@ -383,14 +334,12 @@
 .flow-card.tier-active .card-countdown { color: var(--accent); }
 .flow-card.tier-active .progress-fill { background: var(--accent); }
 
-/* Tier: Warning */
+/* Tier: Warning (traffic-light colors set inline by JS) */
 .flow-card.tier-warning {
   border-color: var(--warning);
   box-shadow: 0 0 12px var(--warning-glow);
   animation: warn-pulse 1.5s ease-in-out infinite;
 }
-.flow-card.tier-warning .card-countdown { color: var(--warning); }
-.flow-card.tier-warning .progress-fill { background: var(--warning); }
 
 /* Tier: Near */
 .flow-card.tier-near .card-countdown { color: var(--text-primary); }

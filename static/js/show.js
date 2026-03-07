@@ -5,7 +5,7 @@
    prev/next cue navigation, and department filters.
    Dependencies: state.js, api.js
    Components: ShowView, Sidebar, FlowArea,
-               TimecodeDisplay, ReadyGoZone, CueList, FlowCard
+               TimecodeDisplay, CueList, FlowCard
    ══════════════════════════════════════════ */
 
 // ── Sidebar ────────────────────────────────
@@ -110,13 +110,12 @@ function getTier(c) {
 // ── Flow rendering (main entry) ────────────
 
 /**
- * Render all flow sections from WebSocket cue data.
- * All cues go to a single unified list; ReadyGo zone shows the nearest warning/go cue.
+ * Render all cues in a single unified list sorted by trigger time.
+ * Warning/go cues show inline countdown (READY/3/2/1/GO!) on the card itself.
  * @param {Array<Object>} wsCues - Cue array from WebSocket message.
  */
 function renderFlowCues(wsCues) {
   if (!wsCues || wsCues.length === 0) {
-    renderReadyGo(DOM.flowReadygo, null);
     DOM.flowUpcoming.innerHTML = `<div class="flow-no-cues">${CONST.EMPTY_CUES_MSG}</div>`;
     return;
   }
@@ -127,176 +126,45 @@ function renderFlowCues(wsCues) {
     filtered = wsCues.filter(c => activeDeptFilters.has(c.department_id));
   }
 
-  // Ready/Go: find the cue in "go" state first, then closest "warning" cue
-  const goCues = filtered.filter(c => c.state === 'go');
-  const warningCues = filtered.filter(c => c.state === 'warning');
-  let readygoCue = null;
-  if (goCues.length > 0) {
-    readygoCue = goCues[0];
-  } else if (warningCues.length > 0) {
-    readygoCue = warningCues.reduce((a, b) => a.countdown_sec < b.countdown_sec ? a : b);
-  }
-
-  // All cues in one list (except the readygo cue which has its own zone), sorted by time
+  // All cues in unified list sorted by time — no extraction, no jumps
   const allCues = filtered
-    .filter(c => !(readygoCue && c.id === readygoCue.id))
+    .slice()
     .sort((a, b) => tcObjToSeconds(a.trigger_tc) - tcObjToSeconds(b.trigger_tc));
 
-  renderReadyGo(DOM.flowReadygo, readygoCue);
   diffCueList(DOM.flowUpcoming, allCues);
 
-  if (allCues.length === 0 && !readygoCue) {
+  if (allCues.length === 0) {
     DOM.flowUpcoming.innerHTML = `<div class="flow-no-cues">${CONST.NO_MATCH_MSG}</div>`;
   }
 }
 
-// ── ReadyGo zone ───────────────────────────
+// ── Traffic-light color helper ──────────────
 
 /**
- * Calculate progress bar percentage for a ReadyGo cue (0% → 100%).
- * @param {Object} cue - Warning cue with countdown_sec.
- * @returns {number} Percentage 0-100.
+ * Get traffic-light color values for a warning/go cue.
+ * @param {Object} c - Cue with state and countdown_sec.
+ * @returns {{statusText: string, statusColor: string, digitText: string, digitColor: string, progressColor: string}}
  */
-function readygoProgressPct(cue) {
-  const warnMax = getCueWarnMax(cue.department_id, cue.id);
-  return Math.max(0, Math.min(100, (1 - cue.countdown_sec / warnMax) * 100));
-}
+function getTrafficLight(c) {
+  const isGo = c.state === 'go';
+  const cd = Math.ceil(c.countdown_sec);
+  const dept = c.department;
 
-/**
- * Render the Ready/Go countdown zone for the nearest warning cue.
- * @param {HTMLElement} container - The #flow-readygo element.
- * @param {Object|null} cue - The closest warning cue, or null.
- */
-function renderReadyGo(container, cue) {
-  if (!cue) {
-    container.classList.remove('visible', 'go-flash');
-    container.innerHTML = '';
-    delete container.dataset.cueId;
-    readygoLastValue = null;
-    return;
+  if (isGo || cd <= 0) {
+    return { statusText: `GO!${CONST.EMDASH}${dept}`, statusColor: 'var(--accent)', digitText: '', digitColor: '', progressColor: 'var(--accent)' };
   }
-
-  container.classList.add('visible');
-  const isGo = cue.state === 'go';
-  const cd = Math.ceil(cue.countdown_sec);
-  let statusText, statusColor, digitText, digitColor, progressColor;
-
-  const readyLabel = `READY${CONST.EMDASH}${cue.department}`;
-  if (isGo) {
-    statusText = `GO!${CONST.EMDASH}${cue.department}`;
-    statusColor = 'var(--accent)';
-    digitText = '';
-    digitColor = '';
-    progressColor = 'var(--accent)';
-  } else if (cd > 3) {
-    statusText = readyLabel;
-    statusColor = 'var(--danger)';
-    digitText = '';
-    digitColor = '';
-    progressColor = 'var(--danger)';
-  } else if (cd === 3) {
-    statusText = readyLabel;
-    statusColor = CONST.COLOR_COUNTDOWN_3;
-    digitText = '3';
-    digitColor = CONST.COLOR_COUNTDOWN_3;
-    progressColor = CONST.COLOR_COUNTDOWN_3;
-  } else if (cd === 2) {
-    statusText = readyLabel;
-    statusColor = 'var(--warning)';
-    digitText = '2';
-    digitColor = 'var(--warning)';
-    progressColor = 'var(--warning)';
-  } else if (cd === 1) {
-    statusText = readyLabel;
-    statusColor = CONST.COLOR_COUNTDOWN_1;
-    digitText = '1';
-    digitColor = CONST.COLOR_COUNTDOWN_1;
-    progressColor = CONST.COLOR_COUNTDOWN_1;
-  } else {
-    statusText = `GO!${CONST.EMDASH}${cue.department}`;
-    statusColor = 'var(--accent)';
-    digitText = '';
-    digitColor = '';
-    progressColor = 'var(--accent)';
+  const readyLabel = `READY${CONST.EMDASH}${dept}`;
+  if (cd > 3) {
+    return { statusText: readyLabel, statusColor: 'var(--danger)', digitText: '', digitColor: '', progressColor: 'var(--danger)' };
   }
-
-  const deptColor = getDeptColor(cue.department_id);
-  const labelText = formatCueLabel(cue);
-  const trackCueId = cue.id;
-  const trackValue = isGo ? 'GO' : (digitText || statusText);
-
-  // First render for this cue — build full DOM
-  const existingCueId = container.dataset.cueId;
-  if (existingCueId !== trackCueId) {
-    container.dataset.cueId = trackCueId;
-    container.classList.remove('go-flash');
-    readygoLastValue = trackValue;
-
-    const digitHtml = digitText
-      ? `<span class="readygo-digit${cd === 1 ? ' shake' : ''}" style="color:${digitColor}">${digitText}</span>`
-      : '<span class="readygo-digit" style="display:none"></span>';
-
-    container.innerHTML = `<div class="readygo-info-row">
-        <div class="dept-bar" style="background:${deptColor}"></div>
-        <div class="readygo-info">
-          <div class="readygo-label">${esc(labelText)}</div>
-          <div class="readygo-dept">${esc(cue.department)}</div>
-        </div>
-        <div class="readygo-tc">${fmtTC(cue.trigger_tc)}</div>
-      </div>
-      <div class="readygo-countdown-row">
-        <span class="readygo-status" style="color:${statusColor}">${esc(statusText)}</span>
-        ${digitHtml}
-      </div>
-      <div class="readygo-progress"><div class="readygo-progress-fill" style="width:${isGo ? 100 : readygoProgressPct(cue)}%;background:${progressColor}"></div></div>`;
-
-  } else {
-    // In-place updates — preserve DOM elements and CSS transitions
-
-    // GO flash animation on state transition
-    if (readygoLastValue !== trackValue) {
-      if (isGo && readygoLastValue !== 'GO') {
-        container.classList.remove('go-flash');
-        void container.offsetWidth;
-        container.classList.add('go-flash');
-      } else if (!isGo) {
-        container.classList.remove('go-flash');
-      }
-      readygoLastValue = trackValue;
-    }
-
-    // Update status text and color
-    const statusEl = container.querySelector('.readygo-status');
-    if (statusEl) {
-      const escapedStatus = esc(statusText);
-      if (statusEl.innerHTML !== escapedStatus) statusEl.innerHTML = escapedStatus;
-      statusEl.style.color = statusColor;
-    }
-
-    // Update digit
-    const digitEl = container.querySelector('.readygo-digit');
-    if (digitEl) {
-      if (digitText) {
-        digitEl.style.display = '';
-        if (digitEl.textContent !== digitText) {
-          digitEl.textContent = digitText;
-          // Re-trigger pop animation
-          digitEl.className = 'readygo-digit' + (cd === 1 ? ' shake' : '');
-          void digitEl.offsetWidth;
-        }
-        digitEl.style.color = digitColor;
-      } else {
-        digitEl.style.display = 'none';
-      }
-    }
-
-    // Update progress bar (smooth — element is preserved)
-    const fillEl = container.querySelector('.readygo-progress-fill');
-    if (fillEl) {
-      fillEl.style.width = (isGo ? 100 : readygoProgressPct(cue)) + '%';
-      fillEl.style.background = progressColor;
-    }
+  if (cd === 3) {
+    return { statusText: readyLabel, statusColor: CONST.COLOR_COUNTDOWN_3, digitText: '3', digitColor: CONST.COLOR_COUNTDOWN_3, progressColor: CONST.COLOR_COUNTDOWN_3 };
   }
+  if (cd === 2) {
+    return { statusText: readyLabel, statusColor: 'var(--warning)', digitText: '2', digitColor: 'var(--warning)', progressColor: 'var(--warning)' };
+  }
+  // cd === 1
+  return { statusText: readyLabel, statusColor: CONST.COLOR_COUNTDOWN_1, digitText: '1', digitColor: CONST.COLOR_COUNTDOWN_1, progressColor: CONST.COLOR_COUNTDOWN_1 };
 }
 
 // ── FlowCard list (DOM-diffed) ─────────────
@@ -372,6 +240,10 @@ function createFlowCard(c) {
     </div>
     <div class="card-tc">${fmtTC(c.trigger_tc)}</div>
     <div class="card-countdown"></div>
+    <div class="card-countdown-row">
+      <span class="card-status"></span>
+      <span class="card-digit"></span>
+    </div>
     <div class="progress-bg"><div class="progress-fill"></div></div>`;
 
   if (tint) card.style.background = tint;
@@ -380,19 +252,24 @@ function createFlowCard(c) {
 }
 
 /**
- * Update an existing flow card's tier, label, countdown, and progress bar.
+ * Update an existing flow card's tier, label, countdown, progress bar,
+ * and inline READY/GO countdown row for warning/go cues.
  * @param {HTMLElement} card - The card DOM element.
  * @param {Object} c - Updated cue object.
  */
 function updateFlowCard(card, c) {
   const tier = getTier(c);
-  const newClass = `flow-card ${tier}`;
+  const isWarningTier = (tier === 'tier-warning');
+
+  // Preserve go-flash class during animation, otherwise sync tier
+  const hasGoFlash = card.classList.contains('go-flash');
+  const newClass = `flow-card ${tier}${hasGoFlash ? ' go-flash' : ''}`;
   if (card.className !== newClass) card.className = newClass;
   card.dataset.triggerTc = fmtTC(c.trigger_tc);
 
   // Dept tint for active/warning
   const deptColor = getDeptColor(c.department_id);
-  if (tier === 'tier-active' || tier === 'tier-warning') {
+  if (tier === 'tier-active' || isWarningTier) {
     card.style.background = hexToRgba(deptColor, CONST.TINT_ALPHA);
   } else {
     card.style.background = '';
@@ -403,24 +280,85 @@ function updateFlowCard(card, c) {
   const labelText = formatCueLabel(c);
   if (labelEl.textContent !== labelText) labelEl.textContent = labelText;
 
-  // Countdown text + color
+  // Countdown text (top-right of card)
   const cdEl = card.querySelector('.card-countdown');
-  const cdText = (c.state === 'passed' || c.state === 'active') ? CONST.CHECKMARK : (c.state === 'go' ? 'GO!' : fmtCountdown(c.countdown_sec));
-  if (cdEl.textContent !== cdText) cdEl.textContent = cdText;
-  if (c.state === 'active') {
-    cdEl.style.color = 'var(--accent)';
+  let cdText, cdColor = '';
+  if (c.state === 'passed' || c.state === 'active') {
+    cdText = CONST.CHECKMARK;
+    cdColor = c.state === 'active' ? 'var(--accent)' : '';
+  } else if (isWarningTier) {
+    // Hide the small countdown — the inline row shows READY/digit/GO instead
+    cdText = '';
+    cdColor = '';
   } else {
-    cdEl.style.color = '';
+    cdText = fmtCountdown(c.countdown_sec);
+  }
+  if (cdEl.textContent !== cdText) cdEl.textContent = cdText;
+  cdEl.style.color = cdColor;
+
+  // Inline countdown row (READY / 3 / 2 / 1 / GO!) — visible only for warning tier
+  const statusEl = card.querySelector('.card-status');
+  const digitEl = card.querySelector('.card-digit');
+  if (isWarningTier) {
+    const tl = getTrafficLight(c);
+
+    // Status text + color
+    const escapedStatus = esc(tl.statusText);
+    if (statusEl.innerHTML !== escapedStatus) statusEl.innerHTML = escapedStatus;
+    statusEl.style.color = tl.statusColor;
+
+    // Digit (3/2/1) with pop/shake animation
+    if (tl.digitText) {
+      digitEl.style.display = '';
+      if (digitEl.textContent !== tl.digitText) {
+        digitEl.textContent = tl.digitText;
+        const cd = Math.ceil(c.countdown_sec);
+        digitEl.className = 'card-digit' + (cd === 1 ? ' shake' : '');
+        void digitEl.offsetWidth; // re-trigger animation
+      }
+      digitEl.style.color = tl.digitColor;
+    } else {
+      digitEl.style.display = 'none';
+      digitEl.textContent = '';
+    }
+
+    // GO flash animation on card
+    const isGo = c.state === 'go';
+    const lastCd = card.dataset.lastCd || '';
+    const currentCd = isGo ? 'GO' : (tl.digitText || 'READY');
+    if (lastCd !== currentCd) {
+      if (isGo && lastCd !== 'GO') {
+        card.classList.remove('go-flash');
+        void card.offsetWidth;
+        card.classList.add('go-flash');
+      } else if (!isGo) {
+        card.classList.remove('go-flash');
+      }
+    }
+    card.dataset.lastCd = currentCd;
+  } else {
+    // Not warning — clear countdown row state
+    if (statusEl.textContent) statusEl.textContent = '';
+    if (digitEl.textContent) { digitEl.textContent = ''; digitEl.style.display = 'none'; }
+    if (card.dataset.lastCd) delete card.dataset.lastCd;
+    card.classList.remove('go-flash');
   }
 
   // Progress bar — fills from 0% → 100% over the warn window
   const fillEl = card.querySelector('.progress-fill');
   if (c.state === 'passed' || c.state === 'active' || c.state === 'go') {
     fillEl.style.width = '100%';
+    fillEl.style.background = (c.state === 'go') ? 'var(--accent)' : '';
+  } else if (c.state === 'warning') {
+    const warnMax = getCueWarnMax(c.department_id, c.id);
+    const pct = Math.max(0, Math.min(100, (1 - c.countdown_sec / warnMax) * 100));
+    fillEl.style.width = pct + '%';
+    fillEl.style.background = getTrafficLight(c).progressColor;
   } else {
     const warnMax = getCueWarnMax(c.department_id, c.id);
     const pct = Math.max(0, Math.min(100, (1 - c.countdown_sec / warnMax) * 100));
     fillEl.style.width = pct + '%';
+    fillEl.style.background = '';
   }
 }
 
