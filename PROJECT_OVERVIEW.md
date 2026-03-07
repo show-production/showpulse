@@ -63,7 +63,7 @@ Single-page app served from `static/index.html` with three tabs:
 | LTC decoder | `src/timecode/ltc.rs` | Full: cpal audio capture, bi-phase zero-crossing detection, 80-bit LTC frame extraction, BCD timecode parsing, sync word (0x3FFD). Dedicated OS thread. Device listing and selection API |
 | MTC decoder | `src/timecode/mtc.rs` | Full: midir MIDI input, quarter-frame accumulation (8 messages → full TC), full-frame SysEx parsing, frame rate detection. Dedicated OS thread. Port listing and selection API |
 | Cue/Department models | `src/cue/types.rs` | Full: Department, Cue (with serde defaults + cue_number + duration/armed/color/continue_mode/post_wait), ContinueMode enum, ShowData, CueState (Upcoming/Warning/Go/Active/Passed), CueStatus (with armed/duration/color/elapsed_sec), CueImportError, CueImportResult |
-| Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments and cues, bulk import (replaces existing cues) with validation, auto-generated cue numbers (Q1, Q2...), input sanitization (string clamping, color validation, post_wait clamping), auto-seed on empty store |
+| Cue store | `src/cue/store.rs` | Full: In-memory with JSON file persistence, CRUD for departments/cues/acts, show name, bulk import (replaces existing cues) with validation, act shift (moves all act cues), auto-generated cue numbers (Q1, Q2...), input sanitization (string clamping, color validation, post_wait clamping), auto-seed on empty store |
 | REST API - Timecode | `src/api/timecode.rs` | Full: GET status, PUT source |
 | REST API - Generator | `src/api/generator.rs` | Full: GET status, PUT config, POST play/pause/stop/goto |
 | REST API - Departments | `src/api/departments.rs` | Full: CRUD (list, create, update, delete) |
@@ -77,11 +77,11 @@ Single-page app served from `static/index.html` with three tabs:
 | User management | `src/api/users.rs` | Full: CRUD (Admin only), PINs stripped from list response, self-delete blocked |
 | Timer lock | `src/api/timer_lock.rs` | Full: Exclusive timer control — acquire (Manager+, 409 if taken), release, status |
 | Server entrypoint | `src/main.rs` | Full: Axum router with 32 API routes + WS, auth middleware, CORS (same-origin), body limit (1MB), concurrency limit (50), security headers, state wiring, user seeding from SHOWPULSE_PIN, seed on startup, static file fallback |
-| Web UI - Show view | `static/index.html` | Full: Clean dashboard with passed cues count badge (expandable dropdown), active cue strips (compact dept-colored rows), centered timer with 2-row transport + Prev/Next, animated Ready/Go zone (READY + digit two-element layout, fixed height, traffic-light colors on text+digits+progress bar, GO! with dept name, backend-driven Go state, in-place DOM updates for smooth transitions, progress bar fills 0%→100%), scrollable coming cues with uniform-size cards (color-only tier differentiation). Click-to-goto on cue cards/strips/passed items, Prev/Next cue navigation, scroll-fold collapses above-timer sections. Frame-accurate 10Hz timecode. DOM-diffed cards, department filters, passed cues toggle, disconnection banner |
-| Web UI - Manage view | `static/index.html` | Full: Department CRUD, cue table with # column + sortable headers + department filter, bulk CSV/JSON import, add/edit/delete modals with cue number field |
-| Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show data export/import |
+| Web UI - Show view | `static/index.html` | Full: Clean dashboard with centered timer + 2-row transport (Prev/Next/Play/Pause/Stop + GoTo), act-grouped cue list with collapsible groups (double-click header), floating controls pill (Now/Auto/Collapse/Expand), traffic-light countdown colors, DOM-diffed cards, department sidebar filters, disconnection banner. Show name in navbar |
+| Web UI - Manage view | `static/index.html` | Full: Department CRUD, Act CRUD (name + sort order), cue table with # column + sortable headers + department filter + act selector, bulk CSV/JSON import, add/edit/delete modals |
+| Web UI - Settings view | `static/index.html` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show name editor, show data export/import |
 | Web UI - UX polish | `static/index.html` | Full: Toast notifications, confirm modals (replaces native confirm), loading spinner, responsive table scroll, 44px touch targets, favicon, DOM diffing for flicker-free cue updates |
-| Demo seed data | `src/cue/store.rs` | 6 departments (Lighting, Sound, Video, Pyro, Automation, Stage Mgmt) + 22 cues from 00:00:10 to 00:08:00 |
+| Demo seed data | `src/cue/store.rs` | 6 departments, 3 acts, 22 fully populated cues (cue numbers, notes, durations, colors, continue modes, post_wait, act assignments) from 00:00:10 to 00:08:00 |
 
 ### Cue Data Model
 
@@ -99,13 +99,25 @@ Single-page app served from `static/index.html` with three tabs:
 | `color` | Option\<String\> | No | None (uses department color) |
 | `continue_mode` | ContinueMode | No | "stop" |
 | `post_wait` | Option\<f64\> | No | None |
+| `act_id` | Option\<UUID\> | No | None (ungrouped) |
 
 **ContinueMode** values: `stop`, `auto_continue`, `auto_follow`
+
+### Act Data Model
+
+| Field | Type | Required | Default |
+|-------|------|----------|---------|
+| `id` | UUID | No | Auto-generated |
+| `name` | String | **Yes** | -- |
+| `sort_order` | u32 | No | 0 |
 
 ### Completed (Recent)
 
 | Feature | Notes |
 |---------|-------|
+| Acts & show name | `src/api/acts.rs`, `src/api/show.rs` — Act CRUD, act shift (moves all cues), show name get/set. Flow view groups cues by act with dividers. Collapsible act groups (double-click header or floating controls) |
+| Navbar rebuild | Three-section flex layout (tabs / show name / connection dot + user). Show name centered, WS connection indicator restored |
+| Floating flow controls | Bottom-right pill with Now, Auto, Collapse All, Expand All |
 | Unit & integration tests | 73 tests: Timecode unit tests, CueStore unit tests, REST endpoint integration tests (`tests/api.rs`) |
 | User management & roles | `src/auth.rs` — 5 roles (Viewer/CrewLead/Operator/Manager/Admin), user CRUD, timer lock, role-based UI gating. ENV: `SHOWPULSE_PIN` seeds admin user |
 | QR code onboarding | `GET /api/qr` — SVG QR code with server URL for crew devices |
@@ -148,6 +160,13 @@ Single-page app served from `static/index.html` with three tabs:
 | POST | `/api/cues` | Create cue (only `department_id` required; `cue_number` auto-generated if empty) |
 | POST | `/api/cues/import` | Bulk import cues — replaces all existing cues (validates department_id, returns `{imported, errors}`) |
 | POST | `/api/show/import` | Import full show (departments + cues) — replaces all existing data |
+| GET | `/api/show/name` | Get show name |
+| PUT | `/api/show/name` | Set show name (Manager+) |
+| GET | `/api/acts` | List acts |
+| POST | `/api/acts` | Create act (Operator+) |
+| PUT | `/api/acts/:id` | Update act (Operator+) |
+| DELETE | `/api/acts/:id` | Delete act (Operator+) |
+| POST | `/api/acts/:id/shift` | Shift all cues in act to new start time (Operator+) |
 | PUT | `/api/cues/:id` | Update cue |
 | DELETE | `/api/cues/:id` | Delete cue |
 | GET | `/api/qr` | Generate SVG QR code with server URL for crew onboarding |

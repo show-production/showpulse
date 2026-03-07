@@ -12,6 +12,11 @@
   gap: 1.5rem;
   align-items: start;
 }
+.manage-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 @media (max-width: 768px) {
   .manage-layout { grid-template-columns: 1fr; }
 }

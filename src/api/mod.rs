@@ -1,9 +1,11 @@
+pub mod acts;
 pub mod cues;
 pub mod departments;
 pub mod generator;
 pub mod ltc;
 pub mod mtc;
 pub mod qr;
+pub mod show;
 pub mod timecode;
 pub mod timer_lock;
 pub mod users;

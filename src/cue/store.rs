@@ -4,7 +4,7 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::auth::{Role, User};
-use super::types::{ContinueMode, Cue, CueImportError, CueImportResult, Department, ShowData};
+use super::types::{Act, ContinueMode, Cue, CueImportError, CueImportResult, Department, ShowData};
 
 /// Maximum allowed length for string fields (names, labels, notes).
 const MAX_STRING_LEN: usize = 500;
@@ -291,6 +291,7 @@ impl CueStore {
             cue.color = update.color;
             cue.continue_mode = update.continue_mode;
             cue.post_wait = update.post_wait;
+            cue.act_id = update.act_id;
             let result = cue.clone();
             drop(data);
             self.persist().await;
@@ -321,7 +322,7 @@ impl CueStore {
         &self.file_path
     }
 
-    /// Populate store with demo departments and cues if it is empty.
+    /// Populate store with demo departments, acts, and cues if it is empty.
     pub async fn seed_if_empty(&self) {
         let data = self.data.read().await;
         if !data.departments.is_empty() || !data.cues.is_empty() {
@@ -331,14 +332,17 @@ impl CueStore {
 
         use crate::timecode::types::Timecode;
 
+        // Show name
+        self.set_show_name("Demo Show — Live at Venue".to_string()).await;
+
         // 6 departments
         let departments = vec![
-            ("Lighting",  "#ffcc00"),
-            ("Sound",     "#00aaff"),
-            ("Video",     "#ff44aa"),
-            ("Pyro",      "#ff4400"),
-            ("Automation","#88ff44"),
-            ("Stage Mgmt","#aa66ff"),
+            ("Lighting",   "#ffcc00"),
+            ("Sound",      "#00aaff"),
+            ("Video",      "#ff44aa"),
+            ("Pyro",       "#ff4400"),
+            ("Automation", "#88ff44"),
+            ("Stage Mgmt", "#aa66ff"),
         ];
 
         let mut dept_ids = Vec::new();
@@ -351,49 +355,169 @@ impl CueStore {
             dept_ids.push(dept.id);
         }
 
-        // Mock cues spread across the show timeline
-        let cues: Vec<(usize, &str, Timecode, u32)> = vec![
-            // (dept_index, label, trigger_tc, warn_seconds)
-            (5, "Standby — Places",            Timecode::new(0, 0, 10, 0),  15),
-            (0, "House lights to 50%",          Timecode::new(0, 0, 30, 0),  10),
-            (1, "Play opening music",           Timecode::new(0, 0, 45, 0),  10),
-            (0, "House lights out",             Timecode::new(0, 1,  0, 0),   8),
-            (2, "Roll intro video",             Timecode::new(0, 1,  5, 0),   5),
-            (0, "Stage wash — blue",            Timecode::new(0, 1, 30, 0),  10),
-            (4, "Raise main curtain",           Timecode::new(0, 1, 35, 0),   8),
-            (1, "Mic check — lead vocal",       Timecode::new(0, 2,  0, 0),  12),
-            (3, "Pyro — stage left fountain",   Timecode::new(0, 2, 30, 0),  15),
-            (0, "Spotlight — center stage",     Timecode::new(0, 3,  0, 0),  10),
-            (2, "IMAG camera 1 — wide",         Timecode::new(0, 3, 15, 0),   5),
-            (1, "Band track — verse 1",         Timecode::new(0, 3, 30, 0),   8),
-            (3, "Pyro — confetti burst",        Timecode::new(0, 4,  0, 0),  12),
-            (0, "Full stage — warm white",      Timecode::new(0, 4, 30, 0),  10),
-            (4, "Lower mid-stage scrim",        Timecode::new(0, 5,  0, 0),  10),
-            (2, "Roll VT package — interview",  Timecode::new(0, 5, 30, 0),   8),
-            (1, "Fade music out",               Timecode::new(0, 6,  0, 0),  10),
-            (5, "Cue presenter — stage right",  Timecode::new(0, 6, 15, 0),   8),
-            (0, "Blackout",                     Timecode::new(0, 7,  0, 0),  10),
-            (4, "Lower main curtain",           Timecode::new(0, 7,  5, 0),   5),
-            (0, "House lights up",              Timecode::new(0, 7, 30, 0),  10),
-            (5, "All clear",                    Timecode::new(0, 8,  0, 0),  10),
+        // 3 acts
+        let act_pre   = self.create_act(Act { id: Uuid::nil(), name: "Pre-Show".to_string(),  sort_order: 1 }).await;
+        let act_main  = self.create_act(Act { id: Uuid::nil(), name: "Main Show".to_string(), sort_order: 2 }).await;
+        let act_close = self.create_act(Act { id: Uuid::nil(), name: "Closing".to_string(),   sort_order: 3 }).await;
+
+        // Dept indices: 0=Lighting, 1=Sound, 2=Video, 3=Pyro, 4=Automation, 5=Stage Mgmt
+        //                                                                                          continue      post
+        // (dept, cue#,  label,                      tc,                   warn, dur,   armed, color,          mode,         wait, act,    notes)
+        struct SeedCue {
+            dept: usize, num: &'static str, label: &'static str, tc: Timecode, warn: u32,
+            dur: Option<u32>, armed: bool, color: Option<&'static str>,
+            cont: ContinueMode, pw: Option<f64>, act: Uuid, notes: &'static str,
+        }
+
+        let cues = vec![
+            // ── Pre-Show ──
+            SeedCue { dept: 5, num: "SM1",  label: "Standby — Places",           tc: Timecode::new(0, 0, 10, 0),  warn: 15, dur: None,     armed: true,  color: None,             cont: ContinueMode::Stop,         pw: None,     act: act_pre.id, notes: "Call all departments to standby positions" },
+            SeedCue { dept: 0, num: "LX1",  label: "House lights to 50%",         tc: Timecode::new(0, 0, 30, 0),  warn: 10, dur: Some(5),  armed: true,  color: None,             cont: ContinueMode::AutoContinue, pw: Some(3.0), act: act_pre.id, notes: "Gentle fade — audience settling" },
+            SeedCue { dept: 1, num: "SND1", label: "Play opening music",          tc: Timecode::new(0, 0, 45, 0),  warn: 10, dur: Some(15), armed: true,  color: None,             cont: ContinueMode::AutoFollow,   pw: None,     act: act_pre.id, notes: "Track: Overture.wav — level -12dB" },
+            SeedCue { dept: 0, num: "LX2",  label: "House lights out",            tc: Timecode::new(0, 1,  0, 0),  warn:  8, dur: Some(3),  armed: true,  color: Some("#ff8800"),  cont: ContinueMode::Stop,         pw: None,     act: act_pre.id, notes: "3-second fade to black" },
+            SeedCue { dept: 2, num: "VID1", label: "Roll intro video",            tc: Timecode::new(0, 1,  5, 0),  warn:  5, dur: Some(25), armed: true,  color: None,             cont: ContinueMode::AutoFollow,   pw: None,     act: act_pre.id, notes: "1920x1080 ProRes — check projector focus" },
+
+            // ── Main Show ──
+            SeedCue { dept: 0, num: "LX3",  label: "Stage wash — blue",           tc: Timecode::new(0, 1, 30, 0),  warn: 10, dur: Some(30), armed: true,  color: Some("#0066ff"),  cont: ContinueMode::Stop,         pw: None,     act: act_main.id, notes: "Full stage blue wash, movers to position 1" },
+            SeedCue { dept: 4, num: "AUT1", label: "Raise main curtain",          tc: Timecode::new(0, 1, 35, 0),  warn:  8, dur: Some(12), armed: true,  color: None,             cont: ContinueMode::Stop,         pw: None,     act: act_main.id, notes: "Speed: medium — watch for snag sensor" },
+            SeedCue { dept: 1, num: "SND2", label: "Mic check — lead vocal",      tc: Timecode::new(0, 2,  0, 0),  warn: 12, dur: None,     armed: true,  color: None,             cont: ContinueMode::Stop,         pw: None,     act: act_main.id, notes: "Open channel 1 — monitor wedge level +3dB" },
+            SeedCue { dept: 3, num: "FX1",  label: "Pyro — stage left fountain",  tc: Timecode::new(0, 2, 30, 0),  warn: 15, dur: Some(4),  armed: true,  color: Some("#ff2200"),  cont: ContinueMode::Stop,         pw: None,     act: act_main.id, notes: "Safety: confirm clear zone before arming" },
+            SeedCue { dept: 0, num: "LX4",  label: "Spotlight — center stage",    tc: Timecode::new(0, 3,  0, 0),  warn: 10, dur: None,     armed: true,  color: None,             cont: ContinueMode::AutoContinue, pw: Some(2.0), act: act_main.id, notes: "Follow spot operator: pick up presenter at mark C" },
+            SeedCue { dept: 2, num: "VID2", label: "IMAG camera 1 — wide",        tc: Timecode::new(0, 3, 15, 0),  warn:  5, dur: Some(15), armed: true,  color: None,             cont: ContinueMode::Stop,         pw: None,     act: act_main.id, notes: "Camera 1 on switcher PGM — dissolve transition" },
+            SeedCue { dept: 1, num: "SND3", label: "Band track — verse 1",        tc: Timecode::new(0, 3, 30, 0),  warn:  8, dur: Some(45), armed: true,  color: None,             cont: ContinueMode::AutoFollow,   pw: None,     act: act_main.id, notes: "Track: MainBacking_v2.wav — sync to click" },
+            SeedCue { dept: 3, num: "FX2",  label: "Pyro — confetti burst",       tc: Timecode::new(0, 4,  0, 0),  warn: 12, dur: Some(3),  armed: false, color: Some("#ff6600"),  cont: ContinueMode::Stop,         pw: None,     act: act_main.id, notes: "DISARMED — weather check needed for outdoor venue" },
+            SeedCue { dept: 0, num: "LX5",  label: "Full stage — warm white",     tc: Timecode::new(0, 4, 30, 0),  warn: 10, dur: Some(60), armed: true,  color: Some("#ffdd88"),  cont: ContinueMode::Stop,         pw: None,     act: act_main.id, notes: "All fixtures warm white 3200K, intensity 80%" },
+            SeedCue { dept: 4, num: "AUT2", label: "Lower mid-stage scrim",       tc: Timecode::new(0, 5,  0, 0),  warn: 10, dur: Some(8),  armed: true,  color: None,             cont: ContinueMode::AutoContinue, pw: Some(5.0), act: act_main.id, notes: "Scrim fly bar to trim 2 — speed slow" },
+            SeedCue { dept: 2, num: "VID3", label: "Roll VT package — interview", tc: Timecode::new(0, 5, 30, 0),  warn:  8, dur: Some(90), armed: true,  color: None,             cont: ContinueMode::AutoFollow,   pw: None,     act: act_main.id, notes: "Pre-recorded segment — 1:30 duration, check audio embed" },
+            SeedCue { dept: 1, num: "SND4", label: "Fade music out",              tc: Timecode::new(0, 6,  0, 0),  warn: 10, dur: Some(5),  armed: true,  color: None,             cont: ContinueMode::Stop,         pw: None,     act: act_main.id, notes: "5-second fade, hold ambient bed at -30dB" },
+            SeedCue { dept: 5, num: "SM2",  label: "Cue presenter — stage right", tc: Timecode::new(0, 6, 15, 0),  warn:  8, dur: None,     armed: true,  color: None,             cont: ContinueMode::Stop,         pw: None,     act: act_main.id, notes: "Radio call: 'Presenter standby stage right'" },
+
+            // ── Closing ──
+            SeedCue { dept: 0, num: "LX6",  label: "Blackout",                    tc: Timecode::new(0, 7,  0, 0),  warn: 10, dur: Some(2),  armed: true,  color: Some("#220000"),  cont: ContinueMode::AutoContinue, pw: Some(1.0), act: act_close.id, notes: "Snap blackout — all fixtures to 0% in 0.5s" },
+            SeedCue { dept: 4, num: "AUT3", label: "Lower main curtain",          tc: Timecode::new(0, 7,  5, 0),  warn:  5, dur: Some(10), armed: true,  color: None,             cont: ContinueMode::Stop,         pw: None,     act: act_close.id, notes: "Full speed — tabs closing" },
+            SeedCue { dept: 0, num: "LX7",  label: "House lights up",             tc: Timecode::new(0, 7, 30, 0),  warn: 10, dur: Some(8),  armed: true,  color: Some("#ffffcc"),  cont: ContinueMode::AutoFollow,   pw: None,     act: act_close.id, notes: "Fade to full house — 8-second ramp" },
+            SeedCue { dept: 5, num: "SM3",  label: "All clear",                   tc: Timecode::new(0, 8,  0, 0),  warn: 10, dur: None,     armed: true,  color: None,             cont: ContinueMode::Stop,         pw: None,     act: act_close.id, notes: "Radio call: 'Show complete — all clear'" },
         ];
 
-        for (dept_idx, label, tc, warn) in cues {
+        for c in cues {
             self.create_cue(Cue {
                 id: Uuid::nil(),
-                department_id: dept_ids[dept_idx],
-                cue_number: String::new(),
-                label: label.to_string(),
-                trigger_tc: tc,
-                warn_seconds: warn,
-                notes: String::new(),
-                duration: None,
-                armed: true,
-                color: None,
-                continue_mode: ContinueMode::Stop,
-                post_wait: None,
+                department_id: dept_ids[c.dept],
+                cue_number: c.num.to_string(),
+                label: c.label.to_string(),
+                trigger_tc: c.tc,
+                warn_seconds: c.warn,
+                notes: c.notes.to_string(),
+                duration: c.dur,
+                armed: c.armed,
+                color: c.color.map(|s| s.to_string()),
+                continue_mode: c.cont,
+                post_wait: c.pw,
+                act_id: Some(c.act),
             }).await;
         }
+    }
+
+    // --- Show name ---
+
+    pub async fn get_show_name(&self) -> String {
+        self.data.read().await.show_name.clone()
+    }
+
+    pub async fn set_show_name(&self, name: String) {
+        let mut clamped = name;
+        clamp_string(&mut clamped);
+        self.data.write().await.show_name = clamped;
+        self.persist().await;
+    }
+
+    // --- Acts ---
+
+    pub async fn list_acts(&self) -> Vec<Act> {
+        let mut acts = self.data.read().await.acts.clone();
+        acts.sort_by_key(|a| a.sort_order);
+        acts
+    }
+
+    pub async fn create_act(&self, mut act: Act) -> Act {
+        act.id = Uuid::new_v4();
+        clamp_string(&mut act.name);
+        let mut data = self.data.write().await;
+        // Auto-assign sort_order if not set
+        if act.sort_order == 0 {
+            act.sort_order = data.acts.len() as u32 + 1;
+        }
+        data.acts.push(act.clone());
+        drop(data);
+        self.persist().await;
+        act
+    }
+
+    pub async fn update_act(&self, id: Uuid, mut update: Act) -> Option<Act> {
+        clamp_string(&mut update.name);
+        let mut data = self.data.write().await;
+        if let Some(act) = data.acts.iter_mut().find(|a| a.id == id) {
+            act.name = update.name;
+            act.sort_order = update.sort_order;
+            let result = act.clone();
+            drop(data);
+            self.persist().await;
+            Some(result)
+        } else {
+            None
+        }
+    }
+
+    pub async fn delete_act(&self, id: Uuid) -> bool {
+        let mut data = self.data.write().await;
+        let len_before = data.acts.len();
+        data.acts.retain(|a| a.id != id);
+        // Unassign cues from deleted act
+        for cue in &mut data.cues {
+            if cue.act_id == Some(id) {
+                cue.act_id = None;
+            }
+        }
+        let deleted = data.acts.len() < len_before;
+        drop(data);
+        if deleted {
+            self.persist().await;
+        }
+        deleted
+    }
+
+    /// Shift all cues in an act so the earliest cue starts at `new_start`.
+    /// Uses 30fps for frame math (delta is relative, so rate doesn't affect the offset).
+    pub async fn shift_act(&self, act_id: Uuid, new_start: crate::timecode::types::Timecode) -> bool {
+        use crate::timecode::types::FrameRate;
+        let rate = FrameRate::Fps30;
+        let mut data = self.data.write().await;
+        let act_cues: Vec<usize> = data.cues.iter().enumerate()
+            .filter(|(_, c)| c.act_id == Some(act_id))
+            .map(|(i, _)| i)
+            .collect();
+
+        if act_cues.is_empty() {
+            return false;
+        }
+
+        let earliest_frames = act_cues.iter()
+            .map(|&i| data.cues[i].trigger_tc.to_total_frames(rate))
+            .min()
+            .unwrap_or(0);
+
+        let new_start_frames = new_start.to_total_frames(rate);
+        let delta = new_start_frames as i64 - earliest_frames as i64;
+
+        for &i in &act_cues {
+            let old_frames = data.cues[i].trigger_tc.to_total_frames(rate) as i64;
+            let new_frames = (old_frames + delta).max(0) as u32;
+            data.cues[i].trigger_tc = crate::timecode::types::Timecode::from_total_frames(new_frames, rate);
+        }
+
+        drop(data);
+        self.persist().await;
+        true
     }
 
     // --- Users ---
@@ -513,6 +637,7 @@ mod tests {
             color: None,
             continue_mode: ContinueMode::Stop,
             post_wait: None,
+            act_id: None,
         }
     }
 

@@ -12,10 +12,11 @@
  * Refresh all Manage view data: departments, cues, and both renders.
  */
 async function refreshManageView() {
-  await Promise.all([loadDepartments(), loadCues()]);
+  await Promise.all([loadDepartments(), loadCues(), loadActs()]);
   renderDeptList();
   renderCueTable();
   renderDeptFilters();
+  renderActList();
 }
 
 /**
@@ -30,6 +31,18 @@ async function loadDepartments() {
  */
 async function loadCues() {
   cues = await api('/cues');
+}
+
+async function loadActs() {
+  acts = await api('/acts');
+}
+
+async function loadShowName() {
+  const res = await api('/show/name');
+  showName = res.name || '';
+  if (DOM.showNameLabel) DOM.showNameLabel.textContent = showName || 'ShowPulse';
+  const input = document.getElementById('show-name-input');
+  if (input) input.value = showName;
 }
 
 // ── DeptPanel ──────────────────────────────
@@ -206,6 +219,12 @@ function openCueModal(editId) {
     `<option value="${d.id}">${esc(d.name)}</option>`
   ).join('');
 
+  const actSel = document.getElementById('cue-act');
+  if (actSel) {
+    actSel.innerHTML = '<option value="">— No Act —</option>' +
+      acts.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  }
+
   document.getElementById('cue-edit-id').value = editId || '';
   if (editId) {
     const c = cues.find(c => c.id === editId);
@@ -213,6 +232,7 @@ function openCueModal(editId) {
     document.getElementById('cue-number').value = c.cue_number || '';
     document.getElementById('cue-label').value = c.label;
     sel.value = c.department_id;
+    if (actSel) actSel.value = c.act_id || '';
     document.getElementById('cue-trigger-tc').value = fmtTC(c.trigger_tc);
     document.getElementById('cue-warn').value = c.warn_seconds;
     document.getElementById('cue-notes').value = c.notes;
@@ -220,6 +240,7 @@ function openCueModal(editId) {
     document.getElementById('cue-modal-title').textContent = 'Add Cue';
     document.getElementById('cue-number').value = '';
     document.getElementById('cue-label').value = '';
+    if (actSel) actSel.value = '';
     document.getElementById('cue-trigger-tc').value = CONST.DEFAULT_TC;
     document.getElementById('cue-warn').value = String(CONST.DEFAULT_WARN_SEC);
     document.getElementById('cue-notes').value = '';
@@ -233,6 +254,7 @@ function openCueModal(editId) {
  */
 async function saveCue() {
   const id = document.getElementById('cue-edit-id').value;
+  const actVal = document.getElementById('cue-act') ? document.getElementById('cue-act').value : '';
   const body = {
     id: id || CONST.NULL_UUID,
     department_id: document.getElementById('cue-dept').value,
@@ -241,6 +263,7 @@ async function saveCue() {
     trigger_tc: parseTC(document.getElementById('cue-trigger-tc').value),
     warn_seconds: parseInt(document.getElementById('cue-warn').value) || CONST.DEFAULT_WARN_SEC,
     notes: document.getElementById('cue-notes').value,
+    act_id: actVal || null,
   };
   try {
     if (id) {
@@ -270,4 +293,87 @@ async function deleteCue(id) {
     showToast('Failed to delete cue', 'error');
   }
   refreshManageView();
+}
+
+// ── Act CRUD ────────────────────────────────
+
+function renderActList() {
+  const el = document.getElementById('act-list');
+  if (!el) return;
+  if (acts.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem;padding:0.5rem">No acts yet.</div>';
+    return;
+  }
+  el.innerHTML = acts.map(a => {
+    const cueCount = cues.filter(c => c.act_id === a.id).length;
+    return `<div class="dept-item">
+      <div class="dept-name">${esc(a.name)} <span style="color:var(--text-dim);font-size:0.75rem">(${cueCount} cues)</span></div>
+      <div class="dept-actions">
+        <button class="icon-btn" onclick="openActModal('${a.id}')" title="Edit">&#9998;</button>
+        <button class="icon-btn danger" onclick="deleteAct('${a.id}')" title="Delete">&times;</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openActModal(editId) {
+  const modal = document.getElementById('act-modal');
+  document.getElementById('act-edit-id').value = editId || '';
+  if (editId) {
+    const a = acts.find(a => a.id === editId);
+    document.getElementById('act-modal-title').textContent = 'Edit Act';
+    document.getElementById('act-name').value = a.name;
+    document.getElementById('act-sort-order').value = a.sort_order;
+  } else {
+    document.getElementById('act-modal-title').textContent = 'Add Act';
+    document.getElementById('act-name').value = '';
+    document.getElementById('act-sort-order').value = acts.length + 1;
+  }
+  modal.classList.add('open');
+  document.getElementById('act-name').focus();
+}
+
+async function saveAct() {
+  const id = document.getElementById('act-edit-id').value;
+  const body = {
+    id: id || CONST.NULL_UUID,
+    name: document.getElementById('act-name').value,
+    sort_order: parseInt(document.getElementById('act-sort-order').value) || 1,
+  };
+  try {
+    if (id) {
+      await api(`/acts/${id}`, { method: 'PUT', body });
+    } else {
+      await api('/acts', { method: 'POST', body });
+    }
+    closeModal('act-modal');
+    showToast(id ? 'Act updated' : 'Act created', 'success');
+  } catch (e) {
+    showToast(`Failed to save act: ${e.message}`, 'error');
+  }
+  refreshManageView();
+}
+
+async function deleteAct(id) {
+  const ok = await showConfirm('Delete Act', 'Delete this act? Cues will be unassigned.');
+  if (!ok) return;
+  try {
+    await api(`/acts/${id}`, { method: 'DELETE' });
+    showToast('Act deleted', 'success');
+  } catch (e) {
+    showToast('Failed to delete act', 'error');
+  }
+  refreshManageView();
+}
+
+async function saveShowName() {
+  const name = document.getElementById('show-name-input').value;
+  try {
+    await api('/show/name', { method: 'PUT', body: { name } });
+    showName = name;
+    if (DOM.showNameLabel) DOM.showNameLabel.textContent = name || 'ShowPulse';
+    showToast('Show name updated', 'success');
+  } catch (e) {
+    showToast('Failed to update show name', 'error');
+  }
 }

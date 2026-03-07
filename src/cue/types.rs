@@ -11,6 +11,15 @@ pub struct Department {
     pub color: String, // hex color, e.g. "#ff0000"
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Act {
+    #[serde(default = "Uuid::new_v4")]
+    pub id: Uuid,
+    pub name: String,
+    #[serde(default)]
+    pub sort_order: u32,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ContinueMode {
@@ -55,6 +64,9 @@ pub struct Cue {
     /// Seconds before auto-continuing to next cue (only with AutoContinue).
     #[serde(default)]
     pub post_wait: Option<f64>,
+    /// Act this cue belongs to. None = unassigned.
+    #[serde(default)]
+    pub act_id: Option<Uuid>,
 }
 
 fn default_cue_label() -> String {
@@ -71,8 +83,12 @@ fn default_true() -> bool {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShowData {
+    #[serde(default)]
+    pub show_name: String,
     pub departments: Vec<Department>,
     pub cues: Vec<Cue>,
+    #[serde(default)]
+    pub acts: Vec<Act>,
     #[serde(default)]
     pub users: Vec<User>,
 }
@@ -80,8 +96,10 @@ pub struct ShowData {
 impl Default for ShowData {
     fn default() -> Self {
         Self {
+            show_name: String::new(),
             departments: Vec::new(),
             cues: Vec::new(),
+            acts: Vec::new(),
             users: Vec::new(),
         }
     }
@@ -127,4 +145,7 @@ pub struct CueStatus {
     pub color: Option<String>,
     /// Seconds elapsed since trigger (for active cues with duration).
     pub elapsed_sec: Option<f64>,
+    /// Act this cue belongs to (if any).
+    pub act_id: Option<Uuid>,
+    pub act_name: Option<String>,
 }

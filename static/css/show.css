@@ -107,6 +107,7 @@
 #view-show.view { padding: 0; max-width: none; height: calc(100vh - 48px); overflow: hidden; }
 
 .flow-area {
+  position: relative;
   display: flex;
   flex-direction: column;
   max-width: 900px;
@@ -182,6 +183,22 @@
 }
 .tc-btn:hover { background: var(--bg-input); border-color: var(--accent); }
 .tc-btn.active { border-color: var(--accent); color: var(--accent); }
+.tc-btn-sm {
+  padding: 0.25rem 0.6rem;
+  font-size: calc(var(--font-size-sm) * 0.8);
+}
+
+/* ── Goto row (separated from transport) ── */
+.tc-goto-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-sm);
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
 .tc-goto-group {
   display: flex;
   gap: var(--gap-xs);
@@ -196,8 +213,31 @@
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
 }
+.tc-goto-info {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  min-height: 1.2em;
+}
+.tc-goto-info:empty { display: none; }
+.tc-goto-info .goto-dept-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tc-goto-info .goto-dept-name {
+  color: var(--text-dim);
+}
+.tc-goto-info .goto-cue-label {
+  color: var(--text-primary);
+  font-weight: 500;
+}
 @media (max-width: 640px) {
   .tc-btn { padding: 0.3rem 0.5rem; font-size: var(--font-size-xs); }
+  .tc-btn-sm { padding: 0.2rem 0.4rem; font-size: calc(var(--font-size-xs) * 0.85); }
   .tc-goto-group input { width: 90px; }
 }
 .flow-upcoming .flow-card { cursor: pointer; }
@@ -281,6 +321,69 @@
   color: var(--text-dim);
   font-size: var(--font-size-base);
 }
+
+/* ── Floating flow controls (bottom-right) ── */
+.flow-controls {
+  position: absolute;
+  bottom: 1rem;
+  inset-inline-end: 1.5rem;
+  z-index: 10;
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.3rem;
+  background: color-mix(in srgb, var(--bg-card) 80%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.fc-btn {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-dim);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+.fc-btn:hover { color: var(--text-primary); border-color: var(--accent); }
+.fc-btn.active { border-color: var(--accent); color: var(--accent); }
+.fc-sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+  margin: 0.15rem 0.1rem;
+}
+
+/* ── Act headers (flow dividers) ── */
+.act-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.6rem 0 0.3rem;
+  padding: 0;
+  color: var(--text-dim);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.act-header.collapsed { opacity: 0.5; }
+.act-group.collapsed .flow-card { display: none; }
+.act-header::before,
+.act-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.act-header::before { flex: 0 0 1rem; }
 
 /* ── FlowCard + Tiers ── */
 .flow-card {
