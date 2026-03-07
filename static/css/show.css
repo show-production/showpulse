@@ -258,7 +258,7 @@
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: opacity 0.3s ease;
+  transition: max-height 0.5s ease, opacity 0.4s ease 0.1s, padding-top 0.5s ease;
 }
 .flow-card.tier-warning .card-countdown-row {
   max-height: 3rem;
@@ -398,7 +398,7 @@
   margin-bottom: 0.4rem;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s, background 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
 }
 .flow-card .card-info { flex: 1; min-width: 0; }
 .flow-card .card-label {
@@ -409,8 +409,17 @@
   text-overflow: ellipsis;
 }
 .flow-card .card-dept {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.7rem;
   color: var(--text-dim);
+}
+.flow-card .dept-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 .flow-card .card-tc {
   font-family: var(--font-mono);
@@ -439,36 +448,49 @@
   border-radius: 0 2px 2px 0;
 }
 
-/* Tier: Active (already triggered — dim so focus stays on upcoming) */
-.flow-card.tier-active {
-  border-color: var(--border);
-  opacity: 0.6;
-}
-.flow-card.tier-active .card-countdown { color: var(--text-dim); }
+/* Tier: Active (already triggered — dim text, keep dept-bar vivid) */
+.flow-card.tier-active { border-color: var(--border); }
+.flow-card.tier-active .card-label,
+.flow-card.tier-active .card-tc { color: var(--text-dim); opacity: 0.6; }
+.flow-card.tier-active .card-countdown { color: var(--text-dim); opacity: 0.6; }
+.flow-card.tier-active .card-dept { opacity: 0.7; }
+.flow-card.tier-active .dept-dot { opacity: 1; }
 .flow-card.tier-active .progress-fill { background: var(--text-dim); }
 
 /* Tier: Warning (traffic-light colors set inline by JS) */
 .flow-card.tier-warning {
   border-color: var(--warning);
   box-shadow: 0 0 12px var(--warning-glow);
-  animation: warn-pulse 1.5s ease-in-out infinite;
+  animation: warn-enter 0.6s ease-out, warn-pulse 1.5s ease-in-out 0.6s infinite;
+}
+@keyframes warn-enter {
+  0% { border-color: var(--border); box-shadow: none; }
+  100% { border-color: var(--warning); box-shadow: 0 0 12px var(--warning-glow); }
 }
 
 /* Tier: Near */
 .flow-card.tier-near .card-countdown { color: var(--text-primary); }
 
-/* Tier: Far */
-.flow-card.tier-far { opacity: 0.7; }
-.flow-card.tier-far .card-countdown { color: var(--text-dim); }
+/* Tier: Far (dim text, keep dept-bar vivid) */
+.flow-card.tier-far .card-label,
+.flow-card.tier-far .card-tc { opacity: 0.7; }
+.flow-card.tier-far .card-countdown { color: var(--text-dim); opacity: 0.7; }
+.flow-card.tier-far .card-dept { opacity: 0.7; }
+.flow-card.tier-far .dept-dot { opacity: 1; }
 
-/* Tier: Distant */
-.flow-card.tier-distant { opacity: 0.45; }
-.flow-card.tier-distant .card-countdown { color: var(--text-dim); }
+/* Tier: Distant (strong dim on text, keep dept-bar vivid) */
+.flow-card.tier-distant .card-label,
+.flow-card.tier-distant .card-tc { opacity: 0.45; }
+.flow-card.tier-distant .card-countdown { color: var(--text-dim); opacity: 0.45; }
 .flow-card.tier-distant .card-dept { display: none; }
 
-/* Tier: Passed */
-.flow-card.tier-passed { opacity: 0.45; border-color: transparent; }
-.flow-card.tier-passed .card-countdown { color: var(--text-dim); }
+/* Tier: Passed (dim text, keep dept-bar vivid) */
+.flow-card.tier-passed { border-color: transparent; }
+.flow-card.tier-passed .card-label,
+.flow-card.tier-passed .card-tc { opacity: 0.45; }
+.flow-card.tier-passed .card-countdown { color: var(--text-dim); opacity: 0.45; }
+.flow-card.tier-passed .card-dept { opacity: 0.5; }
+.flow-card.tier-passed .dept-dot { opacity: 1; }
 .flow-card.tier-passed .progress-fill { background: var(--text-dim); width: 100% !important; }
 
 /* ── RTL overrides ── */

@@ -429,7 +429,7 @@ function createFlowCard(c) {
   card.innerHTML = `<div class="dept-bar" style="background:${deptColor}"></div>
     <div class="card-info">
       <div class="card-label"></div>
-      <div class="card-dept">${esc(c.department)}</div>
+      <div class="card-dept"><span class="dept-dot" style="background:${deptColor}"></span>${esc(c.department)}</div>
     </div>
     <div class="card-tc">${fmtTC(c.trigger_tc)}</div>
     <div class="card-countdown"></div>
@@ -532,27 +532,30 @@ function updateFlowCard(card, c) {
   if (card.className !== newClass) card.className = newClass;
   card.dataset.triggerTc = fmtTC(c.trigger_tc);
 
-  // Dept tint for warning tier only
-  card.style.background = isWarning ? hexToRgba(getDeptColor(c.department_id), CONST.TINT_ALPHA) : '';
+  // Dept color (bar + dot + warning tint)
+  const deptColor = getDeptColor(c.department_id);
+  card.style.background = isWarning ? hexToRgba(deptColor, CONST.TINT_ALPHA) : '';
+  const barEl = card.querySelector('.dept-bar');
+  if (barEl) barEl.style.background = deptColor;
+  const dotEl = card.querySelector('.dept-dot');
+  if (dotEl) dotEl.style.background = deptColor;
 
   // Label
   const labelEl = card.querySelector('.card-label');
   const labelText = formatCueLabel(c);
   if (labelEl.textContent !== labelText) labelEl.textContent = labelText;
 
-  // Countdown badge (top-right)
+  // Countdown badge (top-right) — always visible
   const cdEl = card.querySelector('.card-countdown');
+  let cdText, cdColor = '';
   if (c.state === 'passed' || c.state === 'active') {
-    cdEl.textContent = CONST.CHECKMARK;
-    cdEl.style.color = c.state === 'active' ? 'var(--accent)' : '';
-  } else if (isWarning) {
-    cdEl.textContent = '';
-    cdEl.style.color = '';
+    cdText = c.elapsed_sec != null ? fmtElapsed(c.elapsed_sec) : CONST.CHECKMARK;
+    cdColor = 'var(--text-dim)';
   } else {
-    const text = fmtCountdown(c.countdown_sec);
-    if (cdEl.textContent !== text) cdEl.textContent = text;
-    cdEl.style.color = '';
+    cdText = fmtCountdown(c.countdown_sec);
   }
+  if (cdEl.textContent !== cdText) cdEl.textContent = cdText;
+  cdEl.style.color = cdColor;
 
   // Warning row (READY/3/2/1/GO!)
   if (isWarning) updateWarningRow(card, c);
