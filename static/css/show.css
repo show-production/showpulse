@@ -104,15 +104,15 @@
 .sidebar-backdrop.visible { display: block; }
 
 /* ── FlowArea ── */
-#view-show.view { padding: 0; max-width: none; overflow-y: auto; height: calc(100vh - 48px); }
+#view-show.view { padding: 0; max-width: none; height: calc(100vh - 48px); overflow: hidden; }
 
 .flow-area {
   display: flex;
   flex-direction: column;
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 1rem 2rem;
-  min-height: calc(100vh - 48px);
+  padding: 0 1rem 0;
+  height: 100%;
 }
 
 /* ── TimecodeDisplay ── */
@@ -126,9 +126,6 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  position: sticky;
-  top: 48px;
-  z-index: 10;
 }
 .flow-timecode .tc-row {
   display: flex;
@@ -261,7 +258,10 @@
 
 /* ── UpcomingList ── */
 .flow-upcoming {
-  padding-top: 0.5rem;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0.5rem 0 2rem;
 }
 
 .flow-no-cues {
