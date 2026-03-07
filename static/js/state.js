@@ -127,6 +127,7 @@ function initDOM() {
   DOM.toastContainer = document.getElementById('toast-container');
   DOM.deptList = document.getElementById('dept-list');
   DOM.cueListBody = document.getElementById('cue-list-body');
+  DOM.timelineStrip = document.getElementById('timeline-strip');
   DOM.manageDeptFilter = document.getElementById('manage-dept-filter');
   DOM.deptFilters = document.getElementById('dept-filters');
   DOM.showSidebar = document.getElementById('show-sidebar');
