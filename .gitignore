@@ -1,5 +1,11 @@
 /target
 showpulse-data.json
 .claude/
-*.png
 *.pdf
+
+# Branding: keep SVG sources, ignore generated exports
+branding/export/
+
+# Ignore PNGs except specific static assets
+*.png
+!static/apple-touch-icon.png
