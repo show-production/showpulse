@@ -70,6 +70,9 @@ let confirmResolve = null;
 /** Whether the sidebar is open (persisted to localStorage). */
 let sidebarOpen = localStorage.getItem('sidebarOpen') === 'true';
 
+/** Whether AutoPulse auto-scroll is enabled (persisted, default true). */
+let autoPulse = localStorage.getItem('autoPulse') !== 'false';
+
 
 // ── DOM cache ──────────────────────────────
 
@@ -95,6 +98,7 @@ function initDOM() {
   DOM.showSidebar = document.getElementById('show-sidebar');
   DOM.sidebarBackdrop = document.getElementById('sidebar-backdrop');
   DOM.loadingOverlay = document.getElementById('loading-overlay');
+  DOM.autoPulseBtn = document.getElementById('autopulse-btn');
 }
 
 // ── Shared helpers ─────────────────────────

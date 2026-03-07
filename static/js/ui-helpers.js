@@ -109,6 +109,8 @@ document.addEventListener('keydown', (e) => {
   }
   else if (e.code === 'KeyN') { e.preventDefault(); nextCue(); }
   else if (e.code === 'KeyB') { e.preventDefault(); prevCue(); }
+  else if (e.code === 'KeyA') { e.preventDefault(); toggleAutoPulse(); }
+  else if (e.code === 'KeyC') { e.preventDefault(); jumpToCurrent(); }
 });
 
 // ── Initialization ─────────────────────────
@@ -126,6 +128,9 @@ loadTheme();
   }
   // Restore sidebar state
   if (sidebarOpen) toggleSidebar(true);
+  // Restore autopulse state
+  DOM.autoPulseBtn.classList.toggle('active', autoPulse);
+  initAutoPulseScrollBlock();
   // Hide loading overlay
   DOM.loadingOverlay.classList.add('hidden');
   setTimeout(() => DOM.loadingOverlay.remove(), 500);

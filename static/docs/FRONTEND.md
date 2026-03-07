@@ -4,21 +4,21 @@
 
 | File | Purpose | ~Lines |
 |------|---------|--------|
-| `index.html` | Skeleton HTML (markup only) | 343 |
+| `index.html` | Skeleton HTML (markup only) | 347 |
 | `css/variables.css` | CSS custom properties (design tokens) | 55 |
 | `css/base.css` | Reset, shared patterns (.dot, .dept-bar), utilities | 65 |
 | `css/shell.css` | TopNav, DisconnectBanner, LoadingOverlay, Toast | 110 |
-| `css/show.css` | Sidebar, FlowArea, all flow components, FlowCard tiers | 375 |
+| `css/show.css` | Sidebar, FlowArea, all flow components, FlowCard tiers | 376 |
 | `css/manage.css` | Panel, DeptPanel, CueTable, icon buttons | 115 |
 | `css/settings.css` | Settings grid, groups, radio, slider, speed | 110 |
 | `css/modals.css` | Modal overlay, dialog, form groups, confirm | 90 |
-| `js/state.js` | CONST, global state, DOM cache, shared helpers | 190 |
+| `js/state.js` | CONST, global state, DOM cache, shared helpers | 213 |
 | `js/api.js` | api() wrapper, connectWS() | 55 |
-| `js/show.js` | ShowView rendering, sidebar, transport, navigation | 397 |
+| `js/show.js` | ShowView rendering, sidebar, transport, AutoPulse | 463 |
 | `js/manage.js` | CRUD, table render, dept list, sort | 240 |
 | `js/settings.js` | Source, device refresh, generator, theme | 175 |
 | `js/import-export.js` | Show export/import, CSV parsing, cue import | 140 |
-| `js/ui-helpers.js` | Toasts, modals, keyboard, view switching, init | 120 |
+| `js/ui-helpers.js` | Toasts, modals, keyboard, view switching, init | 155 |
 
 ## Component Terminology
 

@@ -45,17 +45,20 @@
 - **Layout**: Timer is `flex-shrink: 0` (fixed height), cue list is `flex: 1; overflow-y: auto` (scrolls independently)
 
 ### TimecodeDisplay
-- **Visual**: Large TC digits with source label, transport buttons, goto field. Fixed at top of flow area (not sticky).
+- **Visual**: Large TC digits with source label, transport buttons, goto field, AutoPulse + Jump buttons. Fixed at top of flow area.
 - **HTML**: `<div id="flow-timecode">` with `.tc-row` and `.tc-controls`
 - **JS**: Updated by WS messages in `api.js`; transport in `show.js`
-- **CSS**: `show.css` — `.flow-timecode`, `.tc-btn`
+- **CSS**: `show.css` — `.flow-timecode`, `.tc-btn`, `.tc-btn.active`
 - **State**: `DOM.tcValue`, `DOM.tcState`, `DOM.tcFps`
+- **AutoPulse**: `Auto` button toggles auto-scroll (`A` key). When on, cue list tracks the warm cue (first warning/go, or first upcoming). User scroll blocked via wheel/touch event listeners. State persisted to localStorage.
+- **Jump**: `⤇ Now` button smooth-scrolls to warm cue (`C` key). Works regardless of AutoPulse state.
 
 ### CueList
 - **Visual**: Scrollable list of FlowCards — all cues in chronological order
 - **HTML**: `<div id="flow-upcoming">`
-- **JS**: `diffCueList()` in `show.js` (DOM-diffed), sorted by `trigger_tc`
+- **JS**: `diffCueList()` in `show.js` (DOM-diffed), sorted by `trigger_tc`; `autoScrollCueList()` called after each render
 - **CSS**: `show.css` — `.flow-upcoming` with `flex: 1; overflow-y: auto`
+- **AutoPulse scroll**: When enabled, `autoScrollCueList()` runs at 10Hz to keep the warm cue at the top via `scrollTop` + `getBoundingClientRect()`
 
 ### FlowCard
 - **Visual**: Cue card with dept-bar, label, TC, countdown, progress bar
