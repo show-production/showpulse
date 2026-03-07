@@ -156,6 +156,23 @@ async function updateGenConfig() {
 // ── Theme / Appearance ─────────────────────
 
 /**
+ * Switch between dark and light themes.
+ * @param {string} mode - "dark" or "light".
+ * @param {HTMLElement} [el] - The clicked radio label element.
+ */
+function setTheme(mode, el) {
+  if (mode === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  localStorage.setItem('showpulse-theme-mode', mode);
+  // Update radio visual
+  document.querySelectorAll('#theme-radio label').forEach(l => l.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+}
+
+/**
  * Set a CSS custom property and persist to localStorage.
  * @param {string} varName - CSS variable name (e.g. "--accent").
  * @param {string} value - New value.
@@ -171,6 +188,20 @@ function setThemeColor(varName, value) {
  * Load saved theme overrides from localStorage.
  */
 function loadTheme() {
+  // Restore dark/light mode
+  const mode = localStorage.getItem('showpulse-theme-mode') || 'dark';
+  if (mode === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+  // Sync radio button state
+  const radio = document.getElementById(`theme-${mode}`);
+  if (radio) {
+    radio.checked = true;
+    document.querySelectorAll('#theme-radio label').forEach(l => l.classList.remove('selected'));
+    const label = radio.nextElementSibling;
+    if (label) label.classList.add('selected');
+  }
+  // Restore per-variable overrides
   const theme = JSON.parse(localStorage.getItem('showpulse-theme') || '{}');
   for (const [k, v] of Object.entries(theme)) {
     document.documentElement.style.setProperty(k, v);

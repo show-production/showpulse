@@ -1,13 +1,14 @@
 use axum::extract::ws::{Message, WebSocket};
 use futures::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::{broadcast, RwLock};
+use tokio::time::Instant;
 use tracing::info;
 use uuid::Uuid;
 
-use crate::auth::TimerLockState;
+use crate::auth::{Role, TimerLockState};
 use crate::cue::types::CueStatus;
 
 #[derive(Debug, Clone, Serialize)]
@@ -37,14 +38,24 @@ enum DeptFilter {
 pub struct WsSessionInfo {
     pub user_id: Uuid,
     pub user_name: String,
+    pub role: Role,
     /// Pre-set department filter for Viewer/CrewLead users.
     pub dept_filter: Option<HashSet<Uuid>>,
 }
 
-/// Tracks connected client count
+/// Snapshot of a connected client for the admin dashboard.
+#[derive(Clone)]
+pub struct ConnectedClient {
+    pub user_id: Option<Uuid>,
+    pub user_name: Option<String>,
+    pub role: Option<Role>,
+    pub connected_at: Instant,
+}
+
+/// Tracks connected clients and broadcasts timecode/cue state.
 pub struct WsHub {
     tx: broadcast::Sender<BroadcastMessage>,
-    client_count: Arc<RwLock<usize>>,
+    clients: Arc<RwLock<HashMap<Uuid, ConnectedClient>>>,
     timer_lock: TimerLockState,
 }
 
@@ -53,7 +64,7 @@ impl WsHub {
         let (tx, _) = broadcast::channel(128);
         Self {
             tx,
-            client_count: Arc::new(RwLock::new(0)),
+            clients: Arc::new(RwLock::new(HashMap::new())),
             timer_lock,
         }
     }
@@ -63,16 +74,28 @@ impl WsHub {
     }
 
     pub async fn client_count(&self) -> usize {
-        *self.client_count.read().await
+        self.clients.read().await.len()
+    }
+
+    /// Return a snapshot of all connected clients for the admin dashboard.
+    pub async fn list_clients(&self) -> Vec<ConnectedClient> {
+        self.clients.read().await.values().cloned().collect()
     }
 
     pub async fn handle_connection(&self, socket: WebSocket, session: Option<WsSessionInfo>) {
         let mut rx = self.tx.subscribe();
         let (mut sender, mut receiver) = socket.split();
-        let client_count = self.client_count.clone();
+        let clients = self.clients.clone();
         let timer_lock = self.timer_lock.clone();
 
-        *client_count.write().await += 1;
+        let conn_id = Uuid::new_v4();
+        let client = ConnectedClient {
+            user_id: session.as_ref().map(|s| s.user_id),
+            user_name: session.as_ref().map(|s| s.user_name.clone()),
+            role: session.as_ref().map(|s| s.role),
+            connected_at: Instant::now(),
+        };
+        clients.write().await.insert(conn_id, client);
 
         // Pre-set department filter from session (Viewer/CrewLead)
         let initial_filter = session.as_ref().and_then(|s| s.dept_filter.clone());
@@ -132,7 +155,7 @@ impl WsHub {
         }
 
         read_task.abort();
-        *client_count.write().await -= 1;
+        clients.write().await.remove(&conn_id);
 
         // Auto-release timer lock if disconnected user held it
         if let Some(ref s) = session {

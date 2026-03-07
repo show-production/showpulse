@@ -164,6 +164,11 @@ function applyRole() {
     DOM.timerLockStatus.style.display = (isAuth && level >= ROLE_LEVELS.manager) ? '' : 'none';
   }
 
+  // Dashboard panel: Admin only
+  if (DOM.dashboardPanel) {
+    DOM.dashboardPanel.style.display = (isAuth && level >= ROLE_LEVELS.admin) ? '' : 'none';
+  }
+
   // User panel: Admin only
   if (DOM.userPanel) {
     DOM.userPanel.style.display = (isAuth && level >= ROLE_LEVELS.admin) ? '' : 'none';
@@ -347,4 +352,77 @@ async function deleteUser(id, name) {
   if (await apiDelete(`/users/${id}`, 'Delete User', `Delete user "${name}"?`, 'User')) {
     loadUsers();
   }
+}
+
+// ── Admin dashboard ────────────────────────
+
+let dashboardInterval = null;
+
+function startDashboardPolling() {
+  stopDashboardPolling();
+  if (roleLevel(authRole) >= ROLE_LEVELS.admin) {
+    loadDashboard();
+    dashboardInterval = setInterval(loadDashboard, 10000);
+  }
+}
+
+function stopDashboardPolling() {
+  if (dashboardInterval) {
+    clearInterval(dashboardInterval);
+    dashboardInterval = null;
+  }
+}
+
+async function loadDashboard() {
+  if (roleLevel(authRole) < ROLE_LEVELS.admin) return;
+  try {
+    const data = await api('/admin/dashboard');
+    renderDashboard(data);
+  } catch (e) { /* ignore */ }
+}
+
+function fmtDuration(totalSec) {
+  if (totalSec < 60) return `${totalSec}s`;
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function renderDashboard(data) {
+  if (!DOM.dashboardBody) return;
+
+  const lockLine = data.timer_lock.locked && data.timer_lock.holder
+    ? `<span class="dash-lock-holder">${esc(data.timer_lock.holder.user_name)}</span>`
+    : '<span class="dash-lock-none">Unlocked</span>';
+
+  const clientRows = data.clients
+    .sort((a, b) => b.connected_seconds - a.connected_seconds)
+    .map(c => {
+      const name = c.is_authenticated
+        ? esc(c.user_name)
+        : '<span class="text-dim">Anonymous</span>';
+      const role = c.role ? roleLabel(c.role) : '';
+      const dur = fmtDuration(c.connected_seconds);
+      return `<tr>
+        <td>${name}</td>
+        <td>${role}</td>
+        <td>${dur}</td>
+      </tr>`;
+    }).join('');
+
+  DOM.dashboardBody.innerHTML = `
+    <div class="dash-summary">
+      <span>${data.total_connections} connected</span>
+      <span class="dash-sep">&middot;</span>
+      <span>${data.authenticated_connections} authenticated</span>
+      <span class="dash-sep">&middot;</span>
+      <span>Timer: ${lockLine}</span>
+    </div>
+    ${data.clients.length > 0 ? `
+    <table class="dash-table">
+      <thead><tr><th>User</th><th>Role</th><th>Duration</th></tr></thead>
+      <tbody>${clientRows}</tbody>
+    </table>` : '<div class="text-dim" style="padding:0.5rem">No active connections.</div>'}
+  `;
 }
