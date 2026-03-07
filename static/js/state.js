@@ -70,8 +70,6 @@ let confirmResolve = null;
 /** Whether the sidebar is open (persisted to localStorage). */
 let sidebarOpen = localStorage.getItem('sidebarOpen') === 'true';
 
-/** Tracks the last Ready/Go countdown value to detect transitions. */
-let readygoLastValue = null;
 
 // ── DOM cache ──────────────────────────────
 
@@ -88,7 +86,6 @@ function initDOM() {
   DOM.wsDot = document.getElementById('ws-dot');
   DOM.disconnectBanner = document.getElementById('disconnect-banner');
   DOM.flowTimecode = document.getElementById('flow-timecode');
-  DOM.flowReadygo = document.getElementById('flow-readygo');
   DOM.flowUpcoming = document.getElementById('flow-upcoming');
   DOM.toastContainer = document.getElementById('toast-container');
   DOM.deptList = document.getElementById('dept-list');
