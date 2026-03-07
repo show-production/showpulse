@@ -188,6 +188,23 @@
   color: var(--text-dim);
   margin-left: auto;
 }
+.cue-act-add {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+.cue-act-header:hover .cue-act-add { opacity: 1; }
+.cue-act-add:hover { color: var(--accent); border-color: var(--accent); }
 
 /* ── Cue item row ── */
 .cue-item {
@@ -268,6 +285,32 @@
   transition: opacity 0.15s;
 }
 .cue-item:hover .cue-actions { opacity: 1; }
+
+/* ── Inline edit ── */
+.inline-edit {
+  padding: 0.15rem 0.35rem;
+  background: var(--bg-input);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: inherit;
+  font-family: inherit;
+  outline: none;
+}
+.inline-edit--tc {
+  font-family: var(--font-mono);
+  width: 95px;
+}
+.inline-edit--sm { width: 55px; }
+
+/* ── Drag & drop states ── */
+.cue-item.dragging { opacity: 0.25; }
+.cue-item.drag-over-top { box-shadow: inset 0 2px 0 var(--accent); }
+.cue-item.drag-over-bottom { box-shadow: inset 0 -2px 0 var(--accent); }
+.cue-act-header.drag-over {
+  background: var(--bg-input);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
 
 @media (max-width: 640px) {
   .cue-item .cue-dept { display: none; }
