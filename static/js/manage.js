@@ -78,6 +78,12 @@ function renderDeptList() {
 /** Set of act IDs collapsed in the editor cue list. */
 const cueListCollapsed = new Set();
 
+/** Set of selected cue IDs for bulk operations. */
+const selectedCues = new Set();
+
+/** Last clicked cue ID for shift-range selection. */
+let lastSelectedCueId = null;
+
 /**
  * Render the cue list grouped by act with collapsible headers.
  */
@@ -127,6 +133,7 @@ function renderCueList() {
 
     html += `<div class="cue-act-group${collapsed}" data-act-id="${act.id}">`;
     html += `<div class="cue-act-header" onclick="toggleCueActGroup('${act.id}')">
+      <label class="cue-act-check" onclick="event.stopPropagation()"><input type="checkbox" onclick="selectAllInAct('${act.id}', this.checked)"></label>
       <span class="cue-act-chevron">&#x25BE;</span>
       <span class="cue-act-title">${esc(act.name)}</span>
       <span class="cue-act-meta">${actCues.length} cue${actCues.length !== 1 ? 's' : ''}${span ? ' \u00b7 ' + span : ''}</span>
@@ -156,6 +163,7 @@ function renderCueList() {
   }
 
   DOM.cueListBody.innerHTML = html;
+  updateBulkBar();
 }
 
 /**
@@ -167,8 +175,10 @@ function renderCueItem(c) {
   const dept = departments.find(d => d.id === c.department_id);
   const deptColor = dept ? dept.color : CONST.DEFAULT_DEPT_COLOR;
   const deptName = dept ? esc(dept.name) : '?';
+  const sel = selectedCues.has(c.id);
 
-  return `<div class="cue-item" data-cue-id="${c.id}">
+  return `<div class="cue-item${sel ? ' selected' : ''}" data-cue-id="${c.id}">
+    <label class="cue-check" onclick="event.stopPropagation()"><input type="checkbox" onclick="handleCueCheck('${c.id}', this.checked, event)"${sel ? ' checked' : ''}></label>
     <span class="cue-grip" title="Drag to reorder">&#x283F;</span>
     <span class="cue-bar" style="background:${deptColor}"></span>
     <span class="cue-tc" data-field="tc">${fmtTC(c.trigger_tc)}</span>
@@ -490,6 +500,165 @@ function startInlineEdit(item, cueId, fieldEl) {
   });
   input.addEventListener('blur', () => finish(true));
   if (input.tagName === 'SELECT') input.addEventListener('change', () => finish(true));
+}
+
+// ── Multi-Select & Bulk Ops ─────────────────
+
+/**
+ * Create the floating bulk action bar (appended to body).
+ * Call once at init.
+ */
+function initCueBulkOps() {
+  const bar = document.createElement('div');
+  bar.className = 'bulk-bar';
+  bar.id = 'bulk-bar';
+  bar.innerHTML = `
+    <span class="bulk-count" id="bulk-count"></span>
+    <div class="bulk-actions">
+      <select class="bulk-select" id="bulk-move-act" onchange="bulkMoveToAct(this.value); this.value='';">
+        <option value="">Move to...</option>
+      </select>
+      <button class="bulk-btn" onclick="bulkDuplicate()">Duplicate</button>
+      <button class="bulk-btn" onclick="bulkArm(true)">Arm</button>
+      <button class="bulk-btn" onclick="bulkArm(false)">Disarm</button>
+      <button class="bulk-btn bulk-btn--danger" onclick="bulkDelete()">Delete</button>
+    </div>
+    <button class="bulk-close" onclick="clearSelection()" title="Clear selection">&times;</button>
+  `;
+  document.body.appendChild(bar);
+}
+
+/**
+ * Handle checkbox click on a cue item. Supports shift-range select.
+ */
+function handleCueCheck(cueId, checked, event) {
+  if (event.shiftKey && lastSelectedCueId) {
+    const items = [...DOM.cueListBody.querySelectorAll('.cue-item')];
+    const startIdx = items.findIndex(el => el.dataset.cueId === lastSelectedCueId);
+    const endIdx = items.findIndex(el => el.dataset.cueId === cueId);
+    if (startIdx >= 0 && endIdx >= 0) {
+      const [from, to] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+      for (let i = from; i <= to; i++) {
+        selectedCues.add(items[i].dataset.cueId);
+        items[i].classList.add('selected');
+        const cb = items[i].querySelector('.cue-check input');
+        if (cb) cb.checked = true;
+      }
+    }
+  } else if (checked) {
+    selectedCues.add(cueId);
+    const item = DOM.cueListBody.querySelector(`.cue-item[data-cue-id="${cueId}"]`);
+    if (item) item.classList.add('selected');
+  } else {
+    selectedCues.delete(cueId);
+    const item = DOM.cueListBody.querySelector(`.cue-item[data-cue-id="${cueId}"]`);
+    if (item) item.classList.remove('selected');
+  }
+  lastSelectedCueId = cueId;
+  updateBulkBar();
+}
+
+/**
+ * Select or deselect all cues in an act group.
+ */
+function selectAllInAct(actId, checked) {
+  const actCueIds = cues.filter(c => c.act_id === actId).map(c => c.id);
+  const group = DOM.cueListBody.querySelector(`.cue-act-group[data-act-id="${actId}"]`);
+  if (!group) return;
+  actCueIds.forEach(id => checked ? selectedCues.add(id) : selectedCues.delete(id));
+  group.querySelectorAll('.cue-item').forEach(item => {
+    item.classList.toggle('selected', checked);
+    const cb = item.querySelector('.cue-check input');
+    if (cb) cb.checked = checked;
+  });
+  updateBulkBar();
+}
+
+/** Show/hide and update the bulk action bar. */
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  if (!bar) return;
+  // Prune stale selections
+  const ids = new Set(cues.map(c => c.id));
+  for (const id of selectedCues) { if (!ids.has(id)) selectedCues.delete(id); }
+
+  if (selectedCues.size === 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  document.getElementById('bulk-count').textContent =
+    `${selectedCues.size} cue${selectedCues.size !== 1 ? 's' : ''} selected`;
+  const sel = document.getElementById('bulk-move-act');
+  sel.innerHTML = '<option value="">Move to...</option>' +
+    acts.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('') +
+    '<option value="__none__">Ungrouped</option>';
+}
+
+/** Clear all selections. */
+function clearSelection() {
+  selectedCues.clear();
+  lastSelectedCueId = null;
+  DOM.cueListBody.querySelectorAll('.cue-item.selected').forEach(el => el.classList.remove('selected'));
+  DOM.cueListBody.querySelectorAll('.cue-check input, .cue-act-check input').forEach(cb => cb.checked = false);
+  updateBulkBar();
+}
+
+/** Bulk move selected cues to an act. */
+async function bulkMoveToAct(actId) {
+  if (!actId || selectedCues.size === 0) return;
+  const target = actId === '__none__' ? null : actId;
+  try {
+    await Promise.all([...selectedCues].map(id => {
+      const c = cues.find(c => c.id === id);
+      return c ? api(`/cues/${id}`, { method: 'PUT', body: { ...c, act_id: target } }) : null;
+    }));
+    showToast(`Moved ${selectedCues.size} cues`, 'success');
+    clearSelection();
+    await refreshManageView();
+  } catch (e) { showToast('Failed to move cues', 'error'); }
+}
+
+/** Bulk duplicate selected cues. */
+async function bulkDuplicate() {
+  if (selectedCues.size === 0) return;
+  try {
+    await Promise.all([...selectedCues].map(id => {
+      const c = cues.find(c => c.id === id);
+      if (!c) return null;
+      return api('/cues', { method: 'POST', body: {
+        ...c, id: CONST.NULL_UUID, label: c.label + ' (copy)',
+        trigger_tc: secondsToTcObj(tcObjToSeconds(c.trigger_tc) + 5), cue_number: '',
+      }});
+    }));
+    showToast(`Duplicated ${selectedCues.size} cues`, 'success');
+    clearSelection();
+    await refreshManageView();
+  } catch (e) { showToast('Failed to duplicate cues', 'error'); }
+}
+
+/** Bulk delete selected cues. */
+async function bulkDelete() {
+  if (selectedCues.size === 0) return;
+  const ok = await showConfirm('Delete Cues', `Delete ${selectedCues.size} selected cue${selectedCues.size !== 1 ? 's' : ''}?`);
+  if (!ok) return;
+  try {
+    await Promise.all([...selectedCues].map(id => api(`/cues/${id}`, { method: 'DELETE' })));
+    showToast(`Deleted ${selectedCues.size} cues`, 'success');
+    clearSelection();
+    await refreshManageView();
+  } catch (e) { showToast('Failed to delete cues', 'error'); }
+}
+
+/** Bulk arm or disarm selected cues. */
+async function bulkArm(armed) {
+  if (selectedCues.size === 0) return;
+  try {
+    await Promise.all([...selectedCues].map(id => {
+      const c = cues.find(c => c.id === id);
+      return c ? api(`/cues/${id}`, { method: 'PUT', body: { ...c, armed } }) : null;
+    }));
+    showToast(`${armed ? 'Armed' : 'Disarmed'} ${selectedCues.size} cues`, 'success');
+    clearSelection();
+    await refreshManageView();
+  } catch (e) { showToast(`Failed to ${armed ? 'arm' : 'disarm'} cues`, 'error'); }
 }
 
 // ── Department CRUD ────────────────────────
