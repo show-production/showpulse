@@ -82,7 +82,7 @@
   │   │   ├── base.css          # Reset, body, scrollbar, utility classes
   │   │   ├── shell.css         # Navbar, sidebar, tabs, toast, loading
   │   │   ├── show.css          # Flow cards, timer, Ready/Go, floating controls
-  │   │   ├── manage.css        # Department list, cue table
+  │   │   ├── manage.css        # Editor tab styles (cue list, timeline, drag, bulk ops)
   │   │   ├── settings.css      # Settings form, user panel
   │   │   └── modals.css        # Modal overlays
   │   └── js/
@@ -90,7 +90,7 @@
   │       ├── api.js            # fetch wrapper, WebSocket, polling fallback
   │       ├── auth.js           # Login, role gating, user management, timer lock
   │       ├── show.js           # Flow view rendering, DOM diffing, act grouping
-  │       ├── manage.js         # Department/cue/act CRUD UI
+  │       ├── manage.js         # Editor tab: cue list, timeline, drag, inline edit, bulk ops, duplicate
   │       ├── settings.js       # Settings form, theme, device selectors
   │       ├── import-export.js  # CSV/JSON import, show export/import
   │       └── ui-helpers.js     # Tabs, sidebar, modals, toasts, init()
@@ -307,9 +307,10 @@ struct CueList {
 - Department filter sidebar, DOM-diffed cards, keyboard shortcuts.
 - Auto-reconnect on WebSocket disconnect (with visual indicator).
 
-#### Manage View
-- Department CRUD, Act CRUD, cue list table with sorting/filtering.
-- Bulk CSV/JSON import.
+#### Editor View
+- Act-grouped cue list with collapsible headers, drag-and-drop, inline quick edit, multi-select with bulk ops.
+- Visual timeline strip with playhead and department-colored markers.
+- Cue and act duplication. Department CRUD, Act CRUD, CSV/JSON bulk import.
 
 #### Settings View
 - Timecode source/FPS/mode config, device selectors, theme customization, show name, export/import.
@@ -419,9 +420,10 @@ ShowPulse runs on a **local, trusted WiFi network** (production VLAN or dedicate
 | 16 | Floating controls | Flow controls pill (Now/Auto/Collapse/Expand), act header polish | **Done** |
 | 17 | Script maintenance | -501 lines (-18%), CRUD helpers, module cleanup, JSDoc, dead code removal | **Done** |
 | 18 | Visual polish | T-/T+ countdown, warning easing, vivid dept colors | **Done** |
+| 19 | Editor tab overhaul | Act-grouped cue list, drag-and-drop, inline edit, multi-select bulk ops, timeline strip, cue/act duplication | **Done** |
 | 13 | Nice-to-haves | Multi-show, generator presets, print view, portable dist | Planned |
 
-> **Note:** Milestones 1-18 (except 13) are fully implemented. The actual implementation uses vanilla HTML/CSS/JS
+> **Note:** Milestones 1-19 (except 13) are fully implemented. The actual implementation uses vanilla HTML/CSS/JS
 > (modular files in `static/`) instead of Vite/Preact/Solid as originally planned — this simplifies
 > deployment to a true single-binary with no build step. LTC uses `cpal` and MTC uses `midir` as
 > specified. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the current roadmap.

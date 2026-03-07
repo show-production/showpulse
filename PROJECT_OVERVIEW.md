@@ -37,7 +37,7 @@ Dependencies: Rust toolchain + cpal (audio) + midir (MIDI). On Windows, requires
 
 ## Frontend (Web UI)
 
-Single-page app served from `static/index.html` with three tabs:
+Single-page app served from `static/index.html` with three tabs (Show, Editor, Settings):
 
 | Tab | Purpose |
 |-----|---------|

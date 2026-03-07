@@ -121,25 +121,30 @@ You can also double-click an act header to collapse/expand that individual group
 - `A` - Toggle auto-scroll
 - `C` - Jump to current cue
 
-### Manage Tab
+### Editor Tab
 
-For setting up your show.
+For setting up and editing your show.
 
 - **Left panel:**
   - **Departments** — Create, edit, and delete departments (name + color)
-  - **Acts** — Create, edit, and delete acts (name + sort order). Shows cue count per act
-- **Right panel:** Cue list table with:
-  - **#** column showing cue numbers (auto-generated Q1, Q2, Q3... or custom)
-  - Department dropdown filter
-  - Clickable column headers to sort (#, Timecode, Label, Department, Lead Time)
-  - Edit and delete buttons per cue
-- Click **+ Add** to create new departments, acts, or cues
-- Cue modal includes an **Act** selector to assign cues to acts
+  - **Acts** — Create, edit, and delete acts (name + sort order). Shows cue count per act. Duplicate act button clones an entire act with all cues (prompts for time offset)
+- **Right panel:** Act-grouped cue list with:
+  - **Collapsible act headers** showing cue count and time span per act. Click to collapse/expand
+  - **Drag-and-drop** — Grip handle on each cue to drag within or between acts. Drop on act headers to move cues. Auto-calculates new timecodes
+  - **Inline quick edit** — Double-click label, timecode, department, or warning time to edit in place. Enter saves, Escape cancels
+  - **Multi-select** — Checkbox per cue, shift-click for range select, act header checkbox selects all cues in that act
+  - **Bulk action bar** — Appears when cues are selected. Actions: move to act, duplicate, delete, arm/disarm
+  - **Add cue** — Button on each act header to add a cue directly to that act
+  - **Duplicate cue** — One-click duplicate with TC+5s offset
+- **Visual timeline strip** (above cue list):
+  - Horizontal bar with act regions and department-colored cue markers
+  - Green playhead synced to current timecode (updates at 5Hz)
+  - Click any marker to scroll to that cue in the list
 - Click **Import** to bulk-import cues from CSV or JSON files
 
 ### Importing Cues
 
-ShowPulse supports bulk cue import via the **Import** button in the Manage tab. Importing **replaces** all existing cues (not appends). Full show import from Settings replaces departments, cues, and acts.
+ShowPulse supports bulk cue import via the **Import** button in the Editor tab. Importing **replaces** all existing cues (not appends). Full show import from Settings replaces departments, cues, and acts.
 
 **CSV format:** Header row with columns like `timecode`, `label`, `department`, `warn`, `notes`. The parser recognizes common aliases (e.g., "dept" for "department", "tc" for "timecode"). Department names are automatically matched to existing departments.
 
@@ -203,8 +208,8 @@ ShowPulse supports user-based authentication with 5 role levels. When enabled, i
 |------|--------|
 | Viewer | Show view only (filtered to assigned departments) |
 | Crew Lead | Show view only (filtered to assigned departments) |
-| Operator | Show + Manage |
-| Manager | Show + Manage + Settings + timer control (must acquire lock) |
+| Operator | Show + Editor |
+| Manager | Show + Editor + Settings + timer control (must acquire lock) |
 | Admin | Full access including user management |
 
 ### Enable authentication
@@ -255,7 +260,7 @@ All data is saved to `showpulse-data.json` in the app directory (or the path set
 |---------|----------|
 | Port 8080 already in use | Stop the other process, or set `SHOWPULSE_PORT=3000` (or any free port) before starting |
 | Can't connect from other devices | Check firewall rules and ensure devices are on the same network |
-| No cues showing on Show tab | Go to Manage tab and add departments + cues, or delete `showpulse-data.json` to reset demo data |
+| No cues showing on Show tab | Go to Editor tab and add departments + cues, or delete `showpulse-data.json` to reset demo data |
 | WebSocket dot is red | The real-time connection dropped. It auto-reconnects every 2 seconds. The app falls back to polling in the meantime |
 | Build fails on Windows | Ensure Visual Studio Build Tools are installed with the C++ workload |
 | No audio devices listed for LTC | Ensure a microphone/audio input is available and not exclusively held by another app |
