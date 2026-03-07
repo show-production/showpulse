@@ -271,6 +271,20 @@ function getCueWarnMax(deptId, cueId) {
 }
 
 /**
+ * Convert total seconds to a timecode object.
+ * @param {number} totalSec - Total seconds.
+ * @returns {{hours: number, minutes: number, seconds: number, frames: number}}
+ */
+function secondsToTcObj(totalSec) {
+  totalSec = Math.max(0, totalSec);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = Math.floor(totalSec % 60);
+  const f = Math.round((totalSec % 1) * CONST.DEFAULT_FPS);
+  return { hours: h, minutes: m, seconds: s, frames: Math.min(f, CONST.DEFAULT_FPS - 1) };
+}
+
+/**
  * HTML-escape a string for safe insertion.
  * @param {string} s - Raw string.
  * @returns {string} Escaped HTML string.

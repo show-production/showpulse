@@ -130,6 +130,7 @@ function renderCueList() {
       <span class="cue-act-chevron">&#x25BE;</span>
       <span class="cue-act-title">${esc(act.name)}</span>
       <span class="cue-act-meta">${actCues.length} cue${actCues.length !== 1 ? 's' : ''}${span ? ' \u00b7 ' + span : ''}</span>
+      <button class="cue-act-add" onclick="event.stopPropagation(); addCueToAct('${act.id}')" title="Add cue to this act">+</button>
     </div>`;
 
     for (const c of actCues) {
@@ -166,17 +167,16 @@ function renderCueItem(c) {
   const dept = departments.find(d => d.id === c.department_id);
   const deptColor = dept ? dept.color : CONST.DEFAULT_DEPT_COLOR;
   const deptName = dept ? esc(dept.name) : '?';
-  const cueNum = c.cue_number ? `<span class="cue-num">${esc(c.cue_number)}</span>` : '';
 
   return `<div class="cue-item" data-cue-id="${c.id}">
     <span class="cue-grip" title="Drag to reorder">&#x283F;</span>
     <span class="cue-bar" style="background:${deptColor}"></span>
-    <span class="cue-tc">${fmtTC(c.trigger_tc)}</span>
-    ${cueNum}
-    <span class="cue-label">${esc(c.label)}</span>
-    <span class="cue-dept"><span class="cue-dot" style="background:${deptColor}"></span>${deptName}</span>
-    <span class="cue-warn">${c.warn_seconds}s</span>
+    <span class="cue-tc" data-field="tc">${fmtTC(c.trigger_tc)}</span>
+    <span class="cue-label" data-field="label">${esc(c.label)}</span>
+    <span class="cue-dept" data-field="dept"><span class="cue-dot" style="background:${deptColor}"></span>${deptName}</span>
+    <span class="cue-warn" data-field="warn">${c.warn_seconds}s</span>
     <span class="cue-actions">
+      <button class="icon-btn" onclick="duplicateCue('${c.id}')" title="Duplicate">&#x2295;</button>
       <button class="icon-btn" onclick="openCueModal('${c.id}')" title="Edit">&#9998;</button>
       <button class="icon-btn danger" onclick="deleteCue('${c.id}')" title="Delete">&times;</button>
     </span>
@@ -212,6 +212,284 @@ function cueListActSpan(actCues) {
   const m = Math.floor(span / 60);
   const s = Math.floor(span % 60);
   return m > 0 ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
+}
+
+// ── Drag & Drop ─────────────────────────────
+
+/** Currently dragged cue ID. */
+let dragCueId = null;
+
+/**
+ * Initialize drag-and-drop on the cue list via event delegation.
+ * Call once after initDOM().
+ */
+function initCueDrag() {
+  const el = DOM.cueListBody;
+  if (!el) return;
+
+  // Only allow drag when initiated from grip handle
+  el.addEventListener('mousedown', (e) => {
+    const grip = e.target.closest('.cue-grip');
+    if (!grip) return;
+    const item = grip.closest('.cue-item');
+    if (item) item.draggable = true;
+  });
+
+  el.addEventListener('dragstart', (e) => {
+    const item = e.target.closest('.cue-item');
+    if (!item) return;
+    dragCueId = item.dataset.cueId;
+    item.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragCueId);
+  });
+
+  el.addEventListener('dragover', (e) => {
+    if (!dragCueId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    // Clear previous indicators
+    el.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(
+      n => n.classList.remove('drag-over-top', 'drag-over-bottom')
+    );
+    el.querySelectorAll('.cue-act-header.drag-over').forEach(
+      n => n.classList.remove('drag-over')
+    );
+
+    // Indicator on cue item
+    const item = e.target.closest('.cue-item');
+    if (item && item.dataset.cueId !== dragCueId) {
+      const rect = item.getBoundingClientRect();
+      item.classList.add(e.clientY < rect.top + rect.height / 2 ? 'drag-over-top' : 'drag-over-bottom');
+      return;
+    }
+
+    // Indicator on act header (drop to move into act)
+    const header = e.target.closest('.cue-act-header');
+    if (header) header.classList.add('drag-over');
+  });
+
+  el.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    if (!dragCueId) return;
+
+    // Drop on a cue item
+    const targetItem = e.target.closest('.cue-item');
+    if (targetItem && targetItem.dataset.cueId !== dragCueId) {
+      const rect = targetItem.getBoundingClientRect();
+      const dropAbove = e.clientY < rect.top + rect.height / 2;
+      cleanupDrag();
+      await handleCueDrop(dragCueId, targetItem.dataset.cueId, dropAbove);
+      dragCueId = null;
+      return;
+    }
+
+    // Drop on act header
+    const header = e.target.closest('.cue-act-header');
+    if (header) {
+      const actId = header.closest('.cue-act-group')?.dataset.actId;
+      if (actId) {
+        cleanupDrag();
+        await handleCueDropToAct(dragCueId, actId);
+        dragCueId = null;
+        return;
+      }
+    }
+
+    cleanupDrag();
+    dragCueId = null;
+  });
+
+  el.addEventListener('dragend', () => {
+    cleanupDrag();
+    dragCueId = null;
+  });
+}
+
+/** Clear all drag visual states. */
+function cleanupDrag() {
+  const el = DOM.cueListBody;
+  el.querySelectorAll('.dragging').forEach(n => n.classList.remove('dragging'));
+  el.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(
+    n => n.classList.remove('drag-over-top', 'drag-over-bottom')
+  );
+  el.querySelectorAll('.cue-act-header.drag-over').forEach(
+    n => n.classList.remove('drag-over')
+  );
+  el.querySelectorAll('[draggable]').forEach(n => n.draggable = false);
+}
+
+/**
+ * Handle dropping a cue onto/between another cue.
+ * Calculates a new timecode to position it correctly.
+ */
+async function handleCueDrop(draggedId, targetId, dropAbove) {
+  const draggedCue = cues.find(c => c.id === draggedId);
+  const targetCue = cues.find(c => c.id === targetId);
+  if (!draggedCue || !targetCue) return;
+
+  const targetActId = targetCue.act_id || null;
+  const siblings = cues
+    .filter(c => (c.act_id || null) === targetActId && c.id !== draggedId)
+    .sort((a, b) => tcObjToSeconds(a.trigger_tc) - tcObjToSeconds(b.trigger_tc));
+
+  const targetIdx = siblings.findIndex(c => c.id === targetId);
+  const newTcSec = calcDropTc(siblings, targetIdx, dropAbove);
+
+  await saveCueDrop(draggedCue, {
+    trigger_tc: secondsToTcObj(newTcSec),
+    act_id: targetActId,
+  });
+}
+
+/**
+ * Handle dropping a cue onto an act header (move to end of that act).
+ */
+async function handleCueDropToAct(draggedId, actId) {
+  const draggedCue = cues.find(c => c.id === draggedId);
+  if (!draggedCue) return;
+
+  const actCues = cues
+    .filter(c => c.act_id === actId && c.id !== draggedId)
+    .sort((a, b) => tcObjToSeconds(a.trigger_tc) - tcObjToSeconds(b.trigger_tc));
+
+  const newTcSec = actCues.length === 0
+    ? tcObjToSeconds(draggedCue.trigger_tc)
+    : tcObjToSeconds(actCues[actCues.length - 1].trigger_tc) + 5;
+
+  await saveCueDrop(draggedCue, {
+    trigger_tc: secondsToTcObj(newTcSec),
+    act_id: actId,
+  });
+}
+
+/**
+ * Calculate new timecode (in seconds) for a dropped cue based on neighbors.
+ */
+function calcDropTc(siblings, targetIdx, dropAbove) {
+  if (siblings.length === 0) return 0;
+  if (dropAbove) {
+    if (targetIdx === 0) return Math.max(0, tcObjToSeconds(siblings[0].trigger_tc) - 5);
+    const prev = tcObjToSeconds(siblings[targetIdx - 1].trigger_tc);
+    const curr = tcObjToSeconds(siblings[targetIdx].trigger_tc);
+    return (prev + curr) / 2;
+  } else {
+    if (targetIdx >= siblings.length - 1) return tcObjToSeconds(siblings[siblings.length - 1].trigger_tc) + 5;
+    const curr = tcObjToSeconds(siblings[targetIdx].trigger_tc);
+    const next = tcObjToSeconds(siblings[targetIdx + 1].trigger_tc);
+    return (curr + next) / 2;
+  }
+}
+
+/**
+ * Save a cue after drag-drop reorder.
+ */
+async function saveCueDrop(cue, updates) {
+  const body = { ...cue, ...updates };
+  try {
+    await api(`/cues/${cue.id}`, { method: 'PUT', body });
+    await refreshManageView();
+    showToast('Cue moved', 'success');
+  } catch (e) {
+    showToast('Failed to move cue', 'error');
+  }
+}
+
+// ── Inline Edit ─────────────────────────────
+
+/**
+ * Initialize inline editing on the cue list via event delegation.
+ * Double-click a field to edit it in place. Enter saves, Escape cancels.
+ */
+function initCueInlineEdit() {
+  const el = DOM.cueListBody;
+  if (!el) return;
+
+  el.addEventListener('dblclick', (e) => {
+    if (e.target.closest('button, input, select')) return;
+    const item = e.target.closest('.cue-item');
+    if (!item) return;
+    const field = e.target.closest('[data-field]');
+    if (!field) return;
+    startInlineEdit(item, item.dataset.cueId, field);
+  });
+}
+
+/**
+ * Replace a field's content with an inline editor.
+ */
+function startInlineEdit(item, cueId, fieldEl) {
+  const fieldName = fieldEl.dataset.field;
+  const cue = cues.find(c => c.id === cueId);
+  if (!cue || fieldEl.querySelector('input, select')) return;
+
+  let input;
+  switch (fieldName) {
+    case 'label':
+      input = document.createElement('input');
+      input.type = 'text';
+      input.value = cue.label;
+      input.className = 'inline-edit';
+      break;
+    case 'tc':
+      input = document.createElement('input');
+      input.type = 'text';
+      input.value = fmtTC(cue.trigger_tc);
+      input.className = 'inline-edit inline-edit--tc';
+      input.placeholder = 'HH:MM:SS:FF';
+      break;
+    case 'dept':
+      input = document.createElement('select');
+      input.className = 'inline-edit';
+      input.innerHTML = departments.map(d =>
+        `<option value="${d.id}"${d.id === cue.department_id ? ' selected' : ''}>${esc(d.name)}</option>`
+      ).join('');
+      break;
+    case 'warn':
+      input = document.createElement('input');
+      input.type = 'number';
+      input.value = cue.warn_seconds;
+      input.min = 0;
+      input.max = 999;
+      input.className = 'inline-edit inline-edit--sm';
+      break;
+    default: return;
+  }
+
+  const originalHTML = fieldEl.innerHTML;
+  fieldEl.innerHTML = '';
+  fieldEl.appendChild(input);
+  input.focus();
+  if (input.select) input.select();
+
+  const finish = async (save) => {
+    if (input._done) return;
+    input._done = true;
+    if (!save) { fieldEl.innerHTML = originalHTML; return; }
+
+    const updates = {};
+    switch (fieldName) {
+      case 'label': updates.label = input.value || 'Untitled Cue'; break;
+      case 'tc': updates.trigger_tc = parseTC(input.value); break;
+      case 'dept': updates.department_id = input.value; break;
+      case 'warn': updates.warn_seconds = parseInt(input.value) || CONST.DEFAULT_WARN_SEC; break;
+    }
+    try {
+      await api(`/cues/${cue.id}`, { method: 'PUT', body: { ...cue, ...updates } });
+      await refreshManageView();
+    } catch (e) {
+      showToast('Failed to update cue', 'error');
+      fieldEl.innerHTML = originalHTML;
+    }
+  };
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  input.addEventListener('blur', () => finish(true));
+  if (input.tagName === 'SELECT') input.addEventListener('change', () => finish(true));
 }
 
 // ── Department CRUD ────────────────────────
@@ -439,6 +717,38 @@ async function deleteCue(id) {
   if (await apiDelete(`/cues/${id}`, 'Delete Cue', 'Delete this cue?', 'Cue')) {
     refreshManageView();
   }
+}
+
+/**
+ * Duplicate a cue with TC offset +5 seconds.
+ * @param {string} id - Cue UUID to duplicate.
+ */
+async function duplicateCue(id) {
+  const cue = cues.find(c => c.id === id);
+  if (!cue) return;
+  const body = {
+    ...cue,
+    id: CONST.NULL_UUID,
+    label: cue.label + ' (copy)',
+    trigger_tc: secondsToTcObj(tcObjToSeconds(cue.trigger_tc) + 5),
+    cue_number: '',
+  };
+  try {
+    await api('/cues', { method: 'POST', body });
+    await refreshManageView();
+    showToast('Cue duplicated', 'success');
+  } catch (e) {
+    showToast('Failed to duplicate cue', 'error');
+  }
+}
+
+/**
+ * Open the cue modal pre-set to a specific act.
+ * @param {string} actId - Act UUID to pre-select.
+ */
+function addCueToAct(actId) {
+  localStorage.setItem('cue-last-act', actId);
+  openCueModal();
 }
 
 // ── Act CRUD ────────────────────────────────

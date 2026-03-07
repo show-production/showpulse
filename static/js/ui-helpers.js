@@ -147,6 +147,8 @@ loadTheme();
 
 (async function init() {
   initDOM();
+  initCueDrag();
+  initCueInlineEdit();
   // Auth check first
   await initAuth();
   try {
