@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@600');
+      .wordmark { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 72px; font-weight: 600; fill: #1A1A2E; }
+    </style>
+  </defs>
+
+  <!-- Monochrome dark — for use on white/light backgrounds -->
+
+  <!-- Left baseline + small bump -->
+  <polyline
+    points="20,100 50,100 60,88 68,112 76,92"
+    fill="none" stroke="#1A1A2E" stroke-opacity="0.4" stroke-width="4.5"
+    stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Pulse: M-peak into play triangle -->
+  <polyline
+    points="76,92 90,148 106,42 122,148 140,42 170,100"
+    fill="none" stroke="#1A1A2E" stroke-width="5.5"
+    stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Right baseline -->
+  <line x1="170" y1="100" x2="220" y2="100"
+    stroke="#1A1A2E" stroke-opacity="0.4" stroke-width="4.5" stroke-linecap="round"/>
+
+  <!-- Wordmark -->
+  <text x="260" y="122" class="wordmark">ShowPulse</text>
+</svg>
