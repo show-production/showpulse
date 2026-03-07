@@ -56,6 +56,7 @@ Update the version in `Cargo.toml` as part of your PR.
 - **Axum route syntax**: We're on Axum **0.7** which uses `:id` for path params. The `{id}` syntax was introduced in Axum **0.8.0**. Always use `:id` in route definitions and verify against the locked version in `Cargo.lock`.
 - **JS load order**: `state.js` -> `api.js` -> `auth.js` -> `show.js` -> `manage.js` -> `settings.js` -> `import-export.js` -> `ui-helpers.js`. New modules must respect this dependency chain.
 - **CRUD helpers**: Use `apiSave()` / `apiDelete()` from `state.js` for new save/delete patterns instead of duplicating fetch+toast logic.
+- **Editor tab**: The Editor tab (formerly Manage) uses vanilla JS with HTML5 Drag & Drop, event delegation for inline edit (dblclick), and state tracked via `selectedCues` (Set), `cueListCollapsed` (Set), `dragCueId`, `lastSelectedCueId` in `state.js`.
 
 ## Environment Variables
 
