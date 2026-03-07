@@ -6,12 +6,15 @@
      Render        — renderTimeline (act bands, cue markers, playhead, labels, minimap)
      Playhead      — updateTimelinePlayhead (5Hz tick from current TC)
      Zoom & Pan    — initTimelineInteraction (wheel zoom, drag pan, click-to-scrub)
+     Tooltip       — hover cue markers for rich info popup
+     Selection     — two-way sync between timeline markers and cue list
      Navigation    — scrollToCueItem (click marker → scroll + highlight cue)
      Helpers       — tlSecToPct, tlPctToSec, tlFormatTime
    Dependencies: state.js (DOM, cues, acts, CONST, tcObjToSeconds, tcToSeconds,
-                  secondsToTcObj, getDeptColor, esc, parseTC)
+                  secondsToTcObj, getDeptColor, esc, fmtTC, parseTC)
                   show.js (canControlTimer)
                   api.js (api)
+                  manage.js (selectedCues)
    ══════════════════════════════════════════ */
 
 // ── State ───────────────────────────────────
@@ -29,6 +32,9 @@ let tlPanning = false;
 
 /** Pan start state. */
 let tlPanStart = { x: 0, viewStart: 0, viewEnd: 0 };
+
+/** Tooltip element (created once, reused). */
+let tlTooltip = null;
 
 // ── Helpers ─────────────────────────────────
 
@@ -94,14 +100,17 @@ function renderTimeline() {
     bands += `<div class="tl-act" style="left:${l}%;width:${w}%" title="${esc(act.name)}"></div>`;
   }
 
+  // Selected cues set (for highlight)
+  const selSet = (typeof selectedCues !== 'undefined') ? selectedCues : new Set();
+
   // Cue markers
   let markers = '';
   for (const c of cues) {
     const color = getDeptColor(c.department_id);
     const left = parseFloat(pct(tcObjToSeconds(c.trigger_tc)));
-    // Skip markers outside visible range (with some margin)
     if (left < -5 || left > 105) continue;
-    markers += `<div class="tl-cue" style="left:${left}%;background:${color}" title="${esc(c.label)}" data-cue-id="${c.id}" onclick="scrollToCueItem('${c.id}')"></div>`;
+    const sel = selSet.has(c.id) ? ' tl-cue--selected' : '';
+    markers += `<div class="tl-cue${sel}" style="left:${left}%;background:${color}" data-cue-id="${c.id}"></div>`;
   }
 
   // Time labels
@@ -117,14 +126,12 @@ function renderTimeline() {
   let minimap = '';
   if (isZoomed) {
     const fullRange = tlView.fullMax - tlView.fullMin || 1;
-    // Mini cue markers
     let miniMarkers = '';
     for (const c of cues) {
       const color = getDeptColor(c.department_id);
       const left = ((tcObjToSeconds(c.trigger_tc) - tlView.fullMin) / fullRange * 100).toFixed(2);
       miniMarkers += `<div class="tl-mini-cue" style="left:${left}%;background:${color}"></div>`;
     }
-    // Viewport rect
     const vpLeft = ((vStart - tlView.fullMin) / fullRange * 100).toFixed(2);
     const vpWidth = ((vEnd - vStart) / fullRange * 100).toFixed(2);
     minimap = `<div class="tl-minimap"><div class="tl-mini-track">${miniMarkers}<div class="tl-mini-viewport" style="left:${vpLeft}%;width:${vpWidth}%"></div></div></div>`;
@@ -135,7 +142,6 @@ function renderTimeline() {
     `<div class="tl-labels">${labels}</div>` +
     minimap;
 
-  // Store range for playhead updates
   strip.dataset.minT = vStart;
   strip.dataset.range = vRange;
 }
@@ -151,6 +157,58 @@ function updateTimelinePlayhead() {
   const minT = parseFloat(strip.dataset.minT) || 0;
   const range = parseFloat(strip.dataset.range) || 1;
   ph.style.left = Math.max(0, Math.min(100, (curSec - minT) / range * 100)) + '%';
+}
+
+// ── Tooltip ─────────────────────────────────
+
+/** Create the tooltip element once. */
+function ensureTooltip() {
+  if (tlTooltip) return;
+  tlTooltip = document.createElement('div');
+  tlTooltip.className = 'tl-tooltip';
+  document.body.appendChild(tlTooltip);
+}
+
+/** Show rich tooltip for a cue marker. */
+function showTlTooltip(marker, e) {
+  ensureTooltip();
+  const cueId = marker.dataset.cueId;
+  const c = cues.find(c => c.id === cueId);
+  if (!c) return;
+
+  const dept = departments.find(d => d.id === c.department_id);
+  const deptName = dept ? dept.name : '?';
+  const deptColor = dept ? dept.color : CONST.DEFAULT_DEPT_COLOR;
+  const tc = fmtTC(c.trigger_tc);
+
+  tlTooltip.innerHTML =
+    `<div class="tl-tip-label">${esc(c.label)}</div>` +
+    `<div class="tl-tip-tc">${tc}</div>` +
+    `<div class="tl-tip-dept"><span class="tl-tip-dot" style="background:${deptColor}"></span>${esc(deptName)}</div>` +
+    (c.warn_seconds ? `<div class="tl-tip-warn">Warn: ${c.warn_seconds}s</div>` : '');
+
+  // Position above the marker
+  const rect = marker.getBoundingClientRect();
+  tlTooltip.style.left = rect.left + rect.width / 2 + 'px';
+  tlTooltip.style.top = rect.top - 6 + 'px';
+  tlTooltip.classList.add('visible');
+}
+
+/** Hide the tooltip. */
+function hideTlTooltip() {
+  if (tlTooltip) tlTooltip.classList.remove('visible');
+}
+
+// ── Selection Sync ──────────────────────────
+
+/** Highlight selected cues on the timeline (called after selection changes in cue list). */
+function syncTimelineSelection() {
+  const strip = DOM.timelineStrip;
+  if (!strip) return;
+  const selSet = (typeof selectedCues !== 'undefined') ? selectedCues : new Set();
+  strip.querySelectorAll('.tl-cue').forEach(el => {
+    el.classList.toggle('tl-cue--selected', selSet.has(el.dataset.cueId));
+  });
 }
 
 // ── Zoom & Pan ──────────────────────────────
@@ -171,7 +229,6 @@ function initTimelineInteraction() {
     const cursorPct = Math.max(0, Math.min(100, (e.clientX - rect.left) / rect.width * 100));
     const cursorSec = tlPctToSec(cursorPct);
 
-    // Zoom factor: scroll up = zoom in, scroll down = zoom out
     const zoomFactor = e.deltaY < 0 ? 0.8 : 1.25;
 
     const vStart = tlView.start != null ? tlView.start : tlView.fullMin;
@@ -181,7 +238,6 @@ function initTimelineInteraction() {
     const newRange = vRange * zoomFactor;
     const fullRange = tlView.fullMax - tlView.fullMin;
 
-    // Don't zoom out beyond full range
     if (newRange >= fullRange) {
       tlView.start = null;
       tlView.end = null;
@@ -189,15 +245,12 @@ function initTimelineInteraction() {
       return;
     }
 
-    // Don't zoom in beyond 5 seconds visible
     if (newRange < 5) return;
 
-    // Keep cursor position anchored
     const cursorRatio = (cursorSec - vStart) / vRange;
     let newStart = cursorSec - cursorRatio * newRange;
     let newEnd = newStart + newRange;
 
-    // Clamp to full range
     if (newStart < tlView.fullMin) { newStart = tlView.fullMin; newEnd = newStart + newRange; }
     if (newEnd > tlView.fullMax) { newEnd = tlView.fullMax; newStart = newEnd - newRange; }
 
@@ -206,17 +259,30 @@ function initTimelineInteraction() {
     renderTimeline();
   }, { passive: false });
 
-  // Mouse drag → pan (on track background, not on cue markers)
+  // Mouse drag → pan / click-to-scrub / click marker
   strip.addEventListener('mousedown', (e) => {
     if (cues.length === 0) return;
-    // Only pan if clicking on the track background (not a cue marker)
     const target = e.target;
-    if (target.classList.contains('tl-cue')) return;
+
+    // Click on cue marker → select + scroll
+    if (target.classList.contains('tl-cue')) {
+      const cueId = target.dataset.cueId;
+      if (cueId) {
+        scrollToCueItem(cueId);
+        // Toggle selection in cue list
+        if (typeof handleCueCheck === 'function') {
+          const isSelected = (typeof selectedCues !== 'undefined') && selectedCues.has(cueId);
+          handleCueCheck(cueId, !isSelected, e);
+          syncTimelineSelection();
+        }
+      }
+      return;
+    }
 
     const track = document.getElementById('tl-track');
     if (!track || !track.contains(target)) return;
 
-    // If not zoomed, click-to-scrub only (no panning at 1x)
+    // If not zoomed, click-to-scrub only
     if (tlView.start == null) {
       handleTimelineScrub(e);
       return;
@@ -242,7 +308,6 @@ function initTimelineInteraction() {
     let newStart = tlPanStart.viewStart - pctShift;
     let newEnd = tlPanStart.viewEnd - pctShift;
 
-    // Clamp
     if (newStart < tlView.fullMin) { newEnd += (tlView.fullMin - newStart); newStart = tlView.fullMin; }
     if (newEnd > tlView.fullMax) { newStart -= (newEnd - tlView.fullMax); newEnd = tlView.fullMax; }
 
@@ -265,6 +330,14 @@ function initTimelineInteraction() {
     tlView.end = null;
     renderTimeline();
   });
+
+  // Tooltip: hover on cue markers (event delegation)
+  strip.addEventListener('mouseover', (e) => {
+    if (e.target.classList.contains('tl-cue')) showTlTooltip(e.target, e);
+  });
+  strip.addEventListener('mouseout', (e) => {
+    if (e.target.classList.contains('tl-cue')) hideTlTooltip();
+  });
 }
 
 /** Handle click-to-scrub: click on track → goto that timecode. */
@@ -278,7 +351,6 @@ function handleTimelineScrub(e) {
   const tc = secondsToTcObj(sec);
   const tcStr = fmtTC(tc);
 
-  // Update goto field and send command
   if (DOM.gotoTc) DOM.gotoTc.value = tcStr;
   if (typeof canControlTimer === 'function' && !canControlTimer()) return;
 
@@ -291,7 +363,6 @@ function handleTimelineScrub(e) {
 function scrollToCueItem(cueId) {
   const item = DOM.cueListBody.querySelector(`.cue-item[data-cue-id="${cueId}"]`);
   if (!item) return;
-  // Expand act group if collapsed
   const group = item.closest('.cue-act-group');
   if (group && group.classList.contains('collapsed')) {
     const actId = group.dataset.actId;

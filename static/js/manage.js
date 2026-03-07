@@ -51,7 +51,10 @@ async function loadActs() {
 async function loadShowName() {
   const res = await api('/show/name');
   showName = res.name || '';
-  if (DOM.showNameLabel) DOM.showNameLabel.textContent = showName || 'ShowPulse';
+  if (DOM.showNameLabel) {
+    if (showName) { DOM.showNameLabel.textContent = showName; }
+    else { DOM.showNameLabel.innerHTML = CONST.NAV_LOGO + 'ShowPulse'; }
+  }
   const input = document.getElementById('show-name-input');
   if (input) input.value = showName;
 }
@@ -564,6 +567,7 @@ function handleCueCheck(cueId, checked, event) {
   }
   lastSelectedCueId = cueId;
   updateBulkBar();
+  syncTimelineSelection();
 }
 
 /**
@@ -580,6 +584,7 @@ function selectAllInAct(actId, checked) {
     if (cb) cb.checked = checked;
   });
   updateBulkBar();
+  syncTimelineSelection();
 }
 
 /** Show/hide and update the bulk action bar. */
@@ -607,6 +612,7 @@ function clearSelection() {
   DOM.cueListBody.querySelectorAll('.cue-item.selected').forEach(el => el.classList.remove('selected'));
   DOM.cueListBody.querySelectorAll('.cue-check input, .cue-act-check input').forEach(cb => cb.checked = false);
   updateBulkBar();
+  syncTimelineSelection();
 }
 
 /** Bulk move selected cues to an act. */
@@ -1030,7 +1036,10 @@ async function saveShowName() {
   try {
     await api('/show/name', { method: 'PUT', body: { name } });
     showName = name;
-    if (DOM.showNameLabel) DOM.showNameLabel.textContent = name || 'ShowPulse';
+    if (DOM.showNameLabel) {
+      if (name) { DOM.showNameLabel.textContent = name; }
+      else { DOM.showNameLabel.innerHTML = CONST.NAV_LOGO + 'ShowPulse'; }
+    }
     showToast('Show name updated', 'success');
   } catch (e) {
     showToast('Failed to update show name', 'error');

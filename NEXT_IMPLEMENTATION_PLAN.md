@@ -296,6 +296,38 @@ All vanilla JS, zero external dependencies.
 
 ---
 
+## Phase 20: Timeline Editor + Branding + Polish -- Done
+**Goal:** Evolve the timeline strip into an interactive editor, integrate brand identity, polish UI.
+
+### Timeline Editor (Phases 1-5)
+1. **Zoom & Pan (Phase 1):** Mouse wheel cursor-anchored zoom (0.8/1.25 factor, min 5s visible), drag-to-pan on zoomed track. View state: `tlView.start`, `tlView.end`, `tlView.fullMin`, `tlView.fullMax`
+2. **Click-to-Scrub (Phase 3):** Clicking unzoomed timeline track sends `POST /api/generator/goto` with computed timecode
+3. **Minimap (Phase 4):** When zoomed, a 10px minimap shows full timeline with viewport indicator rect (accent border + 15% opacity fill)
+4. **Tooltips (Phase 5):** Rich tooltips on cue marker hover via event delegation on single reused DOM element. Shows label, timecode, department (with color dot), and warning time
+5. **Selection Sync (Phase 5):** Two-way sync between timeline markers and cue list checkboxes. `.tl-cue--selected` class with scaleX(2.5) + glow
+
+### Branding Integration
+- **Favicon:** Inline pulse waveform SVG data URI (no external files)
+- **Login overlay:** Logomark SVG above h2 title
+- **Loading overlay:** Logomark with breathing animation + "ShowPulse" text (replaces spinner)
+- **Nav bar:** Full horizontal logo (waveform + text) top-left before tabs, 39px height
+- **Print reports:** Horizontal logo in page headers, small logomark in footer
+- All SVGs inlined for offline/single-binary compatibility, system font stack (no Google Fonts)
+
+### UI Polish
+- **Checkboxes:** Reduced to 12px, opacity 0.45 default / 0.7 hover / 0.85 checked
+- **Timeline scoping:** CSS `#view-manage.active ~ .timeline-strip` — only visible on Editor tab
+- **Show name centering:** Absolute positioning (`left: 50%; transform: translateX(-50%)`) for true center regardless of nav content
+- **Sidebar overlap fix:** Increased sidebar top padding to 3.5rem to clear hamburger toggle button
+- **Auth fix:** `clearAuth()` on open-access mode to prevent stale localStorage tokens blocking permissions
+
+### Data Generator
+- `gen-rihanna.py`: Generates realistic 106-cue Rihanna concert (5 acts, 8 departments, 15+ songs, timecodes 00:15:00–01:25:00)
+
+**Key files:** `static/js/timeline.js` (extracted timeline module), `static/js/manage.js`, `static/js/state.js` (CONST.NAV_LOGO), `static/js/import-export.js` (printLogo/printMark), `static/css/manage.css` (timeline/tooltip/minimap styles), `static/css/shell.css` (nav logo, show name, login/loading logo), `static/css/show.css` (sidebar padding fix), `static/index.html` (favicon, logos, meta tags)
+
+---
+
 ## Phase 13: Nice-to-haves (LOW PRIORITY)
 
 | Feature | Description | Status |

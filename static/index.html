@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ShowPulse</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>&#x23F1;</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><filter id='g' x='-40%25' y='-40%25' width='180%25' height='180%25'><feGaussianBlur in='SourceGraphic' stdDeviation='2' result='b'/><feColorMatrix in='b' type='matrix' values='0 0 0 0 0 0 0 0 0 1 0 0 0 0 0.533 0 0 0 0.5 0' result='g'/><feMerge><feMergeNode in='g'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs><line x1='2' y1='32' x2='12' y2='32' stroke='%238888A0' stroke-width='3' stroke-linecap='round'/><line x1='52' y1='32' x2='62' y2='32' stroke='%238888A0' stroke-width='3' stroke-linecap='round'/><polyline points='12,32 20,52 32,10 44,52 52,32' fill='none' stroke='%2300FF88' stroke-width='4' stroke-linecap='round' stroke-linejoin='round' filter='url(%23g)'/></svg>">
+<meta name="theme-color" content="#0A0A0F">
+<meta name="description" content="Self-hosted live show management — timecode, cue sheets, real-time crew coordination">
+<meta name="color-scheme" content="dark light">
 <link rel="stylesheet" href="css/variables.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/shell.css">
@@ -17,6 +20,7 @@
 
 <!-- TopNav -->
 <nav class="topnav">
+  <svg class="nav-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200"><defs><filter id="ng" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 0 0 0 0 0 1 0 0 0 0 0.533 0 0 0 0.45 0" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><polyline points="20,100 50,100 60,88 68,112 76,92" fill="none" stroke="#8888A0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="76,92 90,148 106,42 122,148 140,42 170,100" fill="none" stroke="#00FF88" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#ng)"/><polygon points="122,148 140,42 170,100" fill="#00FF8812" stroke="none"/><line x1="170" y1="100" x2="220" y2="100" stroke="#8888A0" stroke-width="4.5" stroke-linecap="round"/><text x="260" y="122" style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;font-size:72px;font-weight:600"><tspan fill="#E0E0E8">Show</tspan><tspan fill="#00FF88">Pulse</tspan></text></svg>
   <div class="tabs">
     <button class="tab active" data-view="show">Show</button>
     <button class="tab" data-view="manage">Editor</button>
@@ -35,13 +39,18 @@
 
 <!-- LoadingOverlay -->
 <div class="loading-overlay" id="loading-overlay">
-  <div class="spinner"></div>
-  <div class="loading-text">Loading ShowPulse...</div>
+  <div class="loading-logo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="160" height="133"><defs><filter id="oglow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 0 0 0 0 0 1 0 0 0 0 0.533 0 0 0 0.45 0" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><polyline points="10,100 40,100 50,88 58,112 66,92" fill="none" stroke="#8888A0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="66,92 80,148 96,42 112,148 130,42 160,100" fill="none" stroke="#00FF88" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#oglow)"/><polygon points="112,148 130,42 160,100" fill="#00FF8812" stroke="none"/><line x1="160" y1="100" x2="230" y2="100" stroke="#8888A0" stroke-width="4.5" stroke-linecap="round"/></svg>
+  </div>
+  <div class="loading-text">ShowPulse</div>
 </div>
 
 <!-- LoginOverlay -->
 <div class="login-overlay" id="login-overlay">
   <form class="login-box" id="login-form" onsubmit="handleLogin(event)">
+    <div class="login-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="120" height="100"><defs><filter id="lglow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 0 0 0 0 0 1 0 0 0 0 0.533 0 0 0 0.45 0" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><polyline points="10,100 40,100 50,88 58,112 66,92" fill="none" stroke="#8888A0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="66,92 80,148 96,42 112,148 130,42 160,100" fill="none" stroke="#00FF88" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#lglow)"/><polygon points="112,148 130,42 160,100" fill="#00FF8812" stroke="none"/><line x1="160" y1="100" x2="230" y2="100" stroke="#8888A0" stroke-width="4.5" stroke-linecap="round"/></svg>
+    </div>
     <h2>ShowPulse</h2>
     <input type="text" id="login-name" placeholder="Name" autocomplete="username">
     <input type="password" id="login-pin" placeholder="PIN" autocomplete="current-password">
