@@ -286,14 +286,24 @@
 }
 .cue-item:hover .cue-actions { opacity: 1; }
 
-/* ── Timeline strip ── */
+/* ── Timeline strip (fixed bottom, always visible) ── */
 .timeline-strip {
-  padding: 0.5rem 0.75rem 0.25rem;
-  border-bottom: 1px solid var(--border);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.5rem 0.75rem 0.4rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  z-index: 60;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
 }
+.timeline-strip:empty { display: none; }
+.timeline-strip { display: none; }
+#view-manage.active ~ .timeline-strip { display: block; }
 .tl-track {
   position: relative;
-  height: 22px;
+  height: 40px;
   background: var(--bg-surface);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -307,10 +317,10 @@
 }
 .tl-cue {
   position: absolute;
-  top: 2px;
-  bottom: 2px;
-  width: 3px;
-  border-radius: 1px;
+  top: 3px;
+  bottom: 3px;
+  width: 4px;
+  border-radius: 2px;
   cursor: pointer;
   transition: transform 0.1s;
 }
@@ -326,6 +336,7 @@
   z-index: 2;
   transition: left 0.2s linear;
 }
+.tl-track { cursor: crosshair; }
 .tl-labels {
   position: relative;
   height: 14px;
@@ -337,6 +348,36 @@
   color: var(--text-dim);
   transform: translateX(-50%);
   white-space: nowrap;
+}
+
+/* ── Timeline minimap (visible when zoomed) ── */
+.tl-minimap {
+  margin-top: 4px;
+}
+.tl-mini-track {
+  position: relative;
+  height: 10px;
+  background: var(--bg-surface);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.tl-mini-cue {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 2px;
+  border-radius: 1px;
+  opacity: 0.5;
+}
+.tl-mini-viewport {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.15;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  box-sizing: border-box;
 }
 
 /* ── Cue highlight flash ── */
@@ -353,19 +394,23 @@
   cursor: pointer;
 }
 .cue-check input, .cue-act-check input {
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
   accent-color: var(--accent);
   cursor: pointer;
   margin: 0;
+  opacity: 0.45;
+  transition: opacity 0.15s;
 }
+.cue-check input:checked, .cue-act-check input:checked { opacity: 0.85; }
+.cue-item:hover .cue-check input, .cue-act-header:hover .cue-act-check input { opacity: 0.7; }
 .cue-item.selected { background: var(--bg-surface); }
 
 /* ── Bulk action bar ── */
 .bulk-bar {
   display: none;
   position: fixed;
-  bottom: 0;
+  bottom: 80px;
   left: 0;
   right: 0;
   align-items: center;

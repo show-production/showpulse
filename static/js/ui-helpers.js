@@ -150,6 +150,7 @@ loadTheme();
   initCueDrag();
   initCueInlineEdit();
   initCueBulkOps();
+  initTimelineInteraction();
   // Auth check first
   await initAuth();
   try {

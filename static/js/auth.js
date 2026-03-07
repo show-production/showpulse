@@ -111,6 +111,7 @@ async function initAuth() {
 
   if (!authEnabled) {
     // Open access — hide login, show everything
+    clearAuth();
     hideLoginOverlay();
     authRole = 'admin'; // full access in open mode
     applyRole();
