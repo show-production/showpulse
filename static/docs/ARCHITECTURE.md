@@ -72,7 +72,7 @@ TimecodeSource (Generator / LTC / MTC)
 ### File Structure
 ```
 static/
-  index.html          ← Skeleton HTML (~280 lines)
+  index.html          ← Skeleton HTML (~340 lines)
   css/                ← 7 CSS files
     variables.css     ← :root custom properties
     base.css          ← Reset, shared patterns, utilities
@@ -113,8 +113,8 @@ Global variables in `state.js`:
 1. `connectWS()` opens WebSocket to `/ws`
 2. Server sends JSON messages at 10Hz with timecode + cue states
 3. `ws.onmessage` updates TC display and calls `renderFlowCues()`
-4. `renderFlowCues()` renders unified cue list with ReadyGo zone
-5. DOM diffing prevents flicker on rapid updates
+4. `renderFlowCues()` sorts all cues chronologically, DOM-diffs the unified list
+5. Warning/go cues expand inline with countdown row (READY/3/2/1/GO!) — no separate zone
 
 ## Cue State Machine
 
@@ -123,8 +123,8 @@ upcoming → warning → go → active → passed
 ```
 
 - **upcoming**: Countdown > warn_seconds
-- **warning**: Countdown ≤ warn_seconds (Ready/Go zone appears, traffic-light colors on text + digits + progress bar)
-- **go**: Triggered — backend emits this state for 2 seconds (`GO_HOLD_SECONDS`). Frontend shows GO! animation with flash effect
+- **warning**: Countdown ≤ warn_seconds (inline countdown row on card with traffic-light colors: red → orange → yellow → green on status text, digits, and progress bar)
+- **go**: Triggered — backend emits this state for 2 seconds (`GO_HOLD_SECONDS`). Frontend shows GO! text + green flash animation on the card
 - **active**: Past trigger point + GO hold delay (per-department tracking). Stays active until next same-dept cue triggers or duration expires
 - **passed**: Next same-department cue has triggered, or cue duration expired
 

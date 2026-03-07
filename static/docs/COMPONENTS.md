@@ -39,40 +39,32 @@
 - **State**: `sidebarOpen` (persisted to localStorage), `activeDeptFilters`
 
 ### FlowArea
-- **Visual**: Main vertical column with all flow sections
+- **Visual**: Main vertical column — timer at top, scrollable cue list below
 - **HTML**: `<div class="flow-area">`
-- **CSS**: `show.css` — flex column, `calc(100vh - 48px)` height
+- **CSS**: `show.css` — flex column, `height: 100%`
+- **Layout**: Timer is `flex-shrink: 0` (fixed height), cue list is `flex: 1; overflow-y: auto` (scrolls independently)
 
 ### TimecodeDisplay
-- **Visual**: Large TC digits with source label, transport buttons, goto field
+- **Visual**: Large TC digits with source label, transport buttons, goto field. Fixed at top of flow area (not sticky).
 - **HTML**: `<div id="flow-timecode">` with `.tc-row` and `.tc-controls`
 - **JS**: Updated by WS messages in `api.js`; transport in `show.js`
 - **CSS**: `show.css` — `.flow-timecode`, `.tc-btn`
 - **State**: `DOM.tcValue`, `DOM.tcState`, `DOM.tcFps`
 
-### ReadyGoZone
-- **Visual**: Countdown zone showing READY → 3/2/1 → GO! with dept name
-- **HTML**: `<div id="flow-readygo">`
-- **JS**: `renderReadyGo()` in `show.js`
-- **CSS**: `show.css` — `.flow-readygo`, `.readygo-status`, `.readygo-digit`
-- **State**: `readygoLastValue` (tracks digit/state transitions), `container.dataset.cueId` (tracks current cue for DOM reuse)
-- **Animations**: Pop (digit appears), shake (digit=1), flash (GO!)
-- **Rendering**: Initial DOM built on cue change; in-place updates for digit/color/progress transitions (preserves CSS transitions)
-- **Traffic-light**: READY text, digits, and progress bar all follow red → orange → yellow → green → GO! color sequence
-- **Progress bar**: Fills 0% → 100% as cue approaches trigger (not draining)
-
-### UpcomingList
-- **Visual**: Scrollable list of FlowCards for upcoming cues
+### CueList
+- **Visual**: Scrollable list of FlowCards — all cues in chronological order
 - **HTML**: `<div id="flow-upcoming">`
-- **JS**: `diffCueList()` in `show.js` (DOM-diffed)
-- **CSS**: `show.css` — `.flow-upcoming` with thin scrollbar
+- **JS**: `diffCueList()` in `show.js` (DOM-diffed), sorted by `trigger_tc`
+- **CSS**: `show.css` — `.flow-upcoming` with `flex: 1; overflow-y: auto`
 
 ### FlowCard
 - **Visual**: Cue card with dept-bar, label, TC, countdown, progress bar
 - **HTML**: Created dynamically via `createFlowCard()` in `show.js`
-- **JS**: `createFlowCard()`, `updateFlowCard()` in `show.js`
+- **JS**: `createFlowCard()`, `updateFlowCard()`, `getTrafficLight()` in `show.js`
 - **CSS**: `show.css` — `.flow-card` with tier classes
 - **Tiers**: `.tier-active` (glow), `.tier-warning` (pulse), `.tier-near`, `.tier-far` (dim), `.tier-distant` (very dim), `.tier-passed` (faded)
+- **Inline countdown**: Warning/go cues expand with `.card-countdown-row` showing READY/3/2/1/GO! text with traffic-light colors (red → orange → yellow → green). Includes digit pop/shake animations and GO flash on the card.
+- **Progress bar**: Fills 0% → 100% with traffic-light color matching countdown state
 - **Interaction**: Click to load trigger TC into goto field
 
 ## Manage View Components
