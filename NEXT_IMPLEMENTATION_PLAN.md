@@ -1,7 +1,7 @@
 # ShowPulse — Remaining Implementation Plan
 
 ## Context
-ShowPulse is a self-hosted Rust/Axum live show management platform. The full pipeline works end-to-end: timecode sources (Generator/LTC/MTC) → countdown engine → WebSocket → crew browsers. All core features, UI/UX polish, and cue import are complete. Remaining work focuses on testing, authentication, security hardening, and nice-to-have features.
+ShowPulse is a self-hosted Rust/Axum live show management platform. The full pipeline works end-to-end: timecode sources (Generator/LTC/MTC) -> countdown engine -> WebSocket -> crew browsers. All core features, UI/UX polish, authentication, and security hardening are complete. Remaining work focuses on nice-to-have features.
 
 **Repository:** https://github.com/DGProject2030/showpulse
 
@@ -17,33 +17,43 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 | LTC Audio Decoding (cpal, bi-phase detection, BCD parsing) | Done |
 | MTC MIDI Decoding (midir, quarter-frame, full-frame SysEx) | Done |
 | Cue & Department data models + JSON persistence | Done |
+| Act data model (name, sort_order) + CRUD + act shift | Done |
+| Show name (get/set, displayed in navbar) | Done |
 | Cue numbering (auto-generated Q1/Q2/Q3, editable) | Done |
-| 25 REST API endpoints (full CRUD + bulk import + auth + QR) | Done |
+| 43 REST API endpoints + 1 WebSocket = 44 total routes | Done |
 | WebSocket hub with per-department filtering | Done |
 | 10Hz countdown engine with per-department cue state tracking | Done |
-| Frontend: Show view (sticky TC, Ready/Go countdown, cue cards) | Done |
-| Frontend: Manage view (dept + cue CRUD, sorting, filtering, CSV/JSON import) | Done |
-| Frontend: Settings (source, frame rate, theme, LTC/MTC devices, export/import) | Done |
+| Frontend: Show view (timer, Ready/Go, act-grouped cues, floating controls) | Done |
+| Frontend: Manage view (dept + cue + act CRUD, sorting, filtering, CSV/JSON import) | Done |
+| Frontend: Settings (source, frame rate, theme, LTC/MTC devices, show name, export/import) | Done |
 | UI/UX: Disconnection banner, keyboard hints, confirm modals | Done |
 | UI/UX: Toast notifications, loading spinner, passed cues toggle | Done |
 | UI/UX: Responsive table scroll, 44px touch targets, favicon | Done |
 | UI/UX: Speed suffix, live color preview, TC size slider label | Done |
+| Acts & collapsible act groups (double-click header or floating controls) | Done |
+| Floating flow controls pill (Now, Auto, Collapse All, Expand All) | Done |
+| Always-visible T- countdown + T+ elapsed time after trigger | Done |
+| Warning entry easing (CSS animation chain) | Done |
+| Vivid department colors (per-element opacity, dept-dot in card tags) | Done |
+| Navbar rebuild (three-section flex: tabs / show name / connection + user) | Done |
 | Cue state: active until replaced by next same-department cue | Done |
-| Ready / 3-2-1 / Go countdown visualization | Done |
+| Ready / 3-2-1 / Go countdown visualization with traffic-light colors | Done |
 | Bulk cue import (JSON + CSV, replaces existing, dept name resolution) | Done |
 | Documentation (README, GETTING_STARTED, PROJECT_OVERVIEW, plans) | Done |
 | Show view clarity: passed count badge, active strips, uniform cards | Done |
-| Traffic-light Ready/Go colors on text+digits+bar (red→orange→green) | Done |
-| Timer vertical layout (meta+timer row, controls row below) | Done |
-| Ready/Go two-element layout (READY + digit, fixed height, GO! with dept name) | Done |
 | Frame-accurate timecode broadcast (10Hz with cached cue states) | Done |
-| Scroll-fold collapses space (max-height:0 transition, not just opacity) | Done |
+| Script maintenance (-501 lines, -18%): CRUD helpers, module cleanup, JSDoc | Done |
+| User management & 5 roles (Viewer/CrewLead/Operator/Manager/Admin) | Done |
+| Timer lock (exclusive Manager control, Admin bypass) | Done |
+| QR code onboarding (`GET /api/qr`) | Done |
+| Security hardening (CORS, body limit, concurrency limit, WS limit, headers) | Done |
+| 73 unit & integration tests | Done |
 
 ### Completed Phases
 
 **Phase 1 — LTC Audio Decoding:** cpal-based decoder with bi-phase zero-crossing detection, 80-bit frame extraction, BCD parsing, sync word (0x3FFD). Dedicated OS thread. API: `GET /api/ltc/devices`, `PUT /api/ltc/device`, `POST /api/ltc/stop`.
 
-**Phase 2 — MTC MIDI Decoding:** midir-based decoder with quarter-frame accumulation (8 messages → full TC), full-frame SysEx parsing. Dedicated OS thread. API: `GET /api/mtc/devices`, `PUT /api/mtc/device`, `POST /api/mtc/stop`.
+**Phase 2 — MTC MIDI Decoding:** midir-based decoder with quarter-frame accumulation (8 messages -> full TC), full-frame SysEx parsing. Dedicated OS thread. API: `GET /api/mtc/devices`, `PUT /api/mtc/device`, `POST /api/mtc/stop`.
 
 **Phase 3 — UI/UX Improvements (15 items):** Disconnection banner, keyboard hints, confirm modals replacing native `confirm()`, "Lead Time" column rename, speed suffix, data panel separation, `setSource()` fix, table scroll, touch targets, loading spinner, toast notifications, passed cues toggle, TC size label, live color preview, favicon.
 
@@ -64,10 +74,10 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 5. Keyboard hints removed from sticky header to reclaim vertical space
 
 **Phase 7 — Dashboard Layout Overhaul v2:**
-1. 5-section vertical layout: stacked passed deck → stacked triggered deck → timer+controls → Ready/Go zone → coming cues
+1. 5-section vertical layout: stacked passed deck -> stacked triggered deck -> timer+controls -> Ready/Go zone -> coming cues
 2. Stacked deck containers: cards overlap with negative margins (~8px edge visible), hover to expand, fold on scroll
 3. Transport controls split into 2 rows: Prev/Play/Pause/Stop/Next + Goto input below
-4. Dedicated animated Ready/Go zone: READY → 3 → 2 → 1 → GO! with CSS pop/shake/flash animations
+4. Dedicated animated Ready/Go zone: READY -> 3 -> 2 -> 1 -> GO! with CSS pop/shake/flash animations
 5. Click-to-goto: clicking any cue card loads its timecode into the Goto input
 6. Prev/Next cue navigation buttons step through cues by timecode order
 7. Scroll-fold: above-timer sections collapse to thin bars when scrolling down in upcoming cues
@@ -79,34 +89,34 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 3. Unified all cue card sizing: same padding and font sizes for all tiers (active/warning/near/far/distant/passed)
 4. Tier differentiation is color-only: border color, text color, box-shadow glow, opacity — no size changes
 5. Eliminates all layout shifts when cues change state during live show
-6. Traffic-light Ready/Go countdown colors: red (READY) → red-orange (3) → orange (2) → yellow-green (1) → green (GO!)
+6. Traffic-light Ready/Go countdown colors: red (READY) -> red-orange (3) -> orange (2) -> yellow-green (1) -> green (GO!)
 7. Timer controls moved below timer in centered row (meta+timer on top, controls below)
 8. Scroll-fold collapses above-timer sections (max-height:0 + opacity transition, freeing space)
 
 **Phase 9 — Ready/Go & Broadcast Polish:**
-1. Ready/Go two-element countdown: READY label stays visible while 3→2→1 digits appear alongside (both 1.4rem, fixed 2.2rem row height)
+1. Ready/Go two-element countdown: READY label stays visible while 3->2->1 digits appear alongside (both 1.4rem, fixed 2.2rem row height)
 2. GO! shows department name: "GO! — Sound" in green, replaces READY label at zero
-3. Traffic-light colors on READY text, digits, and progress bar: red (>3s) → orange (3) → yellow (2) → green (1) → green (GO!)
+3. Traffic-light colors on READY text, digits, and progress bar: red (>3s) -> orange (3) -> yellow (2) -> green (1) -> green (GO!)
 4. Fixed-height countdown row prevents layout shifts during state transitions
 5. Frame-accurate timecode: countdown engine broadcasts every 100ms tick (was second-boundary only), cue states cached and recomputed on second change
 6. Scroll-fold space collapse: above-timer sections now use max-height:0 + overflow:hidden transition (was opacity-only, leaving dead space)
 7. Backend-driven `CueState::Go`: engine emits Go state for 2s after trigger, frontend uses single unified `renderReadyGo()` code path
-8. Progress bar fills 0%→100% as cue approaches trigger
+8. Progress bar fills 0%->100% as cue approaches trigger
 9. In-place DOM updates during 3-2-1 countdown preserve CSS transitions (no innerHTML rebuilds)
 
 ---
 
-## Phase 10: Unit & Integration Tests ✅ Done
+## Phase 10: Unit & Integration Tests -- Done
 **Goal:** Establish test coverage for critical logic.
 
 73 tests implemented:
-- Unit tests in `src/timecode/types.rs`: round-trip frame math, drop-frame edge cases, parse/display, add_frames, to_seconds_f64
-- Unit tests in `src/cue/store.rs`: CRUD, cascading delete, sorting, filtering, bulk import, cue numbers, persistence round-trip
-- Integration tests in `tests/api.rs`: HTTP endpoint tests for departments and cues CRUD, bulk import, status codes
+- Unit tests in `src/timecode/types.rs` (34): round-trip frame math, drop-frame edge cases, parse/display, add_frames, to_seconds_f64
+- Unit tests in `src/cue/store.rs` (24): CRUD, cascading delete, sorting, filtering, bulk import, cue numbers, persistence round-trip
+- Integration tests in `tests/api.rs` (15): HTTP endpoint tests for departments and cues CRUD, bulk import, status codes
 
 ---
 
-## Phase 10.5: Cue Field Expansion ✅ Done
+## Phase 10.5: Cue Field Expansion -- Done
 **Goal:** Align cue model with professional show controller features.
 
 New fields on `Cue`: `duration` (Option\<u32\>), `armed` (bool), `color` (Option\<String\>), `continue_mode` (ContinueMode enum), `post_wait` (Option\<f64\>).
@@ -116,19 +126,19 @@ Countdown engine: filters disarmed cues, duration-based Passed transition, elaps
 
 ---
 
-## Phase 10.6: Backend-Driven Go State + ReadyGo Polish ✅ Done
+## Phase 10.6: Backend-Driven Go State + ReadyGo Polish -- Done
 **Goal:** Fix GO! visual inconsistency and polish ReadyGo rendering.
 
 1. **Backend Go state**: Added `CueState::Go` to state machine. Countdown engine emits `Go` for 2 seconds after trigger (`GO_HOLD_SECONDS`), eliminating frontend race conditions
-2. **Progress bar direction**: Fixed to fill 0%→100% (was inverted 100%→0%) in both ReadyGo zone and upcoming flow cards
-3. **Traffic-light READY text**: Status text color now follows the same red→orange→yellow→green sequence as digits and progress bar
+2. **Progress bar direction**: Fixed to fill 0%->100% (was inverted 100%->0%) in both ReadyGo zone and upcoming flow cards
+3. **Traffic-light READY text**: Status text color now follows the same red->orange->yellow->green sequence as digits and progress bar
 4. **Smooth DOM transitions**: ReadyGo zone uses in-place DOM updates during 3-2-1 countdown instead of full innerHTML rebuilds, preserving CSS transitions on progress bar
 5. **Frontend cleanup**: Removed `renderGoFlash()`, `readygoCueId`, `readygoGoTimer` globals — no longer needed with backend-driven Go state
 6. Mock data files updated with all new cue fields (duration, armed, color, continue_mode, post_wait)
 
 ---
 
-## Phase 11: Authentication ✅ Done (superseded by Phase 14)
+## Phase 11: Authentication -- Done (superseded by Phase 14)
 **Goal:** Auth to protect admin operations while keeping crew view open.
 
 Originally PIN-based, now replaced by user-based auth with 5 roles (see Phase 14).
@@ -139,7 +149,7 @@ Originally PIN-based, now replaced by user-based auth with 5 roles (see Phase 14
 
 ---
 
-## Phase 12: Security Hardening ✅ Mostly Done
+## Phase 12: Security Hardening -- Mostly Done
 **Goal:** Production-ready security posture for LAN deployment.
 
 Implemented in `src/main.rs`:
@@ -154,17 +164,17 @@ Remaining: rate limiting on login endpoint, CSP headers
 
 ---
 
-## Phase 14: User Management & Role-Based Access ✅ Done
+## Phase 14: User Management & Role-Based Access -- Done
 **Goal:** Multi-user authentication with 5 permission levels and exclusive timer control.
 
 ### Role Hierarchy
 
 | Role | Level | Show | Manage | Settings | Timer Control | User CRUD |
 |------|-------|------|--------|----------|---------------|-----------|
-| Viewer | 1 | View (filtered to assigned depts) | — | — | — | — |
-| Crew Lead | 2 | View (filtered to assigned depts) | — | — | — | — |
-| Operator | 3 | View | Full | — | — | — |
-| Manager | 4 | View | Full | Full | Yes (must acquire lock) | — |
+| Viewer | 1 | View (filtered to assigned depts) | -- | -- | -- | -- |
+| Crew Lead | 2 | View (filtered to assigned depts) | -- | -- | -- | -- |
+| Operator | 3 | View | Full | -- | -- | -- |
+| Manager | 4 | View | Full | Full | Yes (must acquire lock) | -- |
 | Admin | 5 | View | Full | Full | Yes (bypasses lock) | Full |
 
 ### Timer Lock
@@ -180,10 +190,10 @@ Remaining: rate limiting on login endpoint, CSP headers
 - `User` struct: id, name, pin, role, departments (persisted in `ShowData.users`)
 - `TimerLock` struct + `TimerLockState` (Arc<RwLock<Option<TimerLock>>>)
 - `Session` struct: carries user_id, name, role, departments per token
-- `SessionStore`: maps tokens → sessions, `open_access` mode for no-user setups
+- `SessionStore`: maps tokens -> sessions, `open_access` mode for no-user setups
 - `require_role()`: extracts session from request extensions, checks minimum role
 - `require_timer_access()`: checks Admin or matching timer lock
-- Login: `{ name, pin }` → `{ token, role, name, departments }`
+- Login: `{ name, pin }` -> `{ token, role, name, departments }`
 
 **API endpoints:**
 - `GET/POST /api/users` — list (Admin, PINs stripped) / create (Admin)
@@ -192,16 +202,76 @@ Remaining: rate limiting on login endpoint, CSP headers
 
 **Frontend (`static/js/auth.js`):**
 - Login overlay (z-index 310, above loading spinner)
-- Role-based tab gating: Viewer/CrewLead → Show only, Operator → +Manage, Manager → +Settings, Admin → +Users panel
+- Role-based tab gating: Viewer/CrewLead -> Show only, Operator -> +Manage, Manager -> +Settings, Admin -> +Users panel
 - Transport controls hidden for roles below Manager
 - Timer lock UI: "Take Control" / "Release" button for Managers
 - User management panel in Settings (Admin): list, add, edit, delete users with role + department assignment
-- Token persisted to localStorage, auto-login on refresh, 401 → re-show login
+- Token persisted to localStorage, auto-login on refresh, 401 -> re-show login
 
 **Migration path:**
 - `SHOWPULSE_PIN=xxxx` auto-creates admin user named "admin" on first run
-- No users configured → open access mode (all endpoints open, no login required)
+- No users configured -> open access mode (all endpoints open, no login required)
 - `ShowData.users` field uses `#[serde(default)]` for backwards-compatible JSON
+
+---
+
+## Phase 15: Acts, Show Name & Navbar Rebuild -- Done
+**Goal:** Add act grouping for cues, configurable show name, and fix the navbar layout.
+
+### Acts
+- `Act` struct: `{ id: Uuid, name: String, sort_order: u32 }` with serde defaults
+- CRUD: `GET/POST /api/acts`, `PUT/DELETE /api/acts/:id`, `POST /api/acts/:id/shift`
+- Cues reference acts via optional `act_id` field
+- Flow view groups cues by act with divider headers (line + inline text)
+- Act groups collapsible: double-click header, or floating controls (Collapse All / Expand All)
+- Collapsed state preserved across re-renders via `data-act-id` DOM attributes
+- Manage view: Act CRUD panel with cue count per act, act selector in cue modal
+- Demo seed: 3 acts (Pre-show, Act 1, Act 2) with cues assigned
+
+### Show Name
+- `GET/PUT /api/show/name` endpoints
+- Show name displayed centered in navbar
+- Editable in Settings view
+- Included in show export/import
+
+### Navbar Rebuild
+- Three-section flex layout: tabs (shrink-to-fit) | show name (flex:1 centered) | nav-right (connection dot + user)
+- WebSocket connection indicator (green/red dot) in nav-right
+- Fixed orphaned CSS from previous `.topnav .brand .dot` structure
+
+---
+
+## Phase 16: Floating Controls & Act Header Polish -- Done
+**Goal:** Move flow controls to a floating pill, polish act dividers.
+
+- Auto-scroll (Auto) and jump-to-current (Now) buttons moved from transport bar to floating pill
+- Floating pill: bottom-right of flow area, semi-transparent with backdrop blur
+- Added Collapse All / Expand All list controls to the pill
+- Act header styling: increased spacing between act groups, colored separator lines
+- Keyboard shortcuts: A (auto-scroll toggle), C (jump to current)
+
+---
+
+## Phase 17: Script Maintenance -- Done
+**Goal:** Clean, hardened, structured codebase. Easy to understand and maintain.
+
+Results: -501 lines (-18% total JS), zero new features added.
+
+1. **CRUD helpers** (`apiSave`, `apiDelete`): Eliminated 8 copy-paste save/delete patterns across department, cue, act, and user management
+2. **Module cleanup**: Merged standalone `diffCueList()` into `diffCueListWithActs()`, split `updateFlowCard()` into 3 focused functions (`updateWarningRow`, `clearWarningRow`, `updateProgressBar`), extracted `canControlTimer()` guard
+3. **Dead code removal**: Removed `getMyUserId()` stub, cleaned up unused globals
+4. **Error hardening**: WS message validation (type checks before DOM access), edge case handling
+5. **Documentation**: JSDoc on all previously undocumented functions, file header indices updated
+
+---
+
+## Phase 18: Visual Polish -- Done
+**Goal:** Always-visible countdown, warning easing, vivid department colors.
+
+1. **T- countdown always visible**: Countdown badge stays visible during warning/go states (was previously hidden)
+2. **T+ elapsed time**: After trigger, shows `T+Xm XXs` using `elapsed_sec` from WS broadcast (replaces checkmark)
+3. **Warning entry easing**: CSS animation chain — `warn-enter` (0.6s smooth border/glow transition) followed by `warn-pulse` (1.5s infinite loop at 0.6s delay). Countdown row slides open with `max-height`/`opacity`/`padding-top` transitions
+4. **Vivid department colors**: Removed card-level opacity, applied per-element dimming to text/countdown only. Dept-bar and dept-dot stay at full brightness across all tiers. `updateFlowCard()` refreshes dept-bar and dept-dot colors every render cycle
 
 ---
 
@@ -209,13 +279,15 @@ Remaining: rate limiting on login endpoint, CSP headers
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| **QR code** | Generate QR with server URL for crew onboarding | ✅ Done (`GET /api/qr`) |
-| **Multi-show** | Extend `ShowData` with show name, add show switching API | Planned |
+| **QR code** | Generate QR with server URL for crew onboarding | Done (`GET /api/qr`) |
+| **Multi-show** | Extend `ShowData` with show switching, show archiving | Planned |
 | **Generator presets** | Save/load named configs in data file | Planned |
 | **Print view** | CSS print stylesheet for cue list | Planned |
 | **Wake lock** | Prevent screen sleep on crew devices during show | Planned |
 | **Audio/vibration alerts** | Warning threshold alerts on crew devices | Planned |
 | **Portable dist** | Embed `static/` into binary, auto-open browser, USB-ready | Planned |
+| **Rate limiting** | Rate-limit login endpoint (tower middleware) | Planned |
+| **CSP headers** | Content-Security-Policy header | Planned |
 
 ---
 
@@ -223,7 +295,7 @@ Remaining: rate limiting on login endpoint, CSP headers
 
 - [x] `cargo build` — compiles without errors
 - [x] `cargo test` — 73 tests pass
-- [x] Manual test: `cargo run` → browser at `http://localhost:8080`
+- [x] Manual test: `cargo run` -> browser at `http://localhost:8080`
 - [x] LTC: test with LTC audio from a generator app or DAW
 - [x] MTC: test with MIDI loopback or DAW sending MTC
 - [x] CSV import: test with 30-cue show file (`test-import-cues.csv`)
