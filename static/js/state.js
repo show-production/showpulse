@@ -126,7 +126,7 @@ function initDOM() {
   DOM.flowUpcoming = document.getElementById('flow-upcoming');
   DOM.toastContainer = document.getElementById('toast-container');
   DOM.deptList = document.getElementById('dept-list');
-  DOM.cueTableBody = document.getElementById('cue-table-body');
+  DOM.cueListBody = document.getElementById('cue-list-body');
   DOM.manageDeptFilter = document.getElementById('manage-dept-filter');
   DOM.deptFilters = document.getElementById('dept-filters');
   DOM.showSidebar = document.getElementById('show-sidebar');
@@ -143,9 +143,9 @@ function initDOM() {
   // Timer lock
   DOM.timerLockBtn = document.getElementById('timer-lock-btn');
   DOM.timerLockStatus = document.getElementById('timer-lock-status');
-  // User panel
-  DOM.userPanel = document.getElementById('user-panel');
-  DOM.userList = document.getElementById('user-list');
+  // Admin dashboard (merged users + active connections)
+  DOM.dashboardPanel = document.getElementById('dashboard-panel');
+  DOM.dashboardBody = document.getElementById('dashboard-body');
   // Nav
   DOM.navTabs = document.querySelectorAll('.tab');
   DOM.logoutBtn = document.getElementById('logout-btn');
@@ -268,6 +268,20 @@ function getDeptColor(id) {
 function getCueWarnMax(deptId, cueId) {
   const c = cues.find(c => c.id === cueId);
   return c ? c.warn_seconds : CONST.DEFAULT_WARN_SEC;
+}
+
+/**
+ * Convert total seconds to a timecode object.
+ * @param {number} totalSec - Total seconds.
+ * @returns {{hours: number, minutes: number, seconds: number, frames: number}}
+ */
+function secondsToTcObj(totalSec) {
+  totalSec = Math.max(0, totalSec);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = Math.floor(totalSec % 60);
+  const f = Math.round((totalSec % 1) * CONST.DEFAULT_FPS);
+  return { hours: h, minutes: m, seconds: s, frames: Math.min(f, CONST.DEFAULT_FPS - 1) };
 }
 
 /**

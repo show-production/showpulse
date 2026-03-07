@@ -1,4 +1,5 @@
 pub mod acts;
+pub mod admin;
 pub mod cues;
 pub mod departments;
 pub mod generator;

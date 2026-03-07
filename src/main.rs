@@ -48,6 +48,7 @@ async fn ws_handler(
             Some(WsSessionInfo {
                 user_id: session.user_id,
                 user_name: session.user_name.clone(),
+                role: session.role,
                 dept_filter,
             })
         } else {

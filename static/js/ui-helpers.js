@@ -20,7 +20,8 @@ document.querySelectorAll('.tab[data-view]').forEach(tab => {
     tab.classList.add('active');
     document.getElementById(`view-${tab.dataset.view}`).classList.add('active');
     if (tab.dataset.view === 'manage') refreshManageView();
-    if (tab.dataset.view === 'settings') { loadUsers(); refreshTimerLock(); loadShowName(); }
+    if (tab.dataset.view === 'settings') { refreshTimerLock(); startDashboardPolling(); }
+    else { stopDashboardPolling(); }
   });
 });
 
@@ -90,6 +91,27 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   });
 });
 
+// TC fields: auto-advance on 2-digit input
+document.querySelectorAll('.tc-field').forEach(field => {
+  field.addEventListener('input', () => {
+    const val = field.value;
+    if (val.length >= 2 && field.dataset.next) {
+      const next = document.getElementById(field.dataset.next);
+      if (next) { next.focus(); next.select(); }
+    }
+  });
+  // Select all on focus for easy overwrite
+  field.addEventListener('focus', () => field.select());
+});
+
+// Armed toggle label sync
+const armedCb = document.getElementById('cue-armed');
+if (armedCb) {
+  armedCb.addEventListener('change', () => {
+    document.getElementById('cue-armed-label').textContent = armedCb.checked ? 'Yes' : 'No';
+  });
+}
+
 // Sync color picker with text input
 document.getElementById('dept-color').addEventListener('input', (e) => {
   document.getElementById('dept-color-text').value = e.target.value;
@@ -125,6 +147,9 @@ loadTheme();
 
 (async function init() {
   initDOM();
+  initCueDrag();
+  initCueInlineEdit();
+  initCueBulkOps();
   // Auth check first
   await initAuth();
   try {
