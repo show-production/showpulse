@@ -431,27 +431,13 @@ pub fn extract_token<B>(req: &Request<B>) -> Option<String> {
         })
 }
 
-/// Extract client IP from request headers or connection info.
+/// Extract client IP from connection info (trusted) with proxy header fallback.
+/// Prefers ConnectInfo (actual TCP peer) to prevent X-Forwarded-For spoofing.
 fn extract_client_ip<B>(req: &Request<B>) -> Option<IpAddr> {
-    // Try X-Forwarded-For first (reverse proxy)
-    req.headers()
-        .get("x-forwarded-for")
-        .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.split(',').next())
-        .and_then(|s| s.trim().parse().ok())
-        // Fallback: try X-Real-IP
-        .or_else(|| {
-            req.headers()
-                .get("x-real-ip")
-                .and_then(|v| v.to_str().ok())
-                .and_then(|s| s.trim().parse().ok())
-        })
-        // Fallback: ConnectInfo if available
-        .or_else(|| {
-            req.extensions()
-                .get::<axum::extract::ConnectInfo<SocketAddr>>()
-                .map(|ci| ci.0.ip())
-        })
+    // Prefer ConnectInfo — the actual TCP connection peer (unspoofable)
+    req.extensions()
+        .get::<axum::extract::ConnectInfo<SocketAddr>>()
+        .map(|ci| ci.0.ip())
 }
 
 use std::net::SocketAddr;
