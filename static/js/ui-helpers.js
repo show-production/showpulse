@@ -9,13 +9,14 @@
 
 // ── View switching ─────────────────────────
 
-document.querySelectorAll('.tab').forEach(tab => {
+document.querySelectorAll('.tab[data-view]').forEach(tab => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab[data-view]').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById(`view-${tab.dataset.view}`).classList.add('active');
     if (tab.dataset.view === 'manage') refreshManageView();
+    if (tab.dataset.view === 'settings') { loadUsers(); refreshTimerLock(); }
   });
 });
 
@@ -99,16 +100,17 @@ document.addEventListener('keydown', (e) => {
   // Don't trigger when typing in an input
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
 
-  if (e.code === 'Space') { e.preventDefault(); genCmd('play'); }
-  else if (e.code === 'Escape') { genCmd('stop'); }
-  else if (e.code === 'KeyP') { genCmd('pause'); }
+  const canControl = !authEnabled || roleLevel(authRole) >= ROLE_LEVELS.manager;
+  if (e.code === 'Space') { e.preventDefault(); if (canControl) genCmd('play'); }
+  else if (e.code === 'Escape') { if (canControl) genCmd('stop'); }
+  else if (e.code === 'KeyP') { if (canControl) genCmd('pause'); }
   else if (e.code === 'KeyS') { e.preventDefault(); toggleSidebar(); }
   else if (e.code === 'KeyG') {
     e.preventDefault();
-    DOM.gotoTc.focus();
+    if (canControl) DOM.gotoTc.focus();
   }
-  else if (e.code === 'KeyN') { e.preventDefault(); nextCue(); }
-  else if (e.code === 'KeyB') { e.preventDefault(); prevCue(); }
+  else if (e.code === 'KeyN') { e.preventDefault(); if (canControl) nextCue(); }
+  else if (e.code === 'KeyB') { e.preventDefault(); if (canControl) prevCue(); }
   else if (e.code === 'KeyA') { e.preventDefault(); toggleAutoPulse(); }
   else if (e.code === 'KeyC') { e.preventDefault(); jumpToCurrent(); }
 });
@@ -119,6 +121,8 @@ loadTheme();
 
 (async function init() {
   initDOM();
+  // Auth check first
+  await initAuth();
   try {
     await loadDepartments();
     await loadCues();
@@ -131,6 +135,8 @@ loadTheme();
   // Restore autopulse state
   DOM.autoPulseBtn.classList.toggle('active', autoPulse);
   initAutoPulseScrollBlock();
+  // Timer lock check for managers
+  refreshTimerLock();
   // Hide loading overlay
   DOM.loadingOverlay.classList.add('hidden');
   setTimeout(() => DOM.loadingOverlay.remove(), 500);

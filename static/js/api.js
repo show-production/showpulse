@@ -17,8 +17,17 @@ async function api(path, opts = {}) {
     opts.body = JSON.stringify(opts.body);
     opts.headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
   }
+  // Inject auth token
+  if (authToken) {
+    opts.headers = { ...opts.headers, 'Authorization': `Bearer ${authToken}` };
+  }
   const r = await fetch('/api' + path, opts);
   if (r.status === 204) return null;
+  if (r.status === 401 && authEnabled && path !== '/auth/login' && path !== '/auth/status') {
+    clearAuth();
+    showLoginOverlay();
+    throw new Error('Session expired');
+  }
   if (!r.ok) {
     const t = await r.text();
     throw new Error(t || r.statusText);
@@ -34,7 +43,8 @@ async function api(path, opts = {}) {
  */
 function connectWS() {
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  ws = new WebSocket(`${proto}//${location.host}/ws`);
+  const tokenParam = authToken ? `?token=${encodeURIComponent(authToken)}` : '';
+  ws = new WebSocket(`${proto}//${location.host}/ws${tokenParam}`);
 
   ws.onopen = () => {
     wsConnected = true;

@@ -5,3 +5,5 @@ pub mod ltc;
 pub mod mtc;
 pub mod qr;
 pub mod timecode;
+pub mod timer_lock;
+pub mod users;

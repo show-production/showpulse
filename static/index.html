@@ -22,8 +22,12 @@
     <button class="tab" data-view="manage">Manage</button>
     <button class="tab" data-view="settings">Settings</button>
   </div>
-  <div class="brand">
-    ShowPulse <span class="dot" id="ws-dot"></span>
+  <div class="nav-right">
+    <span class="auth-user-label" id="auth-user-label"></span>
+    <button class="tab" id="logout-btn" style="display:none" onclick="handleLogout()">Logout</button>
+    <div class="brand">
+      ShowPulse <span class="dot" id="ws-dot"></span>
+    </div>
   </div>
 </nav>
 
@@ -34,6 +38,17 @@
 <div class="loading-overlay" id="loading-overlay">
   <div class="spinner"></div>
   <div class="loading-text">Loading ShowPulse...</div>
+</div>
+
+<!-- LoginOverlay -->
+<div class="login-overlay" id="login-overlay">
+  <form class="login-box" id="login-form" onsubmit="handleLogin(event)">
+    <h2>ShowPulse</h2>
+    <input type="text" id="login-name" placeholder="Name" autocomplete="username">
+    <input type="password" id="login-pin" placeholder="PIN" autocomplete="current-password">
+    <div class="login-error" id="login-error"></div>
+    <button type="submit" class="login-submit" id="login-btn" onclick="handleLogin(event)">Login</button>
+  </form>
 </div>
 
 <!-- ToastContainer -->
@@ -83,6 +98,10 @@
           <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF">
           <button class="tc-btn" onclick="gotoTC()" title="Goto (G)">Go</button>
         </div>
+        <span class="timer-lock-group">
+          <button class="tc-btn" id="timer-lock-btn" style="display:none" onclick="acquireTimerLock()">Take Control</button>
+          <span class="timer-lock-status" id="timer-lock-status"></span>
+        </span>
         <button class="tc-btn active" id="autopulse-btn" onclick="toggleAutoPulse()" title="Auto-scroll (A)">Auto</button>
         <button class="tc-btn" onclick="jumpToCurrent()" title="Jump to current (C)">&#x2907; Now</button>
       </div>
@@ -237,6 +256,14 @@
       </div>
     </div>
 
+    <div class="panel" id="user-panel" style="display:none">
+      <div class="panel-header">
+        <h3>Users</h3>
+        <button class="add-btn" onclick="openUserModal()">+ Add</button>
+      </div>
+      <div class="panel-body" id="user-list"></div>
+    </div>
+
     <div class="panel">
       <div class="panel-header"><h3>Show Data</h3></div>
       <div class="panel-body panel-body--padded">
@@ -319,6 +346,45 @@
   </div>
 </div>
 
+<!-- UserModal -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="user-modal-title">Add User</h3>
+      <button class="icon-btn" onclick="closeModal('user-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="user-edit-id">
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="user-name-input" placeholder="e.g. John">
+      </div>
+      <div class="form-group">
+        <label>PIN</label>
+        <input type="password" id="user-pin-input" placeholder="PIN">
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="user-role-select">
+          <option value="viewer">Viewer</option>
+          <option value="crew_lead">Crew Lead</option>
+          <option value="operator" selected>Operator</option>
+          <option value="manager">Manager</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Departments (Viewer/Crew Lead filter)</label>
+        <div class="dept-checks" id="user-dept-checks"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('user-modal')">Cancel</button>
+      <button class="btn-save" onclick="saveUser()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ConfirmModal -->
 <div class="modal-overlay" id="confirm-modal">
   <div class="modal modal--narrow">
@@ -338,6 +404,7 @@
 
 <script src="js/state.js"></script>
 <script src="js/api.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/show.js"></script>
 <script src="js/manage.js"></script>
 <script src="js/settings.js"></script>

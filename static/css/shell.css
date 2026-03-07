@@ -97,6 +97,136 @@
   letter-spacing: 0.05em;
 }
 
+/* ── LoginOverlay ── */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  z-index: 310;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.login-overlay.visible { display: flex; }
+.login-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.login-box h2 {
+  text-align: center;
+  color: var(--accent);
+  margin: 0 0 0.5rem;
+  font-size: 1.4rem;
+  letter-spacing: 0.05em;
+}
+.login-box input {
+  padding: 0.6rem 0.8rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-md);
+}
+.login-box input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.login-error {
+  color: var(--danger);
+  font-size: var(--font-size-sm);
+  min-height: 1.2em;
+  text-align: center;
+}
+.login-submit {
+  padding: 0.6rem;
+  background: var(--accent);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+}
+.login-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Nav right section ── */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.auth-user-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+}
+
+/* ── Timer lock ── */
+.timer-lock-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.timer-lock-status {
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* ── User management ── */
+.user-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+.user-item:last-child { border-bottom: none; }
+.user-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.user-name {
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+}
+.user-role {
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.user-actions {
+  display: flex;
+  gap: 0.3rem;
+}
+.dept-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+.dept-check {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.dept-check input { cursor: pointer; }
+
 /* ── ToastContainer ── */
 .toast-container {
   position: fixed;

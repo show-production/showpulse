@@ -28,10 +28,19 @@ function toggleSidebar(forceState) {
  * @param {string} cmd - Command name.
  */
 async function genCmd(cmd) {
+  // Manager without timer lock — prompt to acquire
+  if (authEnabled && authRole === 'manager' && !hasTimerLock) {
+    showToast('Acquire timer control first', 'error');
+    return;
+  }
   try {
     await api(`/generator/${cmd}`, { method: 'POST' });
   } catch (e) {
-    showToast(`Command failed: ${e.message}`, 'error');
+    if (e.message.includes('Forbidden') || e.message.includes('403')) {
+      showToast('Timer control required', 'error');
+    } else {
+      showToast(`Command failed: ${e.message}`, 'error');
+    }
   }
 }
 
@@ -39,12 +48,20 @@ async function genCmd(cmd) {
  * Jump to the timecode entered in the goto input field.
  */
 async function gotoTC() {
+  if (authEnabled && authRole === 'manager' && !hasTimerLock) {
+    showToast('Acquire timer control first', 'error');
+    return;
+  }
   const val = DOM.gotoTc.value;
   const tc = parseTC(val);
   try {
     await api('/generator/goto', { method: 'POST', body: { timecode: tc } });
   } catch (e) {
-    showToast(`Goto failed: ${e.message}`, 'error');
+    if (e.message.includes('Forbidden') || e.message.includes('403')) {
+      showToast('Timer control required', 'error');
+    } else {
+      showToast(`Goto failed: ${e.message}`, 'error');
+    }
   }
 }
 

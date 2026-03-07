@@ -12,7 +12,7 @@ use axum::extract::FromRef;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 
-use auth::SessionStore;
+use auth::{SessionStore, TimerLockState};
 use cue::store::CueStore;
 use timecode::TimecodeManager;
 use ws::hub::WsHub;
@@ -23,6 +23,7 @@ pub struct AppState {
     pub store: Arc<CueStore>,
     pub ws_hub: Arc<WsHub>,
     pub sessions: SessionStore,
+    pub timer_lock: TimerLockState,
 }
 
 impl FromRef<AppState> for SessionStore {
@@ -71,6 +72,15 @@ pub fn api_router() -> Router<AppState> {
         .route("/api/mtc/stop", post(api::mtc::stop))
         // QR
         .route("/api/qr", get(api::qr::qr_svg))
+        // Users (Admin only — enforced in handlers)
+        .route("/api/users", get(api::users::list))
+        .route("/api/users", post(api::users::create))
+        .route("/api/users/:id", put(api::users::update))
+        .route("/api/users/:id", delete(api::users::delete))
+        // Timer lock (Manager+ — enforced in handlers)
+        .route("/api/timer-lock", get(api::timer_lock::status))
+        .route("/api/timer-lock", post(api::timer_lock::acquire))
+        .route("/api/timer-lock", delete(api::timer_lock::release))
         // Auth
         .route("/api/auth/status", get(auth::auth_status))
         .route("/api/auth/login", post(auth::login))

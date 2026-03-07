@@ -3,6 +3,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
+use crate::auth::{Role, User};
 use super::types::{ContinueMode, Cue, CueImportError, CueImportResult, Department, ShowData};
 
 /// Maximum allowed length for string fields (names, labels, notes).
@@ -393,6 +394,88 @@ impl CueStore {
                 post_wait: None,
             }).await;
         }
+    }
+
+    // --- Users ---
+
+    pub async fn has_users(&self) -> bool {
+        !self.data.read().await.users.is_empty()
+    }
+
+    pub async fn user_count(&self) -> usize {
+        self.data.read().await.users.len()
+    }
+
+    pub async fn list_users(&self) -> Vec<User> {
+        self.data.read().await.users.clone()
+    }
+
+    pub async fn find_user_by_credentials(&self, name: &str, pin: &str) -> Option<User> {
+        let data = self.data.read().await;
+        data.users.iter().find(|u| u.name == name && u.pin == pin).cloned()
+    }
+
+    pub async fn get_user(&self, id: Uuid) -> Option<User> {
+        let data = self.data.read().await;
+        data.users.iter().find(|u| u.id == id).cloned()
+    }
+
+    pub async fn create_user(&self, mut user: User) -> User {
+        user.id = Uuid::new_v4();
+        clamp_string(&mut user.name);
+        let mut data = self.data.write().await;
+        data.users.push(user.clone());
+        drop(data);
+        self.persist().await;
+        user
+    }
+
+    pub async fn update_user(&self, id: Uuid, mut update: User) -> Option<User> {
+        clamp_string(&mut update.name);
+        let mut data = self.data.write().await;
+        if let Some(user) = data.users.iter_mut().find(|u| u.id == id) {
+            user.name = update.name;
+            if !update.pin.is_empty() {
+                user.pin = update.pin;
+            }
+            user.role = update.role;
+            user.departments = update.departments;
+            let result = user.clone();
+            drop(data);
+            self.persist().await;
+            Some(result)
+        } else {
+            None
+        }
+    }
+
+    pub async fn delete_user(&self, id: Uuid) -> bool {
+        let mut data = self.data.write().await;
+        let len_before = data.users.len();
+        data.users.retain(|u| u.id != id);
+        let deleted = data.users.len() < len_before;
+        if deleted {
+            drop(data);
+            self.persist().await;
+        }
+        deleted
+    }
+
+    /// Create a default admin user from SHOWPULSE_PIN if no users exist yet.
+    pub async fn seed_admin_user(&self, pin: &str) {
+        let data = self.data.read().await;
+        if !data.users.is_empty() {
+            return;
+        }
+        drop(data);
+        self.create_user(User {
+            id: Uuid::new_v4(),
+            name: "admin".to_string(),
+            pin: pin.to_string(),
+            role: Role::Admin,
+            departments: Vec::new(),
+        }).await;
+        tracing::info!("Seeded default admin user from SHOWPULSE_PIN");
     }
 }
 
