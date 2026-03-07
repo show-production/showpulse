@@ -12,7 +12,7 @@ use axum::extract::FromRef;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 
-use auth::{SessionStore, TimerLockState};
+use auth::{LoginLimiter, SessionStore, TimerLockState};
 use cue::store::CueStore;
 use timecode::TimecodeManager;
 use ws::hub::WsHub;
@@ -24,6 +24,7 @@ pub struct AppState {
     pub ws_hub: Arc<WsHub>,
     pub sessions: SessionStore,
     pub timer_lock: TimerLockState,
+    pub login_limiter: LoginLimiter,
 }
 
 impl FromRef<AppState> for SessionStore {
