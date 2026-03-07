@@ -20,7 +20,7 @@ document.querySelectorAll('.tab[data-view]').forEach(tab => {
     tab.classList.add('active');
     document.getElementById(`view-${tab.dataset.view}`).classList.add('active');
     if (tab.dataset.view === 'manage') refreshManageView();
-    if (tab.dataset.view === 'settings') { loadUsers(); refreshTimerLock(); loadShowName(); startDashboardPolling(); }
+    if (tab.dataset.view === 'settings') { refreshTimerLock(); startDashboardPolling(); }
     else { stopDashboardPolling(); }
   });
 });

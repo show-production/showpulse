@@ -172,6 +172,19 @@
 <!-- ═══ SETTINGS VIEW ═══ -->
 <div class="view" id="view-settings">
   <div class="settings-grid">
+    <div class="panel panel--wide" id="dashboard-panel" style="display:none">
+      <div class="panel-header">
+        <h3>Users</h3>
+        <div class="panel-header-actions">
+          <button class="add-btn" onclick="loadDashboard()">&#x21bb;</button>
+          <button class="add-btn" onclick="openUserModal()">+ Add User</button>
+        </div>
+      </div>
+      <div class="panel-body panel-body--flush" id="dashboard-body">
+        <div style="color:var(--text-dim);font-size:0.85rem;padding:0.75rem">Loading...</div>
+      </div>
+    </div>
+
     <div class="panel">
       <div class="panel-header"><h3>Show</h3></div>
       <div class="panel-body panel-body--padded">
@@ -293,31 +306,17 @@
       </div>
     </div>
 
-    <div class="panel" id="dashboard-panel" style="display:none">
-      <div class="panel-header">
-        <h3>Active Users</h3>
-        <button class="add-btn" onclick="loadDashboard()">&#x21bb; Refresh</button>
-      </div>
-      <div class="panel-body" id="dashboard-body">
-        <div style="color:var(--text-dim);font-size:0.85rem;padding:0.5rem">Loading...</div>
-      </div>
-    </div>
-
-    <div class="panel" id="user-panel" style="display:none">
-      <div class="panel-header">
-        <h3>Users</h3>
-        <button class="add-btn" onclick="openUserModal()">+ Add</button>
-      </div>
-      <div class="panel-body" id="user-list"></div>
-    </div>
-
     <div class="panel">
       <div class="panel-header"><h3>Show Data</h3></div>
       <div class="panel-body panel-body--padded">
         <div class="data-actions">
-          <button onclick="exportShow()">Export Show JSON</button>
-          <button onclick="document.getElementById('import-file').click()">Import Show JSON</button>
+          <button onclick="exportShow()">Export JSON</button>
+          <button onclick="document.getElementById('import-file').click()">Import JSON</button>
           <input type="file" id="import-file" accept=".json" class="hidden" onchange="importShow(event)">
+        </div>
+        <div class="data-actions">
+          <button onclick="exportCSV()">Export CSV</button>
+          <button onclick="printCueSheet()">Print Cue Sheet</button>
         </div>
       </div>
     </div>

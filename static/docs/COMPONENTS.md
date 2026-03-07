@@ -134,18 +134,12 @@
 - **CSS**: `settings.css` -- `.data-actions`
 
 ### DashboardPanel (Admin only)
-- **Visual**: Live summary of connected users with name, role, duration, and timer lock status
-- **HTML**: `<div id="dashboard-panel">`
-- **JS**: `loadDashboard()`, `renderDashboard()`, `startDashboardPolling()`, `stopDashboardPolling()` in `auth.js`
-- **CSS**: `settings.css` -- `.dash-summary`, `.dash-table`, `.dash-lock-holder`
-- **State**: Auto-refreshes every 10 seconds while Settings view is active; polling stops when switching away
-- **API**: `GET /api/admin/dashboard`
-
-### UserPanel (Admin only)
-- **Visual**: User list with add/edit/delete, role + department assignment
-- **HTML**: `<div id="user-panel">`
-- **JS**: `renderUserList()`, `openUserModal()`, `saveUser()`, `deleteUser()` in `auth.js`
-- **CSS**: `settings.css`
+- **Visual**: Unified admin dashboard with stat cards (connected, users online, registered, timer control) and user table showing online status dots, roles, connection duration, and edit/delete actions. Anonymous connections shown as a summary row.
+- **HTML**: `<div id="dashboard-panel">` (full-width panel spanning settings grid)
+- **JS**: `loadDashboard()`, `renderDashboard()`, `startDashboardPolling()`, `stopDashboardPolling()`, `openUserModal()`, `saveUser()`, `deleteUser()` in `auth.js`
+- **CSS**: `settings.css` -- `.dash-stats`, `.dash-stat`, `.dash-table`, `.dash-dot`, `.dash-badge`, `.dash-actions`
+- **State**: Auto-refreshes every 10 seconds while Settings view is active; polling stops when switching away. Fetches both `/api/admin/dashboard` and `/api/users` in parallel.
+- **API**: `GET /api/admin/dashboard`, `GET /api/users`
 
 ### TimerLockUI
 - **Visual**: "Take Control" / "Release" button for Managers
