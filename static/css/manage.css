@@ -1,7 +1,7 @@
 /* ══════════════════════════════════════════
-   manage.css — ManageView: DeptPanel, CuePanel, CueTable
+   manage.css — ManageView: DeptPanel, CueList, Timeline, Drag, Inline Edit, Bulk Ops
    ══════════════════════════════════════════
-   CRUD interface for departments and cues.
+   Editor interface for departments, cues, acts, and timeline.
    Dependencies: variables.css, base.css
    ══════════════════════════════════════════ */
 
@@ -101,7 +101,7 @@
 }
 .add-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── CueTable ── */
+/* ── CueTable (legacy, unused — kept for reference) ── */
 .cue-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;

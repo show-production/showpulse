@@ -73,9 +73,6 @@ let ws = null;
 /** Whether the WebSocket is currently connected. */
 let wsConnected = false;
 
-/** Current sort configuration for the cue table. */
-let cueTableSort = { key: 'trigger_tc', asc: true };
-
 /** Resolve function for the confirm modal promise. */
 let confirmResolve = null;
 

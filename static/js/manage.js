@@ -4,7 +4,13 @@
    Sections:
      Data loading    — loadDepartments, loadCues, loadActs, loadShowName
      Dept panel      — renderDeptList, openDeptModal, saveDept, deleteDept
-     Cue table       — renderCueTable, sortCueTable, openCueModal, saveCue, deleteCue
+     Cue list        — renderCueList (act-grouped), openCueModal, saveCue, deleteCue
+     Timeline        — renderTimeline, updateTimelinePlayhead, scrollToCueItem
+     Drag & drop     — initCueDrag, handleCueDrop, handleCueDropToAct, calcDropTc
+     Inline edit     — initCueInlineEdit, startInlineEdit
+     Multi-select    — initCueBulkOps, handleCueCheck, selectAllInAct, bulkMoveToAct,
+                       bulkDuplicate, bulkDelete, bulkArm
+     Duplicate/add   — duplicateCue, duplicateAct, addCueToAct
      Act panel       — renderActList, openActModal, saveAct, deleteAct
      Show name       — saveShowName
    Dependencies: state.js, api.js (apiSave, apiDelete, showToast, closeModal)
