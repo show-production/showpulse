@@ -209,15 +209,22 @@
 
 /* ── Inline countdown row (inside flow-card for warning/go cues) ── */
 .card-countdown-row {
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--gap-md);
   width: 100%;
-  padding-top: 0.25rem;
-  min-height: 2rem;
+  padding-top: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: opacity 0.3s ease;
 }
-.flow-card.tier-warning .card-countdown-row { display: flex; }
+.flow-card.tier-warning .card-countdown-row {
+  max-height: 3rem;
+  opacity: 1;
+  padding-top: 0.25rem;
+}
 .card-status {
   font-family: var(--font-mono);
   font-size: 1.3rem;
@@ -227,11 +234,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+  transition: color 0.3s;
 }
 .card-digit {
   font-family: var(--font-mono);
   font-size: 1.3rem;
   font-weight: 800;
+  transition: color 0.3s;
   line-height: 1;
   animation: card-pop 0.35s ease-out;
 }
@@ -286,7 +295,7 @@
   margin-bottom: 0.4rem;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s, background 0.3s;
 }
 .flow-card .card-info { flex: 1; min-width: 0; }
 .flow-card .card-label {
@@ -327,14 +336,13 @@
   border-radius: 0 2px 2px 0;
 }
 
-/* Tier: Active */
+/* Tier: Active (already triggered — dim so focus stays on upcoming) */
 .flow-card.tier-active {
-  border-color: var(--accent);
-  box-shadow: 0 0 16px var(--active-glow);
-  animation: active-glow 2s ease-in-out infinite;
+  border-color: var(--border);
+  opacity: 0.6;
 }
-.flow-card.tier-active .card-countdown { color: var(--accent); }
-.flow-card.tier-active .progress-fill { background: var(--accent); }
+.flow-card.tier-active .card-countdown { color: var(--text-dim); }
+.flow-card.tier-active .progress-fill { background: var(--text-dim); }
 
 /* Tier: Warning (traffic-light colors set inline by JS) */
 .flow-card.tier-warning {

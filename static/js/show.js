@@ -233,7 +233,7 @@ function createFlowCard(c) {
     DOM.gotoTc.value = card.dataset.triggerTc;
   });
 
-  const tint = (tier === 'tier-active' || tier === 'tier-warning') ? hexToRgba(deptColor, CONST.TINT_ALPHA) : '';
+  const tint = (tier === 'tier-warning') ? hexToRgba(deptColor, CONST.TINT_ALPHA) : '';
 
   card.innerHTML = `<div class="dept-bar" style="background:${deptColor}"></div>
     <div class="card-info">
@@ -269,9 +269,9 @@ function updateFlowCard(card, c) {
   if (card.className !== newClass) card.className = newClass;
   card.dataset.triggerTc = fmtTC(c.trigger_tc);
 
-  // Dept tint for active/warning
+  // Dept tint for warning only (active is dimmed, no tint)
   const deptColor = getDeptColor(c.department_id);
-  if (tier === 'tier-active' || isWarningTier) {
+  if (isWarningTier) {
     card.style.background = hexToRgba(deptColor, CONST.TINT_ALPHA);
   } else {
     card.style.background = '';
