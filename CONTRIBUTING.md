@@ -50,10 +50,12 @@ Update the version in `Cargo.toml` as part of your PR.
 
 ## Backend / Frontend Coordination
 
-- Backend engineer edits `src/`, `Cargo.toml`, `Cargo.lock` only.
+- Backend engineer edits `src/`, `tests/`, `Cargo.toml`, `Cargo.lock` only.
 - Frontend engineer edits `static/` only.
 - Shared files (`CONTRIBUTING.md`, `README.md`, config) — coordinate before editing.
 - **Axum route syntax**: We're on Axum **0.7** which uses `:id` for path params. The `{id}` syntax was introduced in Axum **0.8.0**. Always use `:id` in route definitions and verify against the locked version in `Cargo.lock`.
+- **JS load order**: `state.js` -> `api.js` -> `auth.js` -> `show.js` -> `manage.js` -> `settings.js` -> `import-export.js` -> `ui-helpers.js`. New modules must respect this dependency chain.
+- **CRUD helpers**: Use `apiSave()` / `apiDelete()` from `state.js` for new save/delete patterns instead of duplicating fetch+toast logic.
 
 ## Environment Variables
 
@@ -62,4 +64,4 @@ Update the version in `Cargo.toml` as part of your PR.
 | `SHOWPULSE_PORT` | `8080` | Server port |
 | `SHOWPULSE_BIND` | `0.0.0.0` | Bind address |
 | `SHOWPULSE_DATA_FILE` | `showpulse-data.json` | Data file path |
-| `SHOWPULSE_PIN` | *(none)* | PIN for auth (unset = open access) |
+| `SHOWPULSE_PIN` | *(none)* | Seeds admin user on first run (unset + no users = open access) |

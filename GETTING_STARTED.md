@@ -38,7 +38,7 @@ ShowPulse starting on http://0.0.0.0:8080
 http://localhost:8080
 ```
 
-On first launch, the app automatically creates 6 demo departments and 22 sample cues so you can start testing immediately.
+On first launch, the app automatically creates 6 demo departments, 3 acts, and 22 sample cues so you can start testing immediately.
 
 ## Accessing from Other Devices on Your Network
 
@@ -93,15 +93,22 @@ The main operational view for live shows. The dashboard is organized into clear 
 1. **Passed cues badge** (top) — small pill showing "N passed". Click to expand a dropdown listing all passed cues with department colors and timecodes.
 2. **Active cue strips** — compact single-line rows for currently triggered cues, one per department. Green dept-colored left border with checkmark and label.
 3. **Timer + Controls** (center) — large timecode display with meta info (state/fps/source) on the left, transport controls below: Prev/Play/Pause/Stop/Next + Goto timecode input.
-4. **Ready/Go zone** — dedicated countdown for the next imminent cue. "READY" text and progress bar follow traffic-light colors throughout (red→orange→yellow→green). Countdown digits (3, 2, 1) appear alongside with matching colors. At zero: "GO! — Department" in green with flash effect. Progress bar fills from 0% to 100%. Backend-driven Go state ensures reliable 2-second GO! display. Fixed-height layout with no size jumps, smooth in-place DOM updates.
-5. **Coming cues** (bottom) — scrollable list of upcoming cues with countdown timers and progress bars. All cards are the same size — state is shown through color and opacity only (no layout shifts).
+4. **Ready/Go zone** — dedicated countdown for the next imminent cue. "READY" text and progress bar follow traffic-light colors throughout (red->orange->yellow->green). Countdown digits (3, 2, 1) appear alongside with matching colors. At zero: "GO! — Department" in green with flash effect. Progress bar fills from 0% to 100%. Backend-driven Go state ensures reliable 2-second GO! display. Fixed-height layout with no size jumps, smooth in-place DOM updates.
+5. **Coming cues** (bottom) — scrollable list of upcoming cues grouped by act. Act dividers show act name as inline text between separator lines. All cards are the same size — state is shown through color and opacity only (no layout shifts). Cards show T- countdown (always visible) and T+ elapsed time after trigger.
+
+**Floating controls** (bottom-right pill):
+- **Now** — jump to the current/next cue in the list
+- **Auto** — toggle auto-scroll to follow the current cue
+- **Collapse** — collapse all act groups
+- **Expand** — expand all act groups
+
+You can also double-click an act header to collapse/expand that individual group.
 
 **Interactions:**
 - **Click any cue card, active strip, or passed item** to load its timecode into the Goto field
 - **Prev/Next buttons** step through cues in timecode order, loading each into Goto
 - **Scroll down** in the coming cues section to auto-collapse the above-timer sections (space freed up)
 - **Department filter chips** (sidebar) to show/hide cues by department
-- **Show/Hide Passed** toggle (sidebar) to show or hide the passed cues badge
 
 **Keyboard shortcuts:**
 - `Space` - Play
@@ -111,23 +118,28 @@ The main operational view for live shows. The dashboard is organized into clear 
 - `B` - Previous cue (loads TC into Goto)
 - `G` - Focus the goto timecode input
 - `S` - Toggle sidebar
+- `A` - Toggle auto-scroll
+- `C` - Jump to current cue
 
 ### Manage Tab
 
 For setting up your show.
 
-- **Left panel:** Create, edit, and delete departments (name + color)
+- **Left panel:**
+  - **Departments** — Create, edit, and delete departments (name + color)
+  - **Acts** — Create, edit, and delete acts (name + sort order). Shows cue count per act
 - **Right panel:** Cue list table with:
   - **#** column showing cue numbers (auto-generated Q1, Q2, Q3... or custom)
   - Department dropdown filter
-  - Clickable column headers to sort (# , Timecode, Label, Department, Lead Time)
+  - Clickable column headers to sort (#, Timecode, Label, Department, Lead Time)
   - Edit and delete buttons per cue
-- Click **+ Add** to create new departments or cues
+- Click **+ Add** to create new departments, acts, or cues
+- Cue modal includes an **Act** selector to assign cues to acts
 - Click **Import** to bulk-import cues from CSV or JSON files
 
 ### Importing Cues
 
-ShowPulse supports bulk cue import via the **Import** button in the Manage tab. Importing **replaces** all existing cues (not appends). Full show import from Settings replaces both departments and cues.
+ShowPulse supports bulk cue import via the **Import** button in the Manage tab. Importing **replaces** all existing cues (not appends). Full show import from Settings replaces departments, cues, and acts.
 
 **CSV format:** Header row with columns like `timecode`, `label`, `department`, `warn`, `notes`. The parser recognizes common aliases (e.g., "dept" for "department", "tc" for "timecode"). Department names are automatically matched to existing departments.
 
@@ -143,8 +155,9 @@ Test files are included in the repository:
 - **Frame rate:** 24, 25, 29.97df, 30 fps
 - **Generator mode:** Freerun, Countdown, Clock, Loop
 - **Start timecode** and **speed** controls
+- **Show name:** Configurable name displayed in the navbar
 - **Theme customization:** Background, accent, and warning colors (live preview); timecode display size
-- **Export/Import:** Save or load your entire show (departments + cues) as a JSON file
+- **Export/Import:** Save or load your entire show (departments + cues + acts + show name) as a JSON file
 
 ## Using LTC (SMPTE Linear Timecode)
 
@@ -182,11 +195,21 @@ MTC allows ShowPulse to sync to timecode from MIDI-capable devices (DAWs, show c
 
 ## Authentication (Optional)
 
-ShowPulse supports optional PIN-based authentication to protect admin operations (Manage/Settings tabs) while keeping the Show view open for crew members.
+ShowPulse supports user-based authentication with 5 role levels. When enabled, it protects operations based on user role while keeping the Show view accessible.
 
-### Enable PIN auth
+### Role Hierarchy
 
-Set the `SHOWPULSE_PIN` environment variable before starting:
+| Role | Access |
+|------|--------|
+| Viewer | Show view only (filtered to assigned departments) |
+| Crew Lead | Show view only (filtered to assigned departments) |
+| Operator | Show + Manage |
+| Manager | Show + Manage + Settings + timer control (must acquire lock) |
+| Admin | Full access including user management |
+
+### Enable authentication
+
+Set the `SHOWPULSE_PIN` environment variable before starting to auto-create an admin user:
 
 **Windows (PowerShell):**
 ```powershell
@@ -199,13 +222,13 @@ cargo run
 SHOWPULSE_PIN=1234 cargo run
 ```
 
-When a PIN is set:
-- **Show view** remains fully open — crew can view countdowns without authentication
-- **Manage/Settings** operations (create, update, delete) require a valid session token
-- The frontend prompts for the PIN when needed
-- Session tokens are passed via `Authorization: Bearer <token>` header
+This creates an admin user named "admin" with the given PIN. From the Admin panel, you can then create additional users with different roles and department assignments.
 
-When no PIN is set (default), all operations are open.
+When no PIN is set and no users exist (default), all operations are open — no login required.
+
+### Timer Lock
+
+Managers must acquire the timer lock before controlling transport (Play/Pause/Stop/Goto). Only one Manager can hold the lock at a time. Admins bypass the lock entirely.
 
 ### QR Code for Crew Onboarding
 
@@ -220,11 +243,11 @@ All settings are via environment variables:
 | `SHOWPULSE_PORT` | `8080` | Server port |
 | `SHOWPULSE_BIND` | `0.0.0.0` | Bind address (use `127.0.0.1` for local-only) |
 | `SHOWPULSE_DATA_FILE` | `showpulse-data.json` | Data file path |
-| `SHOWPULSE_PIN` | *(none)* | PIN for auth (unset = open access) |
+| `SHOWPULSE_PIN` | *(none)* | PIN for admin user (unset + no users = open access) |
 
 ## Data Storage
 
-All data is saved to `showpulse-data.json` in the app directory (or the path set via `SHOWPULSE_DATA_FILE`). To reset to demo data, delete this file and restart.
+All data is saved to `showpulse-data.json` in the app directory (or the path set via `SHOWPULSE_DATA_FILE`). This includes departments, cues, acts, show name, and users. To reset to demo data, delete this file and restart.
 
 ## Troubleshooting
 

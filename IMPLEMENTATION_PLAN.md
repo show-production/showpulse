@@ -3,32 +3,32 @@
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   Host Machine                      │
-│                                                     │
-│  ┌──────────┐   ┌──────────────┐   ┌────────────┐  │
-│  │ SMPTE LTC│──>│              │   │  Frontend   │  │
-│  │ (Audio In)│  │   Backend    │──>│  (Static)   │  │
-│  └──────────┘   │  (Rust)      │   │  served by  │  │
-│  ┌──────────┐   │              │   │  backend    │  │
-│  │ MIDI MTC │──>│  WebSocket   │   └─────┬──────┘  │
-│  │ (MIDI In)│   │  Server      │         │         │
-│  └──────────┘   │              │         │         │
-│  ┌──────────┐   │  Internal TC │         │         │
-│  │ TC Gen / │──>│  Generator   │         │         │
-│  │ Emulator │   │              │         │         │
-│  └──────────┘   └──────┬───────┘         │         │
-│                        │                 │         │
-│                   WebSocket            HTTP         │
-│                        │                 │         │
-└────────────────────────┼─────────────────┼─────────┘
-                         │                 │
-                    Local WiFi Network     │
-                         │                 │
-              ┌──────────▼─────────────────▼──┐
-              │   Crew Devices (Browsers)     │
-              │   Phone / Tablet / Laptop     │
-              └───────────────────────────────┘
++-----------------------------------------------------+
+|                   Host Machine                      |
+|                                                     |
+|  +----------+   +--------------+   +------------+  |
+|  | SMPTE LTC|-->|              |   |  Frontend   |  |
+|  | (Audio In)|  |   Backend    |-->|  (Static)   |  |
+|  +----------+   |  (Rust)      |   |  served by  |  |
+|  +----------+   |              |   |  backend    |  |
+|  | MIDI MTC |-->|  WebSocket   |   +------+------+  |
+|  | (MIDI In)|   |  Server      |         |         |
+|  +----------+   |              |         |         |
+|  +----------+   |  Internal TC |         |         |
+|  | TC Gen / |-->|  Generator   |         |         |
+|  | Emulator |   |              |         |         |
+|  +----------+   +------+-------+         |         |
+|                        |                 |         |
+|                   WebSocket            HTTP         |
+|                        |                 |         |
++------------------------+-----------------+---------+
+                         |                 |
+                    Local WiFi Network     |
+                         |                 |
+              +----------v-----------------v--+
+              |   Crew Devices (Browsers)     |
+              |   Phone / Tablet / Laptop     |
+              +-------------------------------+
 ```
 
 ---
@@ -44,15 +44,17 @@
   ├── src/
   │   ├── main.rs              # Entry point, server startup
   │   ├── config.rs            # Runtime configuration (port, audio device, MIDI device)
+  │   ├── lib.rs               # AppState, api_router(), module exports
+  │   ├── auth.rs              # User, Role, SessionStore, timer lock, middleware
   │   ├── timecode/
-  │   │   ├── mod.rs
+  │   │   ├── mod.rs           # TimecodeManager (source switching)
   │   │   ├── types.rs         # Timecode struct (HH:MM:SS:FF), frame rates
   │   │   ├── ltc.rs           # SMPTE LTC decoder (audio input)
   │   │   ├── mtc.rs           # MIDI MTC decoder (MIDI input)
   │   │   └── generator.rs     # Internal timecode generator/emulator
   │   ├── cue/
   │   │   ├── mod.rs
-  │   │   ├── types.rs         # Cue, CueList, Department models
+  │   │   ├── types.rs         # Cue, Department, Act, ShowData, CueState models
   │   │   └── store.rs         # In-memory cue store + JSON file persistence
   │   ├── engine/
   │   │   ├── mod.rs
@@ -60,14 +62,40 @@
   │   ├── ws/
   │   │   ├── mod.rs
   │   │   └── hub.rs           # WebSocket connection manager, broadcast
-  │   ├── api/
-  │   │   ├── mod.rs
-  │   │   ├── cues.rs          # REST endpoints for cue CRUD
-  │   │   ├── departments.rs   # REST endpoints for department management
-  │   │   ├── timecode.rs      # REST endpoint for current timecode status
-  │   │   └── auth.rs          # Authentication middleware
-  │   └── web/                 # Embedded static frontend assets
-  └── frontend/               # Frontend source (built separately, output embedded)
+  │   └── api/
+  │       ├── mod.rs
+  │       ├── acts.rs           # Act CRUD + shift
+  │       ├── cues.rs           # Cue CRUD + bulk import
+  │       ├── departments.rs    # Department CRUD
+  │       ├── generator.rs      # Generator transport controls
+  │       ├── ltc.rs            # LTC device management
+  │       ├── mtc.rs            # MTC port management
+  │       ├── qr.rs             # QR code generation
+  │       ├── show.rs           # Show name get/set
+  │       ├── timecode.rs       # Timecode status + source switching
+  │       ├── timer_lock.rs     # Timer lock acquire/release/status
+  │       └── users.rs          # User CRUD (Admin only)
+  ├── static/                   # Frontend (vanilla HTML/CSS/JS, served by backend)
+  │   ├── index.html
+  │   ├── css/
+  │   │   ├── variables.css     # CSS custom properties (colors, sizes, radii)
+  │   │   ├── base.css          # Reset, body, scrollbar, utility classes
+  │   │   ├── shell.css         # Navbar, sidebar, tabs, toast, loading
+  │   │   ├── show.css          # Flow cards, timer, Ready/Go, floating controls
+  │   │   ├── manage.css        # Department list, cue table
+  │   │   ├── settings.css      # Settings form, user panel
+  │   │   └── modals.css        # Modal overlays
+  │   └── js/
+  │       ├── state.js          # Constants, global state, DOM cache, shared helpers
+  │       ├── api.js            # fetch wrapper, WebSocket, polling fallback
+  │       ├── auth.js           # Login, role gating, user management, timer lock
+  │       ├── show.js           # Flow view rendering, DOM diffing, act grouping
+  │       ├── manage.js         # Department/cue/act CRUD UI
+  │       ├── settings.js       # Settings form, theme, device selectors
+  │       ├── import-export.js  # CSV/JSON import, show export/import
+  │       └── ui-helpers.js     # Tabs, sidebar, modals, toasts, init()
+  └── tests/
+      └── api.rs                # Integration tests for REST endpoints
   ```
 
 ### 1.2 Timecode input
@@ -175,9 +203,16 @@ struct Cue {
     notes: String,
 }
 
+struct Act {
+    id: Uuid,
+    name: String,         // e.g. "Act 1", "Intermission"
+    sort_order: u32,
+}
+
 struct CueList {
     departments: Vec<Department>,
     cues: Vec<Cue>,       // sorted by trigger_tc
+    acts: Vec<Act>,       // sorted by sort_order
 }
 ```
 
@@ -195,6 +230,11 @@ struct CueList {
 | DELETE | `/api/cues/:id`                 | Delete cue                     |
 | POST   | `/api/cues/import`              | Import cues from CSV/JSON file |
 | GET    | `/api/timecode`                 | Current timecode + status      |
+| GET    | `/api/acts`                     | List acts                      |
+| POST   | `/api/acts`                     | Create act                     |
+| PUT    | `/api/acts/:id`                 | Update act                     |
+| DELETE | `/api/acts/:id`                 | Delete act                     |
+| POST   | `/api/acts/:id/shift`           | Shift all cues in act          |
 
 ### 2.3 Persistence
 - **JSON file** on disk (`showpulse-data.json`). Loaded at startup, saved on mutation.
@@ -202,7 +242,7 @@ struct CueList {
 - Optional: support loading/saving named show files.
 
 ### 2.4 Deliverable
-- Full CRUD for departments and cues via REST API.
+- Full CRUD for departments, cues, and acts via REST API.
 - Data persists across restarts.
 
 ---
@@ -210,13 +250,14 @@ struct CueList {
 ## Phase 3: Countdown Engine & WebSocket Broadcast
 
 ### 3.1 Engine loop
-- Runs on a dedicated Tokio task at ~30Hz (every ~33ms).
+- Runs on a dedicated Tokio task at ~10Hz (every ~100ms).
 - Each tick:
   1. Read current timecode from the shared state.
   2. For each cue, compute `time_remaining = cue.trigger_tc - current_tc`.
-  3. Determine cue state: `upcoming | warning | active | passed`.
+  3. Determine cue state: `upcoming | warning | go | active | passed`.
   4. Build a per-department message with the relevant cues and countdowns.
   5. Broadcast to connected WebSocket clients (filtered by department subscription).
+  6. Cache cue states and only recompute on second boundaries (optimization).
 
 ### 3.2 WebSocket protocol
 - **Endpoint:** `ws://host:port/ws`
@@ -234,6 +275,7 @@ struct CueList {
         "label": "LX Cue 42",
         "state": "warning",
         "countdown_sec": 12.4,
+        "elapsed_sec": null,
         "trigger_tc": "01:23:57:00"
       }
     ]
@@ -250,27 +292,27 @@ struct CueList {
 ## Phase 4: Frontend — Crew View
 
 ### 4.1 Tech stack
-- **Framework:** Vanilla JS + Web Components, or lightweight (Preact/Solid). No heavy framework — keep bundle small for fast load on crew phones.
+- **Framework:** Vanilla HTML/CSS/JS — no build step, no framework. Modular JS files loaded in sequence.
 - **Styling:** CSS with custom properties for department colors. Dark theme default (typical backstage environment).
-- **Build:** Vite. Output is static HTML/JS/CSS embedded into the Rust binary at compile time (`include_dir` or `rust-embed` crate).
+- **Serving:** Static files served by the Axum backend via `tower-http::services::ServeDir`.
 
 ### 4.2 Pages / Views
 
-#### Crew Countdown View (`/` or `/#/crew`)
-- **Primary display:** Large countdown timer for the next upcoming cue.
-- Department selector (dropdown or tabs) to filter which cues to show.
-- Color-coded states: green (upcoming, >30s), yellow (warning), red (imminent, <5s), flash on fire.
-- Audio/vibration alert when countdown hits warning threshold.
+#### Show View (default tab)
+- **Primary display:** Large centered timecode with transport controls below.
+- **Passed cues:** Count badge with expandable dropdown.
+- **Active cue strips:** Compact rows with department color + checkmark.
+- **Ready/Go zone:** Dedicated countdown with traffic-light colors (READY -> 3 -> 2 -> 1 -> GO!).
+- **Coming cues:** Scrollable list with act grouping, collapsible groups, floating controls.
+- Department filter sidebar, DOM-diffed cards, keyboard shortcuts.
 - Auto-reconnect on WebSocket disconnect (with visual indicator).
-- Wake-lock API to prevent screen from sleeping during show.
 
-#### Admin / Show Manager View (`/#/admin`)
-- Department CRUD (name, color).
-- Cue list editor: table view, add/edit/delete cues, drag to reorder.
-- CSV/JSON import for cue lists.
-- Live timecode display showing current incoming timecode.
-- System status: timecode source (LTC/MTC), connection health, connected clients count.
-- Protected by authentication (see Security section).
+#### Manage View
+- Department CRUD, Act CRUD, cue list table with sorting/filtering.
+- Bulk CSV/JSON import.
+
+#### Settings View
+- Timecode source/FPS/mode config, device selectors, theme customization, show name, export/import.
 
 ### 4.3 Deliverable
 - Crew can open `http://<host>:8080` on their phone and see live countdowns.
@@ -284,7 +326,7 @@ struct CueList {
 - **Multi-show support:** Save/load different show files.
 - **Cue list print view:** Printable cue sheet for paper backup.
 - **QR code on admin page:** For easy crew onboarding — scan QR to open crew view URL.
-- **Generator presets:** Save/load named generator configurations (e.g., "Act 1 rehearsal loop", "Intermission countdown") for quick recall during tech rehearsals.
+- **Generator presets:** Save/load named generator configurations for quick recall during tech rehearsals.
 
 ### 5.2 Deliverable
 - Production-ready admin interface.
@@ -301,40 +343,42 @@ ShowPulse runs on a **local, trusted WiFi network** (production VLAN or dedicate
 
 | Concern | Approach |
 |---------|----------|
-| **Admin access** | PIN-based authentication. Admin sets a 4-8 digit PIN on first run (stored as bcrypt hash in config). Admin endpoints require the PIN submitted via a login form, which returns a session token (short-lived JWT or opaque token stored in a `HttpOnly` cookie). |
-| **Crew access** | No authentication required. Crew view is read-only — it only receives WebSocket data. No mutations possible from crew endpoints. |
-| **Session management** | Tokens expire after 8 hours (typical show day). Configurable. |
-| **Rate limiting** | Rate-limit the PIN login endpoint (5 attempts per minute per IP) to prevent brute-force. Use `tower` middleware. |
+| **User-based access** | 5-level role system: Viewer, CrewLead, Operator, Manager, Admin. Users authenticate with name+PIN. Admin user auto-seeded from `SHOWPULSE_PIN` env var. No users configured = open access. |
+| **Session management** | Opaque tokens stored in `SessionStore`. Tokens via Bearer header or `?token=` query param. |
+| **Role gating** | `require_role()` guard checks minimum role level. Viewer/CrewLead: Show only (dept-filtered). Operator: +Manage. Manager: +Settings + timer lock. Admin: +User CRUD. |
+| **Timer lock** | Exclusive timer control for Managers. Admin bypasses lock. `POST/DELETE /api/timer-lock`. |
+| **Rate limiting** | Planned: rate-limit login endpoint (5 attempts per minute per IP) via tower middleware. |
 
 ### Input Validation
 - All REST inputs validated with `serde` deserialization + explicit validation (timecode format, string lengths, UUID format).
 - Reject oversized request bodies (max 1MB).
-- Sanitize cue labels/notes to prevent XSS if rendered in HTML (use text content, not innerHTML).
+- String clamping, color hex validation, post_wait clamping in CueStore.
 
 ### WebSocket Security
 - WebSocket connections are read-only for crew — server pushes data, ignores any unexpected client messages beyond the initial subscribe.
-- Connection limit per IP (max 10) to prevent resource exhaustion from a misbehaving device.
+- Connection limit: `MAX_WS_CLIENTS = 100`.
 - Heartbeat/ping-pong with 30s timeout to clean up stale connections.
 
 ### Data Security
 - Show data files stored on local disk with standard filesystem permissions.
-- No secrets in the show data file — PIN hash stored separately in a config file.
+- No secrets in the show data file — PINs stored alongside users in the data file.
 - No telemetry, no external network calls, no phoning home.
 
 ### CORS & Headers
 - CORS restricted to same-origin (frontend is served by the same backend).
-- Standard security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`.
+- Standard security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`.
+- Planned: `Content-Security-Policy` header.
 
 ### Threat Model Summary
 | Threat | Mitigation |
 |--------|-----------|
-| Unauthorized cue editing | PIN auth on admin endpoints |
-| Brute-force PIN | Rate limiting on login |
-| XSS via cue data | Input sanitization, CSP headers |
-| WebSocket flooding | Per-IP connection limits, heartbeat cleanup |
-| Stale sessions | Token expiry (8h) |
+| Unauthorized cue editing | Role-based auth (Operator+ required) |
+| Unauthorized timer control | Timer lock + Manager+ role |
+| Brute-force PIN | Planned: rate limiting on login |
+| XSS via cue data | Input sanitization, HTML escaping |
+| WebSocket flooding | Client limit (100), heartbeat cleanup |
 | Data loss | JSON file persistence, manual backup/export |
-| Network sniffing | Acceptable risk on local production network; optional TLS via self-signed cert for high-security venues |
+| Network sniffing | Acceptable risk on local production network |
 
 ---
 
@@ -343,14 +387,12 @@ ShowPulse runs on a **local, trusted WiFi network** (production VLAN or dedicate
 | Layer | Technology | Rationale |
 |-------|-----------|-----------|
 | Backend runtime | **Rust + Tokio** | Low latency, single binary deployment, no runtime deps |
-| HTTP framework | **Axum** | First-class WebSocket support, tower middleware ecosystem |
+| HTTP framework | **Axum 0.7** | First-class WebSocket support, tower middleware ecosystem |
 | Audio input | **cpal** | Cross-platform audio capture |
 | MIDI input | **midir** | Cross-platform MIDI |
 | Serialization | **serde + serde_json** | Standard Rust JSON handling |
-| Frontend build | **Vite** | Fast builds, small output |
-| Frontend UI | **Preact** or **Solid** | Tiny bundle, reactive updates for countdown timers |
-| Static embedding | **rust-embed** | Embed frontend into single binary |
-| Auth tokens | **JWT (jsonwebtoken crate)** or opaque tokens | Stateless session validation |
+| Frontend | **Vanilla HTML/CSS/JS** | No build step, modular files, simple deployment |
+| QR codes | **qrcode** | SVG QR generation for crew onboarding |
 
 ---
 
@@ -367,14 +409,19 @@ ShowPulse runs on a **local, trusted WiFi network** (production VLAN or dedicate
 | 7 | Cue import | Bulk JSON/CSV import with validation, column aliases, dept name resolution | **Done** |
 | 8 | Display overhaul | Dominant TC, collapsible transport, DOM diffing, countdown-focused cards | **Done** |
 | 9 | Dashboard v2 | 5-section layout, stacked decks, animated Ready/Go zone, cue navigation, Prev/Next, scroll-fold | **Done** |
-| 10 | Testing | 71 unit & integration tests for timecode, store, API endpoints | **Done** |
+| 10 | Testing | 73 unit & integration tests for timecode, store, API endpoints | **Done** |
 | 10.5 | Cue field expansion | Duration, armed, color, continue_mode, post_wait on Cue | **Done** |
-| 10.6 | Go state + ReadyGo polish | Backend CueState::Go, traffic-light text, progress bar 0→100%, smooth DOM transitions | **Done** |
+| 10.6 | Go state + ReadyGo polish | Backend CueState::Go, traffic-light text, progress bar 0-100%, smooth DOM transitions | **Done** |
 | 11 | Authentication | PIN-based auth, SessionStore, require_auth middleware | **Done** |
 | 12 | Security hardening | CORS, body limit, concurrency limit, security headers, input validation | **Done** |
-| 13 | Polish & packaging | Multi-show, generator presets, print view, portable dist | Planned |
+| 14 | User management | 5 roles (Viewer-Admin), user CRUD, timer lock, role-based UI gating | **Done** |
+| 15 | Acts & show name | Act CRUD, act grouping in flow view, collapsible groups, show name, navbar rebuild | **Done** |
+| 16 | Floating controls | Flow controls pill (Now/Auto/Collapse/Expand), act header polish | **Done** |
+| 17 | Script maintenance | -501 lines (-18%), CRUD helpers, module cleanup, JSDoc, dead code removal | **Done** |
+| 18 | Visual polish | T-/T+ countdown, warning easing, vivid dept colors | **Done** |
+| 13 | Nice-to-haves | Multi-show, generator presets, print view, portable dist | Planned |
 
-> **Note:** Milestones 1-12 are fully implemented. The actual implementation uses vanilla HTML/CSS/JS
+> **Note:** Milestones 1-18 (except 13) are fully implemented. The actual implementation uses vanilla HTML/CSS/JS
 > (modular files in `static/`) instead of Vite/Preact/Solid as originally planned — this simplifies
 > deployment to a true single-binary with no build step. LTC uses `cpal` and MTC uses `midir` as
 > specified. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the current roadmap.

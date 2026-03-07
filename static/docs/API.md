@@ -35,10 +35,17 @@ Response: 204 No Content
 ### List cues
 ```
 GET /cues
-Response: [{id, department_id, cue_number, label, trigger_tc, warn_seconds, notes}, ...]
+GET /cues?department_id=<uuid>
+Response: [{id, department_id, cue_number, label, trigger_tc, warn_seconds, notes, duration, armed, color, continue_mode, post_wait, act_id}, ...]
 ```
 
 `trigger_tc` format: `{hours, minutes, seconds, frames}`
+
+### Get single cue
+```
+GET /cues/:id
+Response: {id, department_id, cue_number, label, trigger_tc, warn_seconds, notes, duration, armed, color, continue_mode, post_wait, act_id}
+```
 
 ### Create cue
 ```
@@ -55,9 +62,10 @@ Body: {
   armed?,               // bool, default: true
   color?,               // String (hex, e.g. "#ff0000"), null = use dept color
   continue_mode?,       // "stop" | "auto_continue" | "auto_follow", default: "stop"
-  post_wait?            // f64 (seconds), only used with auto_continue
+  post_wait?,           // f64 (seconds), only used with auto_continue
+  act_id?               // UUID, null = unassigned
 }
-Response: {id, department_id, cue_number, label, trigger_tc, warn_seconds, notes, duration, armed, color, continue_mode, post_wait}
+Response: {id, department_id, cue_number, label, trigger_tc, warn_seconds, notes, duration, armed, color, continue_mode, post_wait, act_id}
 ```
 
 Only `department_id` is mandatory (serde defaults apply for others).
@@ -65,7 +73,7 @@ Only `department_id` is mandatory (serde defaults apply for others).
 ### Update cue
 ```
 PUT /cues/:id
-Body: {id, department_id, cue_number, label, trigger_tc, warn_seconds, notes, duration?, armed?, color?, continue_mode?, post_wait?}
+Body: {id, department_id, cue_number, label, trigger_tc, warn_seconds, notes, duration?, armed?, color?, continue_mode?, post_wait?, act_id?}
 Response: {id, ...}
 ```
 
@@ -82,16 +90,72 @@ Body: [{department_id, label?, trigger_tc?, warn_seconds?, notes?}, ...]
 Response: {imported: number, errors: [{index, message}, ...]}
 ```
 
-## Show Import
+Replaces all existing cues.
+
+## Show
 
 ### Import full show (replace)
 ```
 POST /show/import
-Body: {departments: [...], cues: [...]}
+Body: {departments: [...], cues: [...], acts?: [...], show_name?: "..."}
 Response: {imported: number, errors: [{index, message}, ...]}
 ```
 
-Replaces all existing departments and cues.
+Replaces all existing departments, cues, and acts.
+
+### Get show name
+```
+GET /show/name
+Response: {name: "My Show"}
+```
+
+### Set show name (Manager+)
+```
+PUT /show/name
+Body: {name: "My Show"}
+Response: 204 No Content
+```
+
+## Acts
+
+### List acts
+```
+GET /acts
+Response: [{id, name, sort_order}, ...]
+```
+
+Sorted by `sort_order`.
+
+### Create act (Operator+)
+```
+POST /acts
+Body: {id?: "00000000-...", name: "Act 1", sort_order?: 1}
+Response: {id, name, sort_order}
+```
+
+### Update act (Operator+)
+```
+PUT /acts/:id
+Body: {id, name, sort_order}
+Response: {id, name, sort_order}
+```
+
+### Delete act (Operator+)
+```
+DELETE /acts/:id
+Response: 204 No Content
+```
+
+Cues in the deleted act are unassigned (not deleted).
+
+### Shift act cues (Operator+)
+```
+POST /acts/:id/shift
+Body: {start_tc: {hours, minutes, seconds, frames}}
+Response: 204 No Content
+```
+
+Moves all cues in the act so the first cue starts at the given timecode. Other cues shift by the same offset.
 
 ## Timecode
 
@@ -118,11 +182,19 @@ POST /generator/stop
 Response: 204 No Content
 ```
 
+Requires Manager+ role AND timer lock (or Admin).
+
 ### Goto timecode
 ```
 POST /generator/goto
 Body: {timecode: {hours, minutes, seconds, frames}}
 Response: 204 No Content
+```
+
+### Get generator status
+```
+GET /generator
+Response: {mode, frame_rate, state, start_tc, current_tc, loop_in, loop_out, speed}
 ```
 
 ### Update config
@@ -178,20 +250,20 @@ Response: 204 No Content
 
 ## Authentication
 
-When `SHOWPULSE_PIN` is set, mutation endpoints (POST/PUT/DELETE) require a valid session token. GET endpoints and WebSocket remain open.
+When users exist in the system, mutation endpoints (POST/PUT/DELETE) require a valid session token. GET endpoints and WebSocket remain open. When no users are configured, all endpoints are open.
 
 ### Check auth status
 ```
 GET /auth/status
-Response: {enabled: bool, authenticated: bool}
+Response: {auth_enabled: bool}
 ```
 
 ### Login
 ```
 POST /auth/login
-Body: {pin: "1234"}
-Response: {token: "..."}   // 200 OK
-Response: 401 Unauthorized  // wrong PIN
+Body: {name: "admin", pin: "1234"}
+Response: {token: "...", role: "admin", name: "admin", departments: ["uuid", ...]}   // 200 OK
+Response: 401 Unauthorized  // wrong name or PIN
 ```
 
 ### Logout
@@ -202,6 +274,65 @@ Response: 204 No Content
 ```
 
 Token is passed via `Authorization: Bearer <token>` header on subsequent requests. For WebSocket, pass as `?token=<token>` query parameter.
+
+## Users (Admin only)
+
+### List users
+```
+GET /users
+Response: [{id, name, role, departments}, ...]
+```
+
+PINs are stripped from the response.
+
+### Create user
+```
+POST /users
+Body: {name: "...", pin: "...", role: "operator", departments?: ["uuid", ...]}
+Response: {id, name, role, departments}
+```
+
+Role values: `"viewer"`, `"crew_lead"`, `"operator"`, `"manager"`, `"admin"`
+
+### Update user
+```
+PUT /users/:id
+Body: {id, name, pin?, role, departments?}
+Response: {id, name, role, departments}
+```
+
+### Delete user
+```
+DELETE /users/:id
+Response: 204 No Content
+```
+
+Self-delete is blocked (400 Bad Request).
+
+## Timer Lock
+
+Exclusive timer control. Only one Manager can hold the lock at a time. Admins bypass the lock entirely.
+
+### Get lock status
+```
+GET /timer-lock
+Response: {locked: bool, holder_name?: "...", holder_id?: "uuid"}
+```
+
+### Acquire lock (Manager+)
+```
+POST /timer-lock
+Response: 200 OK          // lock acquired
+Response: 409 Conflict     // already held by another user
+```
+
+### Release lock
+```
+DELETE /timer-lock
+Response: 204 No Content
+```
+
+Own lock or Admin override.
 
 ## QR Code
 
@@ -216,9 +347,10 @@ Response: SVG image (image/svg+xml) with server URL for crew onboarding
 ### Connect
 ```
 WS /ws
+WS /ws?token=<auth_token>
 ```
 
-### Message format (server → client, ~10Hz)
+### Message format (server -> client, ~10Hz)
 ```json
 {
   "timecode": "01:23:45:12",
@@ -237,7 +369,9 @@ WS /ws
       "armed": true,
       "duration": null,
       "color": null,
-      "elapsed_sec": null
+      "elapsed_sec": null,
+      "act_id": "uuid-or-null",
+      "act_name": "Act 1"
     }
   ]
 }
@@ -248,6 +382,6 @@ WS /ws
 |-------|---------|
 | `upcoming` | Not yet in warning range |
 | `warning` | Within warn_seconds of trigger |
-| `go` | Triggered — held for 2 seconds for GO! animation |
+| `go` | Triggered -- held for 2 seconds for GO! animation |
 | `active` | Past trigger TC + GO hold delay, still running |
 | `passed` | Next same-department cue has triggered, or duration expired |
