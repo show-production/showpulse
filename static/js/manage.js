@@ -104,6 +104,7 @@ function renderCueList() {
 
   if (filtered.length === 0) {
     DOM.cueListBody.innerHTML = '<div class="cue-list-empty">No cues yet.</div>';
+    renderTimeline();
     return;
   }
 
@@ -164,6 +165,7 @@ function renderCueList() {
 
   DOM.cueListBody.innerHTML = html;
   updateBulkBar();
+  renderTimeline();
 }
 
 /**
@@ -222,6 +224,86 @@ function cueListActSpan(actCues) {
   const m = Math.floor(span / 60);
   const s = Math.floor(span % 60);
   return m > 0 ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
+}
+
+// ── Timeline Strip ──────────────────────────
+
+/**
+ * Render the visual timeline strip above the cue list.
+ * Shows act regions, cue markers, and a playhead.
+ */
+function renderTimeline() {
+  const strip = DOM.timelineStrip;
+  if (!strip) return;
+  if (cues.length === 0) { strip.innerHTML = ''; return; }
+
+  const times = cues.map(c => tcObjToSeconds(c.trigger_tc)).sort((a, b) => a - b);
+  const pad = Math.max(10, (times[times.length - 1] - times[0]) * 0.03);
+  const minT = Math.max(0, times[0] - pad);
+  const maxT = times[times.length - 1] + pad;
+  const range = maxT - minT || 1;
+  const pct = (sec) => ((sec - minT) / range * 100).toFixed(2);
+
+  // Act bands
+  let bands = '';
+  const sortedActs = acts.slice().sort((a, b) => a.sort_order - b.sort_order);
+  for (const act of sortedActs) {
+    const ac = cues.filter(c => c.act_id === act.id);
+    if (ac.length === 0) continue;
+    const at = ac.map(c => tcObjToSeconds(c.trigger_tc));
+    const l = pct(Math.min(...at));
+    const w = ((Math.max(...at) - Math.min(...at)) / range * 100).toFixed(2);
+    bands += `<div class="tl-act" style="left:${l}%;width:${Math.max(parseFloat(w), 0.5)}%" title="${esc(act.name)}"></div>`;
+  }
+
+  // Cue markers
+  let markers = '';
+  for (const c of cues) {
+    const color = getDeptColor(c.department_id);
+    markers += `<div class="tl-cue" style="left:${pct(tcObjToSeconds(c.trigger_tc))}%;background:${color}" title="${esc(c.label)}" onclick="scrollToCueItem('${c.id}')"></div>`;
+  }
+
+  // Time labels
+  let labels = '';
+  const n = 5;
+  for (let i = 0; i <= n; i++) {
+    const sec = minT + range * i / n;
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = Math.floor(sec % 60);
+    const txt = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${m}:${String(s).padStart(2,'0')}`;
+    labels += `<span style="left:${(i / n * 100).toFixed(1)}%">${txt}</span>`;
+  }
+
+  strip.innerHTML = `<div class="tl-track">${bands}${markers}<div class="tl-playhead" id="tl-playhead"></div></div><div class="tl-labels">${labels}</div>`;
+  strip.dataset.minT = minT;
+  strip.dataset.range = range;
+}
+
+/** Update the playhead position from the current timecode display. */
+function updateTimelinePlayhead() {
+  const ph = document.getElementById('tl-playhead');
+  const strip = DOM.timelineStrip;
+  if (!ph || !strip || !strip.dataset.range) return;
+  const curSec = tcToSeconds(DOM.tcValue ? DOM.tcValue.textContent : '00:00:00:00');
+  const minT = parseFloat(strip.dataset.minT) || 0;
+  const range = parseFloat(strip.dataset.range) || 1;
+  ph.style.left = Math.max(0, Math.min(100, (curSec - minT) / range * 100)) + '%';
+}
+
+/** Scroll to a cue item in the list and briefly highlight it. */
+function scrollToCueItem(cueId) {
+  const item = DOM.cueListBody.querySelector(`.cue-item[data-cue-id="${cueId}"]`);
+  if (!item) return;
+  // Expand act group if collapsed
+  const group = item.closest('.cue-act-group');
+  if (group && group.classList.contains('collapsed')) {
+    const actId = group.dataset.actId;
+    if (actId) toggleCueActGroup(actId);
+  }
+  item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  item.classList.add('cue-highlight');
+  setTimeout(() => item.classList.remove('cue-highlight'), 1500);
 }
 
 // ── Drag & Drop ─────────────────────────────
@@ -935,6 +1017,7 @@ function renderActList() {
     return `<div class="dept-item">
       <div class="dept-name">${esc(a.name)} <span style="color:var(--text-dim);font-size:0.75rem">(${cueCount} cues)</span></div>
       <div class="dept-actions">
+        <button class="icon-btn" onclick="duplicateAct('${a.id}')" title="Duplicate act">&#x2295;</button>
         <button class="icon-btn" onclick="openActModal('${a.id}')" title="Edit">&#9998;</button>
         <button class="icon-btn danger" onclick="deleteAct('${a.id}')" title="Delete">&times;</button>
       </div>
@@ -982,6 +1065,36 @@ async function saveAct() {
 async function deleteAct(id) {
   if (await apiDelete(`/acts/${id}`, 'Delete Act', 'Delete this act? Cues will be unassigned.', 'Act')) {
     refreshManageView();
+  }
+}
+
+/**
+ * Duplicate an entire act and all its cues with a time offset.
+ * @param {string} actId - Act UUID to duplicate.
+ */
+async function duplicateAct(actId) {
+  const act = acts.find(a => a.id === actId);
+  if (!act) return;
+  const offsetStr = prompt('Time offset for duplicated cues (seconds):', '0');
+  if (offsetStr === null) return;
+  const offsetSec = parseFloat(offsetStr) || 0;
+  try {
+    const newAct = await api('/acts', { method: 'POST', body: {
+      id: CONST.NULL_UUID,
+      name: act.name + ' (copy)',
+      sort_order: act.sort_order + 1,
+    }});
+    const actCues = cues.filter(c => c.act_id === actId);
+    if (newAct && newAct.id && actCues.length > 0) {
+      await Promise.all(actCues.map(c => api('/cues', { method: 'POST', body: {
+        ...c, id: CONST.NULL_UUID, act_id: newAct.id, cue_number: '',
+        trigger_tc: secondsToTcObj(tcObjToSeconds(c.trigger_tc) + offsetSec),
+      }})));
+    }
+    await refreshManageView();
+    showToast(`Duplicated "${act.name}" with ${actCues.length} cues`, 'success');
+  } catch (e) {
+    showToast('Failed to duplicate act', 'error');
   }
 }
 
