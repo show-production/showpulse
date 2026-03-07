@@ -248,6 +248,24 @@ POST /mtc/stop
 Response: 204 No Content
 ```
 
+## Admin Dashboard
+
+### Get active users dashboard (Admin only)
+```
+GET /admin/dashboard
+Response: {
+  total_connections: number,
+  authenticated_connections: number,
+  clients: [
+    {user_name: "John" | null, role: "manager" | null, connected_seconds: 1234, is_authenticated: bool},
+    ...
+  ],
+  timer_lock: {locked: bool, holder?: {user_id: "uuid", user_name: "John"}}
+}
+```
+
+Returns a snapshot of all connected WebSocket clients, their roles, connection durations, and current timer lock status.
+
 ## Authentication
 
 When users exist in the system, mutation endpoints (POST/PUT/DELETE) require a valid session token. GET endpoints and WebSocket remain open. When no users are configured, all endpoints are open.

@@ -133,6 +133,14 @@
 - **JS**: `exportShow()`, `importShow()` in `import-export.js`
 - **CSS**: `settings.css` -- `.data-actions`
 
+### DashboardPanel (Admin only)
+- **Visual**: Live summary of connected users with name, role, duration, and timer lock status
+- **HTML**: `<div id="dashboard-panel">`
+- **JS**: `loadDashboard()`, `renderDashboard()`, `startDashboardPolling()`, `stopDashboardPolling()` in `auth.js`
+- **CSS**: `settings.css` -- `.dash-summary`, `.dash-table`, `.dash-lock-holder`
+- **State**: Auto-refreshes every 10 seconds while Settings view is active; polling stops when switching away
+- **API**: `GET /api/admin/dashboard`
+
 ### UserPanel (Admin only)
 - **Visual**: User list with add/edit/delete, role + department assignment
 - **HTML**: `<div id="user-panel">`

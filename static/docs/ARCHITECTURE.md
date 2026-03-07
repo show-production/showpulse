@@ -35,9 +35,10 @@ User Action
 AppState {
   tc_manager: Arc<TimecodeManager>,  // Timecode source orchestration
   store: Arc<CueStore>,              // Department + cue + act CRUD + JSON persistence
-  ws_hub: Arc<WsHub>,                // WebSocket broadcast
+  ws_hub: Arc<WsHub>,                // WebSocket broadcast + connected client tracking
   sessions: SessionStore,            // User-based auth session tokens
   timer_lock: TimerLockState,        // Exclusive timer control for Managers
+  login_limiter: LoginLimiter,       // Per-IP brute-force rate limiting
 }
 ```
 

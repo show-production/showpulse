@@ -19,7 +19,7 @@
 <nav class="topnav">
   <div class="tabs">
     <button class="tab active" data-view="show">Show</button>
-    <button class="tab" data-view="manage">Manage</button>
+    <button class="tab" data-view="manage">Editor</button>
     <button class="tab" data-view="settings">Settings</button>
   </div>
   <span class="show-name-label" id="show-name-label">ShowPulse</span>
@@ -254,6 +254,15 @@
       <div class="panel-header"><h3>Appearance</h3></div>
       <div class="panel-body panel-body--padded">
         <div class="setting-group">
+          <label>Theme</label>
+          <div class="radio-group" id="theme-radio">
+            <input type="radio" name="theme" value="dark" id="theme-dark" checked>
+            <label for="theme-dark" class="selected" onclick="setTheme('dark', this)">Dark</label>
+            <input type="radio" name="theme" value="light" id="theme-light">
+            <label for="theme-light" onclick="setTheme('light', this)">Light</label>
+          </div>
+        </div>
+        <div class="setting-group">
           <label>Background</label>
           <div class="color-row">
             <input type="color" value="#0a0a0f" oninput="setThemeColor('--bg-primary', this.value)">
@@ -281,6 +290,16 @@
             <span class="slider-value" id="tc-size-label">6rem</span>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="panel" id="dashboard-panel" style="display:none">
+      <div class="panel-header">
+        <h3>Active Users</h3>
+        <button class="add-btn" onclick="loadDashboard()">&#x21bb; Refresh</button>
+      </div>
+      <div class="panel-body" id="dashboard-body">
+        <div style="color:var(--text-dim);font-size:0.85rem;padding:0.5rem">Loading...</div>
       </div>
     </div>
 

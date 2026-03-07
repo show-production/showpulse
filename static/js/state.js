@@ -143,6 +143,9 @@ function initDOM() {
   // Timer lock
   DOM.timerLockBtn = document.getElementById('timer-lock-btn');
   DOM.timerLockStatus = document.getElementById('timer-lock-status');
+  // Dashboard panel
+  DOM.dashboardPanel = document.getElementById('dashboard-panel');
+  DOM.dashboardBody = document.getElementById('dashboard-body');
   // User panel
   DOM.userPanel = document.getElementById('user-panel');
   DOM.userList = document.getElementById('user-list');
