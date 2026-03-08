@@ -48,6 +48,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 | QR code onboarding (`GET /api/qr`) | Done |
 | Security hardening (CORS, body limit, concurrency limit, WS limit, headers) | Done |
 | 73 unit & integration tests | Done |
+| Hebrew / RTL internationalization (i18n engine, DOM tagging, JS externalization) | Phase D done |
 
 ### Completed Phases
 
@@ -326,6 +327,23 @@ All vanilla JS, zero external dependencies.
 - `gen-rihanna.py`: Generates realistic 106-cue Rihanna concert (5 acts, 8 departments, 15+ songs, timecodes 00:15:00–01:25:00)
 
 **Key files:** `static/js/timeline.js` (extracted timeline module), `static/js/manage.js`, `static/js/state.js` (CONST.NAV_LOGO), `static/js/import-export.js` (printLogo/printMark), `static/css/manage.css` (timeline/tooltip/minimap styles), `static/css/shell.css` (nav logo, show name, login/loading logo), `static/css/show.css` (sidebar padding fix), `static/index.html` (favicon, logos, meta tags)
+
+---
+
+## Phase 21: Hebrew / RTL Internationalization -- In Progress
+**Goal:** Full Hebrew translation and RTL layout support for Israeli production crews.
+
+### Completed
+- **Phase A — i18n infrastructure:** `i18n.js` module with `t(key, params)` lookup, `{param}` interpolation, `setLanguage()`, `applyLanguage()`. English and Hebrew dictionaries (~120 keys each). Language radio toggle in Settings with localStorage persistence. Script loaded second (after state.js).
+- **Phase B — HTML `data-i18n` attributes:** All 5 modals (department, cue, act, user, confirm) tagged with `data-i18n`, `data-i18n-placeholder`, `data-i18n-title` attributes for static text translation.
+- **Phase C — `applyI18nToDOM()` wiring:** DOM scanner function applies translations from `data-i18n*` attributes. Called at init and on language change via `refreshAllViews()`.
+- **Phase D — JS string externalization:** ~100 hardcoded English strings across 9 JS files replaced with `t()` calls. Covers toasts, error messages, modal titles, button labels, status text, dashboard labels, filter labels, bulk operation feedback. Entity name keys (`entity.department/cue/act/user`) for generic CRUD helpers.
+
+### Remaining
+- **Phase E:** Hebrew translation review by native speaker
+- **Phase F:** RTL visual regression testing, mobile layout verification
+
+**Key files:** `static/js/i18n.js` (dictionaries + engine), all 9 other JS files (t() calls), `static/index.html` (data-i18n attributes)
 
 ---
 

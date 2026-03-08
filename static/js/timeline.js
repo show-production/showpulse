@@ -185,7 +185,7 @@ function showTlTooltip(marker, e) {
     `<div class="tl-tip-label">${esc(c.label)}</div>` +
     `<div class="tl-tip-tc">${tc}</div>` +
     `<div class="tl-tip-dept"><span class="tl-tip-dot" style="background:${deptColor}"></span>${esc(deptName)}</div>` +
-    (c.warn_seconds ? `<div class="tl-tip-warn">Warn: ${c.warn_seconds}s</div>` : '');
+    (c.warn_seconds ? `<div class="tl-tip-warn">${t('tl.warn')}: ${c.warn_seconds}s</div>` : '');
 
   // Position above the marker
   const rect = marker.getBoundingClientRect();

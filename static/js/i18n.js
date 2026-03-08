@@ -214,6 +214,12 @@ const I18N = {
     'role.manager': 'Manager',
     'role.admin': 'Admin',
 
+    // Entity names (for toast templates)
+    'entity.department': 'Department',
+    'entity.cue': 'Cue',
+    'entity.act': 'Act',
+    'entity.user': 'User',
+
     // Generic modal buttons
     'modal.cancel': 'Cancel',
     'modal.save': 'Save',
@@ -583,6 +589,12 @@ const I18N = {
     'role.operator': '\u05DE\u05E4\u05E2\u05D9\u05DC',
     'role.manager': '\u05DE\u05E0\u05D4\u05DC',
     'role.admin': '\u05DE\u05E0\u05D4\u05DC \u05DE\u05E2\u05E8\u05DB\u05EA',
+
+    // Entity names
+    'entity.department': '\u05DE\u05D7\u05DC\u05E7\u05D4',
+    'entity.cue': '\u05E7\u05D9\u05D5',
+    'entity.act': '\u05DE\u05E2\u05E8\u05DB\u05D4',
+    'entity.user': '\u05DE\u05E9\u05EA\u05DE\u05E9',
 
     // Generic modal buttons
     'modal.cancel': '\u05D1\u05D9\u05D8\u05D5\u05DC',

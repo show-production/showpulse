@@ -44,9 +44,9 @@ const CONST = {
   EMDASH: ' \u2014 ',
   CHECKMARK: '\u2713',
 
-  // Text
-  EMPTY_CUES_MSG: 'No cues yet. Go to Manage to add some.',
-  NO_MATCH_MSG: 'No matching cues.',
+  // Text (deprecated — use t() keys instead; kept for fallback)
+  EMPTY_CUES_MSG: null,
+  NO_MATCH_MSG: null,
 
   // Branding — nav logomark (favicon SVG at 20px)
   NAV_LOGO: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="20" height="20" style="vertical-align:-3px;margin-right:4px"><defs><filter id="ng" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 0 0 0 0 0 1 0 0 0 0 0.533 0 0 0 0.5 0" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><line x1="2" y1="32" x2="12" y2="32" stroke="#8888A0" stroke-width="3" stroke-linecap="round"/><line x1="52" y1="32" x2="62" y2="32" stroke="#8888A0" stroke-width="3" stroke-linecap="round"/><polyline points="12,32 20,52 32,10 44,52 52,32" fill="none" stroke="#00FF88" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#ng)"/></svg>',
@@ -198,7 +198,7 @@ function fmtTC(tc) {
  * @returns {string}
  */
 function fmtCountdown(sec) {
-  if (sec <= 0) return 'NOW';
+  if (sec <= 0) return t('cue.now');
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60);
   if (m > 0) return `T-${m}m ${String(s).padStart(2, '0')}s`;
@@ -313,10 +313,10 @@ async function apiSave(endpoint, id, body, label) {
     } else {
       await api(endpoint, { method: 'POST', body });
     }
-    showToast(id ? `${label} updated` : `${label} created`, 'success');
+    showToast(t(id ? 'toast.updated' : 'toast.created', { label }), 'success');
     return true;
   } catch (e) {
-    showToast(`Failed to save ${label.toLowerCase()}: ${e.message}`, 'error');
+    showToast(t('toast.failSave', { label, error: e.message }), 'error');
     return false;
   }
 }
@@ -334,10 +334,10 @@ async function apiDelete(endpoint, title, message, label) {
   if (!ok) return false;
   try {
     await api(endpoint, { method: 'DELETE' });
-    showToast(`${label} deleted`, 'success');
+    showToast(t('toast.deleted', { label }), 'success');
     return true;
   } catch (e) {
-    showToast(`Failed to delete ${label.toLowerCase()}: ${e.message}`, 'error');
+    showToast(t('toast.failDelete', { label, error: e.message }), 'error');
     return false;
   }
 }

@@ -556,7 +556,7 @@ function printCueSheet() {
   html += `</body></html>`;
 
   const win = window.open('', '_blank');
-  if (!win) { showToast('Popup blocked — please allow popups for this site', 'error'); return; }
+  if (!win) { showToast(t('toast.popupBlocked'), 'error'); return; }
   win.document.write(html);
   win.document.close();
   win.focus();
@@ -582,13 +582,15 @@ function importShow(event) {
       const result = await api('/show/import', { method: 'POST', body: { departments: depts, cues: importedCues } });
 
       refreshManageView();
-      let msg = `Replaced show: ${depts.length} department(s), ${result.imported} cue(s)`;
+      let msg;
       if (result.errors.length > 0) {
-        msg += ` (${result.errors.length} cue error(s))`;
+        msg = t('import.showPartial', { depts: depts.length, cues: result.imported, errors: result.errors.length });
+      } else {
+        msg = t('import.showSuccess', { depts: depts.length, cues: result.imported });
       }
       showToast(msg, result.errors.length > 0 ? 'info' : 'success');
     } catch (err) {
-      showToast(`Import failed: ${err.message}`, 'error');
+      showToast(t('import.failed', { msg: err.message }), 'error');
     }
   };
   reader.readAsText(file);
@@ -606,7 +608,7 @@ function importShow(event) {
  */
 function parseCsvToCues(csvText) {
   const lines = csvText.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) throw new Error('CSV must have a header row and at least one data row');
+  if (lines.length < 2) throw new Error(t('import.csvInvalid'));
 
   const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
   const colMap = {};
@@ -637,7 +639,7 @@ function parseCsvToCues(csvText) {
       deptId = deptByName[cols[colMap.department].toLowerCase()] || null;
     }
     if (!deptId) {
-      throw new Error(`Row ${i + 1}: could not resolve department "${cols[colMap.department] || cols[colMap.department_id] || ''}"`);
+      throw new Error(t('import.deptNotFound', { num: i + 1, dept: cols[colMap.department] || cols[colMap.department_id] || '' }));
     }
 
     const cue = { department_id: deptId };
@@ -679,29 +681,29 @@ async function importCues(event) {
         } else if (parsed.cues && Array.isArray(parsed.cues)) {
           cuesPayload = parsed.cues;
         } else {
-          throw new Error('JSON must be an array of cues or { "cues": [...] }');
+          throw new Error(t('import.jsonInvalid'));
         }
       }
 
       if (cuesPayload.length === 0) {
-        showToast('No cues found in file', 'info');
+        showToast(t('import.noCues'), 'info');
         return;
       }
 
       const result = await api('/cues/import', { method: 'POST', body: cuesPayload });
 
       if (result.errors.length === 0) {
-        showToast(`Imported ${result.imported} cue(s) successfully`, 'success');
+        showToast(t('import.cuesSuccess', { count: result.imported }), 'success');
       } else {
         showToast(
-          `Imported ${result.imported}, failed ${result.errors.length}. First error: ${result.errors[0].message}`,
+          t('import.cuesPartial', { ok: result.imported, fail: result.errors.length, msg: result.errors[0].message }),
           result.imported > 0 ? 'info' : 'error',
           5000
         );
       }
       refreshManageView();
     } catch (err) {
-      showToast(`Import failed: ${err.message}`, 'error');
+      showToast(t('import.failed', { msg: err.message }), 'error');
     }
   };
   reader.readAsText(file);

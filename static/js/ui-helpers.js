@@ -108,7 +108,7 @@ document.querySelectorAll('.tc-field').forEach(field => {
 const armedCb = document.getElementById('cue-armed');
 if (armedCb) {
   armedCb.addEventListener('change', () => {
-    document.getElementById('cue-armed-label').textContent = armedCb.checked ? 'Yes' : 'No';
+    document.getElementById('cue-armed-label').textContent = armedCb.checked ? t('cueModal.armedYes') : t('cueModal.armedNo');
   });
 }
 
@@ -176,7 +176,7 @@ function refreshAllViews() {
     await Promise.all([loadDepartments(), loadCues(), loadActs(), loadShowName()]);
     renderDeptFilters();
   } catch (e) {
-    showToast('Failed to load initial data', 'error');
+    showToast(t('init.loadFailed'), 'error');
   }
   // Restore sidebar state
   if (sidebarOpen) toggleSidebar(true);

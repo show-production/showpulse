@@ -37,7 +37,7 @@ function toggleSidebar(forceState) {
  */
 function canControlTimer() {
   if (authEnabled && authRole === 'manager' && !hasTimerLock) {
-    showToast('Acquire timer control first', 'error');
+    showToast(t('timer.acquireFirst'), 'error');
     return false;
   }
   return true;
@@ -52,7 +52,7 @@ async function genCmd(cmd) {
   try {
     await api(`/generator/${cmd}`, { method: 'POST' });
   } catch (e) {
-    showToast(e.message.includes('403') ? 'Timer control required' : `Command failed: ${e.message}`, 'error');
+    showToast(e.message.includes('403') ? t('timer.required') : `Command failed: ${e.message}`, 'error');
   }
 }
 
@@ -64,7 +64,7 @@ async function gotoTC() {
   try {
     await api('/generator/goto', { method: 'POST', body: { timecode: parseTC(DOM.gotoTc.value) } });
   } catch (e) {
-    showToast(e.message.includes('403') ? 'Timer control required' : `Goto failed: ${e.message}`, 'error');
+    showToast(e.message.includes('403') ? t('timer.required') : `Goto failed: ${e.message}`, 'error');
   }
 }
 
@@ -176,7 +176,7 @@ function getTier(c) {
  */
 function renderFlowCues(wsCues) {
   if (!wsCues || wsCues.length === 0) {
-    DOM.flowUpcoming.innerHTML = `<div class="flow-no-cues">${CONST.EMPTY_CUES_MSG}</div>`;
+    DOM.flowUpcoming.innerHTML = `<div class="flow-no-cues">${t('cue.noCues')}</div>`;
     return;
   }
 
@@ -194,7 +194,7 @@ function renderFlowCues(wsCues) {
   diffCueListWithActs(DOM.flowUpcoming, allCues);
 
   if (allCues.length === 0) {
-    DOM.flowUpcoming.innerHTML = `<div class="flow-no-cues">${CONST.NO_MATCH_MSG}</div>`;
+    DOM.flowUpcoming.innerHTML = `<div class="flow-no-cues">${t('cue.noMatch')}</div>`;
   }
 
   autoScrollCueList();
@@ -213,9 +213,9 @@ function getTrafficLight(c) {
   const dept = c.department;
 
   if (isGo || cd <= 0) {
-    return { statusText: `GO!${CONST.EMDASH}${dept}`, statusColor: 'var(--accent)', digitText: '', digitColor: '', progressColor: 'var(--accent)' };
+    return { statusText: `${t('cue.go')}${CONST.EMDASH}${dept}`, statusColor: 'var(--accent)', digitText: '', digitColor: '', progressColor: 'var(--accent)' };
   }
-  const readyLabel = `READY${CONST.EMDASH}${dept}`;
+  const readyLabel = `${t('cue.ready')}${CONST.EMDASH}${dept}`;
   if (cd > 3) {
     return { statusText: readyLabel, statusColor: 'var(--danger)', digitText: '', digitColor: '', progressColor: 'var(--danger)' };
   }
@@ -635,7 +635,7 @@ function jumpToCurrent() {
  * Render department filter chips in the sidebar.
  */
 function renderDeptFilters() {
-  let html = `<span class="dept-chip ${activeDeptFilters.size === 0 ? 'active' : ''}" onclick="clearDeptFilters()">All</span>`;
+  let html = `<span class="dept-chip ${activeDeptFilters.size === 0 ? 'active' : ''}" onclick="clearDeptFilters()">${t('sidebar.allDepts')}</span>`;
   departments.forEach(d => {
     const active = activeDeptFilters.has(d.id) ? 'active' : '';
     html += `<span class="dept-chip ${active}" onclick="toggleDeptFilter('${d.id}')">
