@@ -188,19 +188,19 @@
   font-size: calc(var(--font-size-sm) * 0.8);
 }
 
-/* ── Goto row (separated from transport) ── */
-.tc-goto-row {
+/* ── Bottom row (goto left, cue list controls right) ── */
+.tc-bottom-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--gap-sm);
+  justify-content: space-between;
+  width: 100%;
   padding-top: 0.25rem;
   border-top: 1px solid var(--border);
   margin-top: 0.25rem;
-  flex-wrap: wrap;
 }
 .tc-goto-group {
   display: flex;
+  align-items: center;
   gap: var(--gap-xs);
 }
 .tc-goto-group input {
@@ -322,20 +322,11 @@
   font-size: var(--font-size-base);
 }
 
-/* ── Floating flow controls (bottom-right) ── */
+/* ── Cue list controls (right side of bottom row) ── */
 .flow-controls {
-  position: absolute;
-  bottom: 1rem;
-  inset-inline-end: 1.5rem;
-  z-index: 10;
   display: flex;
   gap: 0.3rem;
-  padding: 0.3rem;
-  background: color-mix(in srgb, var(--bg-card) 80%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  flex-shrink: 0;
 }
 .fc-btn {
   padding: 0.3rem 0.7rem;

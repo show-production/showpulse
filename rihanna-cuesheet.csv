@@ -1,0 +1,349 @@
+Cue #,Label,Department,Act,Timecode,Warning (s),Duration (s),Armed,Continue,Notes
+Q1.001,Blackout — Pre Desperado,Lighting,Act 1 — Desperado (Opening),00:00:00:00,5,3,Yes,stop,Full stage blackout
+Q1.002,Standby Desperado,Stage Mgr,Act 1 — Desperado (Opening),00:00:01:00,5,,Yes,stop,All depts standby
+Q1.003,Channel check — Desperado,Comms,Act 1 — Desperado (Opening),00:00:03:00,3,,Yes,stop,Verify all channels clear
+Q1.004,Track start — Desperado,Sound,Act 1 — Desperado (Opening),00:00:04:00,8,315,Yes,stop,Main playback
+Q1.005,Content load — Desperado,Video,Act 1 — Desperado (Opening),00:00:04:00,8,310,Yes,stop,Main screen content
+Q1.006,Opening look — Desperado,Lighting,Act 1 — Desperado (Opening),00:00:08:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q1.007,Spots pick up — Desperado,Follow Spots,Act 1 — Desperado (Opening),00:00:09:00,8,,Yes,stop,Pick up artist CS
+Q1.008,Opening lasers — Desperado,Lasers,Act 1 — Desperado (Opening),00:00:13:00,10,20,Yes,stop,Fan pattern green
+Q1.026,Descend center platform — Desperado,Rigging,Act 1 — Desperado (Opening),00:00:16:00,15,8,Yes,stop,Artist entrance from above
+Q1.009,Verse 1 — Desperado,Lighting,Act 1 — Desperado (Opening),00:00:33:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q1.010,Verse 1 content — Desperado,Video,Act 1 — Desperado (Opening),00:00:36:00,8,25,Yes,stop,Lyrics + abstract
+Q1.011,Instrument preset — Desperado,Backline,Act 1 — Desperado (Opening),00:00:39:00,5,,Yes,stop,Verify guitar/keys preset
+Q1.012,Pre-chorus build — Desperado,Lighting,Act 1 — Desperado (Opening),00:01:22:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q1.013,Chorus hit — Desperado,Pyro,Act 1 — Desperado (Opening),00:01:39:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q1.014,Chorus — Desperado,Lighting,Act 1 — Desperado (Opening),00:01:42:00,5,25,Yes,stop,Full wash + strobes
+Q1.015,Chorus lasers — Desperado,Lasers,Act 1 — Desperado (Opening),00:01:45:00,10,20,Yes,stop,Beam array full house
+Q1.016,CO2 jets — Desperado,SFX,Act 1 — Desperado (Opening),00:01:48:00,12,,Yes,stop,CO2 x4 downstage
+Q1.017,Verse 2 — Desperado,Lighting,Act 1 — Desperado (Opening),00:02:28:00,5,25,Yes,stop,"Warm wash, medium"
+Q1.018,Verse 2 content — Desperado,Video,Act 1 — Desperado (Opening),00:02:31:00,8,25,Yes,stop,Band cam + graphics
+Q1.027,Flame bars — Desperado,SFX,Act 1 — Desperado (Opening),00:02:45:00,15,,Yes,stop,Flame bars x6 upstage
+Q1.019,Bridge — Desperado,Lighting,Act 1 — Desperado (Opening),00:03:18:00,5,20,Yes,stop,Intimate spot only
+Q1.020,Set piece move — Desperado,Rigging,Act 1 — Desperado (Opening),00:03:24:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q1.028,Waterfall gerbs — Desperado,Pyro,Act 1 — Desperado (Opening),00:03:50:00,15,,Yes,stop,Waterfall gerbs US truss
+Q1.021,Final chorus — Desperado,Lighting,Act 1 — Desperado (Opening),00:04:07:00,5,25,Yes,stop,Maximum intensity
+Q1.022,Spots wide — Desperado,Follow Spots,Act 1 — Desperado (Opening),00:04:10:00,8,,Yes,stop,Widen to full stage
+Q1.023,Quick change standby — Desperado,Wardrobe,Act 1 — Desperado (Opening),00:04:50:00,10,,Yes,stop,Next costume ready SR
+Q1.024,Outro fade — Desperado,Lighting,Act 1 — Desperado (Opening),00:05:03:00,5,8,Yes,stop,Slow fade to specials
+Q1.025,Blackout — End Desperado,Lighting,Act 1 — Desperado (Opening),00:05:23:00,5,3,Yes,stop,Full blackout
+Q2.029,Blackout — Pre Pon De Replay,Lighting,Act 2 — Pon De Replay,00:06:00:00,5,3,Yes,stop,Full stage blackout
+Q2.030,Standby Pon De Replay,Stage Mgr,Act 2 — Pon De Replay,00:06:01:00,5,,Yes,stop,All depts standby
+Q2.031,Channel check — Pon De Replay,Comms,Act 2 — Pon De Replay,00:06:03:00,3,,Yes,stop,Verify all channels clear
+Q2.032,Track start — Pon De Replay,Sound,Act 2 — Pon De Replay,00:06:04:00,8,315,Yes,stop,Main playback
+Q2.033,Content load — Pon De Replay,Video,Act 2 — Pon De Replay,00:06:04:00,8,310,Yes,stop,Main screen content
+Q2.034,Opening look — Pon De Replay,Lighting,Act 2 — Pon De Replay,00:06:08:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q2.035,Spots pick up — Pon De Replay,Follow Spots,Act 2 — Pon De Replay,00:06:09:00,8,,Yes,stop,Pick up artist CS
+Q2.036,Opening lasers — Pon De Replay,Lasers,Act 2 — Pon De Replay,00:06:13:00,10,20,Yes,stop,Fan pattern green
+Q2.037,Verse 1 — Pon De Replay,Lighting,Act 2 — Pon De Replay,00:06:33:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q2.038,Verse 1 content — Pon De Replay,Video,Act 2 — Pon De Replay,00:06:36:00,8,25,Yes,stop,Lyrics + abstract
+Q2.039,Instrument preset — Pon De Replay,Backline,Act 2 — Pon De Replay,00:06:39:00,5,,Yes,stop,Verify guitar/keys preset
+Q2.054,Confetti burst — Pon De Replay,SFX,Act 2 — Pon De Replay,00:07:06:00,12,,Yes,stop,Gold confetti cannons x4
+Q2.040,Pre-chorus build — Pon De Replay,Lighting,Act 2 — Pon De Replay,00:07:22:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q2.041,Chorus hit — Pon De Replay,Pyro,Act 2 — Pon De Replay,00:07:39:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q2.042,Chorus — Pon De Replay,Lighting,Act 2 — Pon De Replay,00:07:42:00,5,25,Yes,stop,Full wash + strobes
+Q2.043,Chorus lasers — Pon De Replay,Lasers,Act 2 — Pon De Replay,00:07:45:00,10,20,Yes,stop,Beam array full house
+Q2.044,CO2 jets — Pon De Replay,SFX,Act 2 — Pon De Replay,00:07:48:00,12,,Yes,stop,CO2 x4 downstage
+Q2.045,Verse 2 — Pon De Replay,Lighting,Act 2 — Pon De Replay,00:08:28:00,5,25,Yes,stop,"Warm wash, medium"
+Q2.046,Verse 2 content — Pon De Replay,Video,Act 2 — Pon De Replay,00:08:31:00,8,25,Yes,stop,Band cam + graphics
+Q2.055,Flame pots — Pon De Replay,Pyro,Act 2 — Pon De Replay,00:09:01:00,15,,Yes,stop,Flame pots x8 perimeter
+Q2.047,Bridge — Pon De Replay,Lighting,Act 2 — Pon De Replay,00:09:18:00,5,20,Yes,stop,Intimate spot only
+Q2.048,Set piece move — Pon De Replay,Rigging,Act 2 — Pon De Replay,00:09:24:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q2.049,Final chorus — Pon De Replay,Lighting,Act 2 — Pon De Replay,00:10:07:00,5,25,Yes,stop,Maximum intensity
+Q2.050,Spots wide — Pon De Replay,Follow Spots,Act 2 — Pon De Replay,00:10:10:00,8,,Yes,stop,Widen to full stage
+Q2.056,Streamers — Pon De Replay,SFX,Act 2 — Pon De Replay,00:10:30:00,10,,Yes,stop,Streamer cannons DSL/DSR
+Q2.051,Quick change standby — Pon De Replay,Wardrobe,Act 2 — Pon De Replay,00:10:50:00,10,,Yes,stop,Next costume ready SR
+Q2.052,Outro fade — Pon De Replay,Lighting,Act 2 — Pon De Replay,00:11:03:00,5,8,Yes,stop,Slow fade to specials
+Q2.053,Blackout — End Pon De Replay,Lighting,Act 2 — Pon De Replay,00:11:23:00,5,3,Yes,stop,Full blackout
+Q3.057,Blackout — Pre SOS,Lighting,Act 3 — SOS,00:12:00:00,5,3,Yes,stop,Full stage blackout
+Q3.058,Standby SOS,Stage Mgr,Act 3 — SOS,00:12:01:00,5,,Yes,stop,All depts standby
+Q3.059,Channel check — SOS,Comms,Act 3 — SOS,00:12:03:00,3,,Yes,stop,Verify all channels clear
+Q3.060,Track start — SOS,Sound,Act 3 — SOS,00:12:04:00,8,315,Yes,stop,Main playback
+Q3.061,Content load — SOS,Video,Act 3 — SOS,00:12:04:00,8,310,Yes,stop,Main screen content
+Q3.062,Opening look — SOS,Lighting,Act 3 — SOS,00:12:08:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q3.063,Spots pick up — SOS,Follow Spots,Act 3 — SOS,00:12:09:00,8,,Yes,stop,Pick up artist CS
+Q3.064,Opening lasers — SOS,Lasers,Act 3 — SOS,00:12:13:00,10,20,Yes,stop,Fan pattern green
+Q3.065,Verse 1 — SOS,Lighting,Act 3 — SOS,00:12:33:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q3.066,Verse 1 content — SOS,Video,Act 3 — SOS,00:12:36:00,8,25,Yes,stop,Lyrics + abstract
+Q3.067,Instrument preset — SOS,Backline,Act 3 — SOS,00:12:39:00,5,,Yes,stop,Verify guitar/keys preset
+Q3.082,Tunnel effect — SOS,Lasers,Act 3 — SOS,00:12:49:00,10,30,Yes,stop,Laser tunnel green/blue
+Q3.068,Pre-chorus build — SOS,Lighting,Act 3 — SOS,00:13:22:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q3.069,Chorus hit — SOS,Pyro,Act 3 — SOS,00:13:39:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q3.070,Chorus — SOS,Lighting,Act 3 — SOS,00:13:42:00,5,25,Yes,stop,Full wash + strobes
+Q3.071,Chorus lasers — SOS,Lasers,Act 3 — SOS,00:13:45:00,10,20,Yes,stop,Beam array full house
+Q3.072,CO2 jets — SOS,SFX,Act 3 — SOS,00:13:48:00,12,,Yes,stop,CO2 x4 downstage
+Q3.073,Verse 2 — SOS,Lighting,Act 3 — SOS,00:14:28:00,5,25,Yes,stop,"Warm wash, medium"
+Q3.074,Verse 2 content — SOS,Video,Act 3 — SOS,00:14:31:00,8,25,Yes,stop,Band cam + graphics
+Q3.083,Low fog — SOS,SFX,Act 3 — SOS,00:14:45:00,10,45,Yes,stop,Cryo fog floor level
+Q3.075,Bridge — SOS,Lighting,Act 3 — SOS,00:15:18:00,5,20,Yes,stop,Intimate spot only
+Q3.076,Set piece move — SOS,Rigging,Act 3 — SOS,00:15:24:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q3.077,Final chorus — SOS,Lighting,Act 3 — SOS,00:16:07:00,5,25,Yes,stop,Maximum intensity
+Q3.078,Spots wide — SOS,Follow Spots,Act 3 — SOS,00:16:10:00,8,,Yes,stop,Widen to full stage
+Q3.079,Quick change standby — SOS,Wardrobe,Act 3 — SOS,00:16:50:00,10,,Yes,stop,Next costume ready SR
+Q3.080,Outro fade — SOS,Lighting,Act 3 — SOS,00:17:03:00,5,8,Yes,stop,Slow fade to specials
+Q3.081,Blackout — End SOS,Lighting,Act 3 — SOS,00:17:23:00,5,3,Yes,stop,Full blackout
+Q4.084,Blackout — Pre Umbrella,Lighting,Act 4 — Umbrella,00:18:00:00,5,3,Yes,stop,Full stage blackout
+Q4.085,Standby Umbrella,Stage Mgr,Act 4 — Umbrella,00:18:02:00,5,,Yes,stop,All depts standby
+Q4.086,Channel check — Umbrella,Comms,Act 4 — Umbrella,00:18:03:00,3,,Yes,stop,Verify all channels clear
+Q4.087,Track start — Umbrella,Sound,Act 4 — Umbrella,00:18:05:00,8,375,Yes,stop,Main playback
+Q4.088,Content load — Umbrella,Video,Act 4 — Umbrella,00:18:05:00,8,370,Yes,stop,Main screen content
+Q4.089,Opening look — Umbrella,Lighting,Act 4 — Umbrella,00:18:09:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q4.090,Spots pick up — Umbrella,Follow Spots,Act 4 — Umbrella,00:18:11:00,8,,Yes,stop,Pick up artist CS
+Q4.091,Opening lasers — Umbrella,Lasers,Act 4 — Umbrella,00:18:15:00,10,20,Yes,stop,Fan pattern green
+Q4.109,Rain curtain deploy — Umbrella,Rigging,Act 4 — Umbrella,00:18:31:00,15,180,Yes,stop,Water effect upstage scrim
+Q4.092,Verse 1 — Umbrella,Lighting,Act 4 — Umbrella,00:18:39:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q4.093,Verse 1 content — Umbrella,Video,Act 4 — Umbrella,00:18:42:00,8,25,Yes,stop,Lyrics + abstract
+Q4.094,Instrument preset — Umbrella,Backline,Act 4 — Umbrella,00:18:46:00,5,,Yes,stop,Verify guitar/keys preset
+Q4.110,Rain SFX start — Umbrella,SFX,Act 4 — Umbrella,00:19:18:00,10,150,Yes,stop,Theatrical rain machine
+Q4.095,Pre-chorus build — Umbrella,Lighting,Act 4 — Umbrella,00:19:37:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q4.096,Chorus hit — Umbrella,Pyro,Act 4 — Umbrella,00:19:57:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q4.097,Chorus — Umbrella,Lighting,Act 4 — Umbrella,00:20:00:00,5,25,Yes,stop,Full wash + strobes
+Q4.098,Chorus lasers — Umbrella,Lasers,Act 4 — Umbrella,00:20:04:00,10,20,Yes,stop,Beam array full house
+Q4.099,CO2 jets — Umbrella,SFX,Act 4 — Umbrella,00:20:08:00,12,,Yes,stop,CO2 x4 downstage
+Q4.111,Spark shower — Umbrella,Pyro,Act 4 — Umbrella,00:20:16:00,15,,Yes,stop,Silver spark rain from truss
+Q4.100,Verse 2 — Umbrella,Lighting,Act 4 — Umbrella,00:20:55:00,5,25,Yes,stop,"Warm wash, medium"
+Q4.101,Verse 2 content — Umbrella,Video,Act 4 — Umbrella,00:20:59:00,8,25,Yes,stop,Band cam + graphics
+Q4.102,Bridge — Umbrella,Lighting,Act 4 — Umbrella,00:21:54:00,5,20,Yes,stop,Intimate spot only
+Q4.103,Set piece move — Umbrella,Rigging,Act 4 — Umbrella,00:22:01:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q4.112,Rain curtain retract — Umbrella,Rigging,Act 4 — Umbrella,00:22:33:00,15,20,Yes,stop,Retract water scrim
+Q4.104,Final chorus — Umbrella,Lighting,Act 4 — Umbrella,00:22:52:00,5,25,Yes,stop,Maximum intensity
+Q4.105,Spots wide — Umbrella,Follow Spots,Act 4 — Umbrella,00:22:56:00,8,,Yes,stop,Widen to full stage
+Q4.113,Rain SFX stop — Umbrella,SFX,Act 4 — Umbrella,00:23:31:00,8,,Yes,stop,Kill rain machine
+Q4.106,Quick change standby — Umbrella,Wardrobe,Act 4 — Umbrella,00:23:43:00,10,,Yes,stop,Next costume ready SR
+Q4.107,Outro fade — Umbrella,Lighting,Act 4 — Umbrella,00:23:58:00,5,8,Yes,stop,Slow fade to specials
+Q4.108,Blackout — End Umbrella,Lighting,Act 4 — Umbrella,00:24:22:00,5,3,Yes,stop,Full blackout
+Q5.114,Blackout — Pre Unfaithful,Lighting,Act 5 — Unfaithful,00:25:00:00,5,3,Yes,stop,Full stage blackout
+Q5.115,Standby Unfaithful,Stage Mgr,Act 5 — Unfaithful,00:25:01:00,5,,Yes,stop,All depts standby
+Q5.116,Channel check — Unfaithful,Comms,Act 5 — Unfaithful,00:25:03:00,3,,Yes,stop,Verify all channels clear
+Q5.117,Track start — Unfaithful,Sound,Act 5 — Unfaithful,00:25:04:00,8,315,Yes,stop,Main playback
+Q5.118,Content load — Unfaithful,Video,Act 5 — Unfaithful,00:25:04:00,8,310,Yes,stop,Main screen content
+Q5.119,Opening look — Unfaithful,Lighting,Act 5 — Unfaithful,00:25:08:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q5.120,Spots pick up — Unfaithful,Follow Spots,Act 5 — Unfaithful,00:25:09:00,8,,Yes,stop,Pick up artist CS
+Q5.121,Opening lasers — Unfaithful,Lasers,Act 5 — Unfaithful,00:25:13:00,10,20,Yes,stop,Fan pattern green
+Q5.139,Piano reveal — Unfaithful,Rigging,Act 5 — Unfaithful,00:25:26:00,15,10,Yes,stop,Rotate platform to reveal piano
+Q5.122,Verse 1 — Unfaithful,Lighting,Act 5 — Unfaithful,00:25:33:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q5.123,Verse 1 content — Unfaithful,Video,Act 5 — Unfaithful,00:25:36:00,8,25,Yes,stop,Lyrics + abstract
+Q5.124,Instrument preset — Unfaithful,Backline,Act 5 — Unfaithful,00:25:39:00,5,,Yes,stop,Verify guitar/keys preset
+Q5.125,Pre-chorus build — Unfaithful,Lighting,Act 5 — Unfaithful,00:26:22:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q5.126,Chorus hit — Unfaithful,Pyro,Act 5 — Unfaithful,00:26:39:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q5.127,Chorus — Unfaithful,Lighting,Act 5 — Unfaithful,00:26:42:00,5,25,Yes,stop,Full wash + strobes
+Q5.128,Chorus lasers — Unfaithful,Lasers,Act 5 — Unfaithful,00:26:45:00,10,20,Yes,stop,Beam array full house
+Q5.129,CO2 jets — Unfaithful,SFX,Act 5 — Unfaithful,00:26:48:00,12,,Yes,stop,CO2 x4 downstage
+Q5.130,Verse 2 — Unfaithful,Lighting,Act 5 — Unfaithful,00:27:28:00,5,25,Yes,stop,"Warm wash, medium"
+Q5.131,Verse 2 content — Unfaithful,Video,Act 5 — Unfaithful,00:27:31:00,8,25,Yes,stop,Band cam + graphics
+Q5.140,Audience cam — Unfaithful,Video,Act 5 — Unfaithful,00:27:45:00,8,60,Yes,stop,Switch to audience IMAG
+Q5.132,Bridge — Unfaithful,Lighting,Act 5 — Unfaithful,00:28:18:00,5,20,Yes,stop,Intimate spot only
+Q5.133,Set piece move — Unfaithful,Rigging,Act 5 — Unfaithful,00:28:24:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q5.134,Final chorus — Unfaithful,Lighting,Act 5 — Unfaithful,00:29:07:00,5,25,Yes,stop,Maximum intensity
+Q5.135,Spots wide — Unfaithful,Follow Spots,Act 5 — Unfaithful,00:29:10:00,8,,Yes,stop,Widen to full stage
+Q5.136,Quick change standby — Unfaithful,Wardrobe,Act 5 — Unfaithful,00:29:50:00,10,,Yes,stop,Next costume ready SR
+Q5.137,Outro fade — Unfaithful,Lighting,Act 5 — Unfaithful,00:30:03:00,5,8,Yes,stop,Slow fade to specials
+Q5.138,Blackout — End Unfaithful,Lighting,Act 5 — Unfaithful,00:30:23:00,5,3,Yes,stop,Full blackout
+Q6.141,Blackout — Pre Stay,Lighting,Act 6 — Stay,00:31:00:00,5,3,Yes,stop,Full stage blackout
+Q6.142,Standby Stay,Stage Mgr,Act 6 — Stay,00:31:01:00,5,,Yes,stop,All depts standby
+Q6.143,Channel check — Stay,Comms,Act 6 — Stay,00:31:03:00,3,,Yes,stop,Verify all channels clear
+Q6.144,Track start — Stay,Sound,Act 6 — Stay,00:31:04:00,8,315,Yes,stop,Main playback
+Q6.145,Content load — Stay,Video,Act 6 — Stay,00:31:04:00,8,310,Yes,stop,Main screen content
+Q6.146,Opening look — Stay,Lighting,Act 6 — Stay,00:31:08:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q6.147,Spots pick up — Stay,Follow Spots,Act 6 — Stay,00:31:09:00,8,,Yes,stop,Pick up artist CS
+Q6.148,Opening lasers — Stay,Lasers,Act 6 — Stay,00:31:13:00,10,20,Yes,stop,Fan pattern green
+Q6.166,Acoustic mix — Stay,Sound,Act 6 — Stay,00:31:16:00,8,,Yes,stop,Switch to acoustic submix
+Q6.149,Verse 1 — Stay,Lighting,Act 6 — Stay,00:31:33:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q6.167,Single spot — Stay,Lighting,Act 6 — Stay,00:31:33:00,5,90,Yes,stop,Single tight spot CS
+Q6.150,Verse 1 content — Stay,Video,Act 6 — Stay,00:31:36:00,8,25,Yes,stop,Lyrics + abstract
+Q6.151,Instrument preset — Stay,Backline,Act 6 — Stay,00:31:39:00,5,,Yes,stop,Verify guitar/keys preset
+Q6.152,Pre-chorus build — Stay,Lighting,Act 6 — Stay,00:32:22:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q6.153,Chorus hit — Stay,Pyro,Act 6 — Stay,00:32:39:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q6.154,Chorus — Stay,Lighting,Act 6 — Stay,00:32:42:00,5,25,Yes,stop,Full wash + strobes
+Q6.155,Chorus lasers — Stay,Lasers,Act 6 — Stay,00:32:45:00,10,20,Yes,stop,Beam array full house
+Q6.156,CO2 jets — Stay,SFX,Act 6 — Stay,00:32:48:00,12,,Yes,stop,CO2 x4 downstage
+Q6.157,Verse 2 — Stay,Lighting,Act 6 — Stay,00:33:28:00,5,25,Yes,stop,"Warm wash, medium"
+Q6.158,Verse 2 content — Stay,Video,Act 6 — Stay,00:33:31:00,8,25,Yes,stop,Band cam + graphics
+Q6.159,Bridge — Stay,Lighting,Act 6 — Stay,00:34:18:00,5,20,Yes,stop,Intimate spot only
+Q6.160,Set piece move — Stay,Rigging,Act 6 — Stay,00:34:24:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q6.161,Final chorus — Stay,Lighting,Act 6 — Stay,00:35:07:00,5,25,Yes,stop,Maximum intensity
+Q6.162,Spots wide — Stay,Follow Spots,Act 6 — Stay,00:35:10:00,8,,Yes,stop,Widen to full stage
+Q6.168,Starfield content — Stay,Video,Act 6 — Stay,00:35:24:00,8,40,Yes,stop,Slow starfield on screens
+Q6.163,Quick change standby — Stay,Wardrobe,Act 6 — Stay,00:35:50:00,10,,Yes,stop,Next costume ready SR
+Q6.164,Outro fade — Stay,Lighting,Act 6 — Stay,00:36:03:00,5,8,Yes,stop,Slow fade to specials
+Q6.165,Blackout — End Stay,Lighting,Act 6 — Stay,00:36:23:00,5,3,Yes,stop,Full blackout
+Q7.169,Blackout — Pre Rude Boy,Lighting,Act 7 — Rude Boy,00:37:00:00,5,3,Yes,stop,Full stage blackout
+Q7.170,Standby Rude Boy,Stage Mgr,Act 7 — Rude Boy,00:37:02:00,5,,Yes,stop,All depts standby
+Q7.171,Channel check — Rude Boy,Comms,Act 7 — Rude Boy,00:37:03:00,3,,Yes,stop,Verify all channels clear
+Q7.172,Track start — Rude Boy,Sound,Act 7 — Rude Boy,00:37:05:00,8,345,Yes,stop,Main playback
+Q7.173,Content load — Rude Boy,Video,Act 7 — Rude Boy,00:37:05:00,8,340,Yes,stop,Main screen content
+Q7.174,Opening look — Rude Boy,Lighting,Act 7 — Rude Boy,00:37:09:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q7.175,Spots pick up — Rude Boy,Follow Spots,Act 7 — Rude Boy,00:37:10:00,8,,Yes,stop,Pick up artist CS
+Q7.176,Opening lasers — Rude Boy,Lasers,Act 7 — Rude Boy,00:37:14:00,10,20,Yes,stop,Fan pattern green
+Q7.177,Verse 1 — Rude Boy,Lighting,Act 7 — Rude Boy,00:37:36:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q7.178,Verse 1 content — Rude Boy,Video,Act 7 — Rude Boy,00:37:39:00,8,25,Yes,stop,Lyrics + abstract
+Q7.179,Instrument preset — Rude Boy,Backline,Act 7 — Rude Boy,00:37:43:00,5,,Yes,stop,Verify guitar/keys preset
+Q7.194,Beam sweep — Rude Boy,Lasers,Act 7 — Rude Boy,00:37:54:00,10,40,Yes,stop,RGB beam sweep audience
+Q7.180,Pre-chorus build — Rude Boy,Lighting,Act 7 — Rude Boy,00:38:30:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q7.181,Chorus hit — Rude Boy,Pyro,Act 7 — Rude Boy,00:38:48:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q7.182,Chorus — Rude Boy,Lighting,Act 7 — Rude Boy,00:38:51:00,5,25,Yes,stop,Full wash + strobes
+Q7.183,Chorus lasers — Rude Boy,Lasers,Act 7 — Rude Boy,00:38:55:00,10,20,Yes,stop,Beam array full house
+Q7.184,CO2 jets — Rude Boy,SFX,Act 7 — Rude Boy,00:38:58:00,12,,Yes,stop,CO2 x4 downstage
+Q7.195,CO2 cryo cannons — Rude Boy,SFX,Act 7 — Rude Boy,00:39:24:00,12,,Yes,stop,Cryo x6 thrust stage
+Q7.185,Verse 2 — Rude Boy,Lighting,Act 7 — Rude Boy,00:39:42:00,5,25,Yes,stop,"Warm wash, medium"
+Q7.186,Verse 2 content — Rude Boy,Video,Act 7 — Rude Boy,00:39:45:00,8,25,Yes,stop,Band cam + graphics
+Q7.196,Concussion mortar — Rude Boy,Pyro,Act 7 — Rude Boy,00:40:18:00,15,,Yes,stop,4x concussion DS
+Q7.187,Bridge — Rude Boy,Lighting,Act 7 — Rude Boy,00:40:36:00,5,20,Yes,stop,Intimate spot only
+Q7.188,Set piece move — Rude Boy,Rigging,Act 7 — Rude Boy,00:40:43:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q7.197,Confetti — Rude Boy,SFX,Act 7 — Rude Boy,00:41:11:00,10,,Yes,stop,Multi-color confetti full house
+Q7.189,Final chorus — Rude Boy,Lighting,Act 7 — Rude Boy,00:41:30:00,5,25,Yes,stop,Maximum intensity
+Q7.190,Spots wide — Rude Boy,Follow Spots,Act 7 — Rude Boy,00:41:33:00,8,,Yes,stop,Widen to full stage
+Q7.191,Quick change standby — Rude Boy,Wardrobe,Act 7 — Rude Boy,00:42:16:00,10,,Yes,stop,Next costume ready SR
+Q7.192,Outro fade — Rude Boy,Lighting,Act 7 — Rude Boy,00:42:31:00,5,8,Yes,stop,Slow fade to specials
+Q7.193,Blackout — End Rude Boy,Lighting,Act 7 — Rude Boy,00:42:52:00,5,3,Yes,stop,Full blackout
+Q8.198,Blackout — Pre Only Girl,Lighting,Act 8 — Only Girl (In The World),00:43:30:00,5,3,Yes,stop,Full stage blackout
+Q8.199,Standby Only Girl,Stage Mgr,Act 8 — Only Girl (In The World),00:43:32:00,5,,Yes,stop,All depts standby
+Q8.200,Channel check — Only Girl,Comms,Act 8 — Only Girl (In The World),00:43:33:00,3,,Yes,stop,Verify all channels clear
+Q8.201,Track start — Only Girl,Sound,Act 8 — Only Girl (In The World),00:43:35:00,8,345,Yes,stop,Main playback
+Q8.202,Content load — Only Girl,Video,Act 8 — Only Girl (In The World),00:43:35:00,8,340,Yes,stop,Main screen content
+Q8.203,Opening look — Only Girl,Lighting,Act 8 — Only Girl (In The World),00:43:39:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q8.204,Spots pick up — Only Girl,Follow Spots,Act 8 — Only Girl (In The World),00:43:40:00,8,,Yes,stop,Pick up artist CS
+Q8.205,Opening lasers — Only Girl,Lasers,Act 8 — Only Girl (In The World),00:43:44:00,10,20,Yes,stop,Fan pattern green
+Q8.206,Verse 1 — Only Girl,Lighting,Act 8 — Only Girl (In The World),00:44:06:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q8.223,Flame jets — Only Girl,SFX,Act 8 — Only Girl (In The World),00:44:06:00,15,,Yes,stop,Flame jets x8 along thrust
+Q8.207,Verse 1 content — Only Girl,Video,Act 8 — Only Girl (In The World),00:44:09:00,8,25,Yes,stop,Lyrics + abstract
+Q8.208,Instrument preset — Only Girl,Backline,Act 8 — Only Girl (In The World),00:44:13:00,5,,Yes,stop,Verify guitar/keys preset
+Q8.209,Pre-chorus build — Only Girl,Lighting,Act 8 — Only Girl (In The World),00:45:00:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q8.210,Chorus hit — Only Girl,Pyro,Act 8 — Only Girl (In The World),00:45:18:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q8.211,Chorus — Only Girl,Lighting,Act 8 — Only Girl (In The World),00:45:21:00,5,25,Yes,stop,Full wash + strobes
+Q8.212,Chorus lasers — Only Girl,Lasers,Act 8 — Only Girl (In The World),00:45:25:00,10,20,Yes,stop,Beam array full house
+Q8.213,CO2 jets — Only Girl,SFX,Act 8 — Only Girl (In The World),00:45:28:00,12,,Yes,stop,CO2 x4 downstage
+Q8.224,Gerb waterfall — Only Girl,Pyro,Act 8 — Only Girl (In The World),00:45:35:00,15,,Yes,stop,Silver gerbs from truss line
+Q8.214,Verse 2 — Only Girl,Lighting,Act 8 — Only Girl (In The World),00:46:12:00,5,25,Yes,stop,"Warm wash, medium"
+Q8.215,Verse 2 content — Only Girl,Video,Act 8 — Only Girl (In The World),00:46:15:00,8,25,Yes,stop,Band cam + graphics
+Q8.225,Fan array — Only Girl,Lasers,Act 8 — Only Girl (In The World),00:46:48:00,10,30,Yes,stop,Full RGB fan array
+Q8.216,Bridge — Only Girl,Lighting,Act 8 — Only Girl (In The World),00:47:06:00,5,20,Yes,stop,Intimate spot only
+Q8.217,Set piece move — Only Girl,Rigging,Act 8 — Only Girl (In The World),00:47:13:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q8.218,Final chorus — Only Girl,Lighting,Act 8 — Only Girl (In The World),00:48:00:00,5,25,Yes,stop,Maximum intensity
+Q8.219,Spots wide — Only Girl,Follow Spots,Act 8 — Only Girl (In The World),00:48:03:00,8,,Yes,stop,Widen to full stage
+Q8.226,CO2 + confetti — Only Girl,SFX,Act 8 — Only Girl (In The World),00:48:18:00,12,,Yes,stop,Simultaneous CO2 + gold confetti
+Q8.220,Quick change standby — Only Girl,Wardrobe,Act 8 — Only Girl (In The World),00:48:46:00,10,,Yes,stop,Next costume ready SR
+Q8.221,Outro fade — Only Girl,Lighting,Act 8 — Only Girl (In The World),00:49:01:00,5,8,Yes,stop,Slow fade to specials
+Q8.222,Blackout — End Only Girl,Lighting,Act 8 — Only Girl (In The World),00:49:22:00,5,3,Yes,stop,Full blackout
+Q9.227,Blackout — Pre Where Have You Been,Lighting,Act 9 — Where Have You Been,00:50:00:00,5,3,Yes,stop,Full stage blackout
+Q9.228,Standby Where Have You Been,Stage Mgr,Act 9 — Where Have You Been,00:50:02:00,5,,Yes,stop,All depts standby
+Q9.229,Channel check — Where Have You Been,Comms,Act 9 — Where Have You Been,00:50:03:00,3,,Yes,stop,Verify all channels clear
+Q9.230,Track start — Where Have You Been,Sound,Act 9 — Where Have You Been,00:50:05:00,8,345,Yes,stop,Main playback
+Q9.231,Content load — Where Have You Been,Video,Act 9 — Where Have You Been,00:50:05:00,8,340,Yes,stop,Main screen content
+Q9.232,Opening look — Where Have You Been,Lighting,Act 9 — Where Have You Been,00:50:09:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q9.233,Spots pick up — Where Have You Been,Follow Spots,Act 9 — Where Have You Been,00:50:10:00,8,,Yes,stop,Pick up artist CS
+Q9.234,Opening lasers — Where Have You Been,Lasers,Act 9 — Where Have You Been,00:50:14:00,10,20,Yes,stop,Fan pattern green
+Q9.252,Cage descend — WHYB,Rigging,Act 9 — Where Have You Been,00:50:18:00,15,12,Yes,stop,Performance cage from grid
+Q9.235,Verse 1 — Where Have You Been,Lighting,Act 9 — Where Have You Been,00:50:36:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q9.236,Verse 1 content — Where Have You Been,Video,Act 9 — Where Have You Been,00:50:39:00,8,25,Yes,stop,Lyrics + abstract
+Q9.237,Instrument preset — Where Have You Been,Backline,Act 9 — Where Have You Been,00:50:43:00,5,,Yes,stop,Verify guitar/keys preset
+Q9.253,Cage lasers — WHYB,Lasers,Act 9 — Where Have You Been,00:51:04:00,10,50,Yes,stop,Tight beam cage outline
+Q9.238,Pre-chorus build — Where Have You Been,Lighting,Act 9 — Where Have You Been,00:51:30:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q9.239,Chorus hit — Where Have You Been,Pyro,Act 9 — Where Have You Been,00:51:48:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q9.240,Chorus — Where Have You Been,Lighting,Act 9 — Where Have You Been,00:51:51:00,5,25,Yes,stop,Full wash + strobes
+Q9.241,Chorus lasers — Where Have You Been,Lasers,Act 9 — Where Have You Been,00:51:55:00,10,20,Yes,stop,Beam array full house
+Q9.242,CO2 jets — Where Have You Been,SFX,Act 9 — Where Have You Been,00:51:58:00,12,,Yes,stop,CO2 x4 downstage
+Q9.243,Verse 2 — Where Have You Been,Lighting,Act 9 — Where Have You Been,00:52:42:00,5,25,Yes,stop,"Warm wash, medium"
+Q9.244,Verse 2 content — Where Have You Been,Video,Act 9 — Where Have You Been,00:52:45:00,8,25,Yes,stop,Band cam + graphics
+Q9.254,Line rockets — WHYB,Pyro,Act 9 — Where Have You Been,00:53:00:00,15,,Yes,stop,Comet rockets x6
+Q9.245,Bridge — Where Have You Been,Lighting,Act 9 — Where Have You Been,00:53:36:00,5,20,Yes,stop,Intimate spot only
+Q9.246,Set piece move — Where Have You Been,Rigging,Act 9 — Where Have You Been,00:53:43:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q9.247,Final chorus — Where Have You Been,Lighting,Act 9 — Where Have You Been,00:54:30:00,5,25,Yes,stop,Maximum intensity
+Q9.255,Cage ascend — WHYB,Rigging,Act 9 — Where Have You Been,00:54:30:00,15,12,Yes,stop,Retract cage
+Q9.248,Spots wide — Where Have You Been,Follow Spots,Act 9 — Where Have You Been,00:54:33:00,8,,Yes,stop,Widen to full stage
+Q9.249,Quick change standby — Where Have You Been,Wardrobe,Act 9 — Where Have You Been,00:55:16:00,10,,Yes,stop,Next costume ready SR
+Q9.250,Outro fade — Where Have You Been,Lighting,Act 9 — Where Have You Been,00:55:31:00,5,8,Yes,stop,Slow fade to specials
+Q9.251,Blackout — End Where Have You Been,Lighting,Act 9 — Where Have You Been,00:55:52:00,5,3,Yes,stop,Full blackout
+Q10.256,Blackout — Pre Work,Lighting,Act 10 — Work,00:56:30:00,5,3,Yes,stop,Full stage blackout
+Q10.257,Standby Work,Stage Mgr,Act 10 — Work,00:56:32:00,5,,Yes,stop,All depts standby
+Q10.258,Channel check — Work,Comms,Act 10 — Work,00:56:33:00,3,,Yes,stop,Verify all channels clear
+Q10.259,Track start — Work,Sound,Act 10 — Work,00:56:35:00,8,345,Yes,stop,Main playback
+Q10.260,Content load — Work,Video,Act 10 — Work,00:56:35:00,8,340,Yes,stop,Main screen content
+Q10.261,Opening look — Work,Lighting,Act 10 — Work,00:56:39:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q10.262,Spots pick up — Work,Follow Spots,Act 10 — Work,00:56:40:00,8,,Yes,stop,Pick up artist CS
+Q10.263,Opening lasers — Work,Lasers,Act 10 — Work,00:56:44:00,10,20,Yes,stop,Fan pattern green
+Q10.264,Verse 1 — Work,Lighting,Act 10 — Work,00:57:06:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q10.265,Verse 1 content — Work,Video,Act 10 — Work,00:57:09:00,8,25,Yes,stop,Lyrics + abstract
+Q10.266,Instrument preset — Work,Backline,Act 10 — Work,00:57:13:00,5,,Yes,stop,Verify guitar/keys preset
+Q10.281,Caribbean content — Work,Video,Act 10 — Work,00:57:13:00,8,120,Yes,stop,Tropical island visuals
+Q10.267,Pre-chorus build — Work,Lighting,Act 10 — Work,00:58:00:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q10.282,Low fog burst — Work,SFX,Act 10 — Work,00:58:00:00,10,30,Yes,stop,Thick low fog DS
+Q10.268,Chorus hit — Work,Pyro,Act 10 — Work,00:58:18:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q10.269,Chorus — Work,Lighting,Act 10 — Work,00:58:21:00,5,25,Yes,stop,Full wash + strobes
+Q10.270,Chorus lasers — Work,Lasers,Act 10 — Work,00:58:25:00,10,20,Yes,stop,Beam array full house
+Q10.271,CO2 jets — Work,SFX,Act 10 — Work,00:58:28:00,12,,Yes,stop,CO2 x4 downstage
+Q10.272,Verse 2 — Work,Lighting,Act 10 — Work,00:59:12:00,5,25,Yes,stop,"Warm wash, medium"
+Q10.273,Verse 2 content — Work,Video,Act 10 — Work,00:59:15:00,8,25,Yes,stop,Band cam + graphics
+Q10.283,Flame pots circle — Work,Pyro,Act 10 — Work,00:59:48:00,15,,Yes,stop,360 flame circle thrust
+Q10.274,Bridge — Work,Lighting,Act 10 — Work,01:00:06:00,5,20,Yes,stop,Intimate spot only
+Q10.275,Set piece move — Work,Rigging,Act 10 — Work,01:00:13:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q10.276,Final chorus — Work,Lighting,Act 10 — Work,01:01:00:00,5,25,Yes,stop,Maximum intensity
+Q10.277,Spots wide — Work,Follow Spots,Act 10 — Work,01:01:03:00,8,,Yes,stop,Widen to full stage
+Q10.278,Quick change standby — Work,Wardrobe,Act 10 — Work,01:01:46:00,10,,Yes,stop,Next costume ready SR
+Q10.279,Outro fade — Work,Lighting,Act 10 — Work,01:02:01:00,5,8,Yes,stop,Slow fade to specials
+Q10.280,Blackout — End Work,Lighting,Act 10 — Work,01:02:22:00,5,3,Yes,stop,Full blackout
+Q11.284,Blackout — Pre Diamonds,Lighting,Act 11 — Diamonds,01:03:00:00,5,3,Yes,stop,Full stage blackout
+Q11.285,Standby Diamonds,Stage Mgr,Act 11 — Diamonds,01:03:02:00,5,,Yes,stop,All depts standby
+Q11.286,Channel check — Diamonds,Comms,Act 11 — Diamonds,01:03:03:00,3,,Yes,stop,Verify all channels clear
+Q11.287,Track start — Diamonds,Sound,Act 11 — Diamonds,01:03:05:00,8,375,Yes,stop,Main playback
+Q11.288,Content load — Diamonds,Video,Act 11 — Diamonds,01:03:05:00,8,370,Yes,stop,Main screen content
+Q11.289,Opening look — Diamonds,Lighting,Act 11 — Diamonds,01:03:09:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q11.290,Spots pick up — Diamonds,Follow Spots,Act 11 — Diamonds,01:03:11:00,8,,Yes,stop,Pick up artist CS
+Q11.291,Opening lasers — Diamonds,Lasers,Act 11 — Diamonds,01:03:15:00,10,20,Yes,stop,Fan pattern green
+Q11.309,Diamond set piece — Diamonds,Rigging,Act 11 — Diamonds,01:03:19:00,15,15,Yes,stop,Raise diamond chandelier CS
+Q11.292,Verse 1 — Diamonds,Lighting,Act 11 — Diamonds,01:03:39:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q11.293,Verse 1 content — Diamonds,Video,Act 11 — Diamonds,01:03:42:00,8,25,Yes,stop,Lyrics + abstract
+Q11.294,Instrument preset — Diamonds,Backline,Act 11 — Diamonds,01:03:46:00,5,,Yes,stop,Verify guitar/keys preset
+Q11.310,Crystal refraction — Diamonds,Lighting,Act 11 — Diamonds,01:03:58:00,5,120,Yes,stop,Mirror ball + tight beams
+Q11.295,Pre-chorus build — Diamonds,Lighting,Act 11 — Diamonds,01:04:37:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q11.296,Chorus hit — Diamonds,Pyro,Act 11 — Diamonds,01:04:57:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q11.297,Chorus — Diamonds,Lighting,Act 11 — Diamonds,01:05:00:00,5,25,Yes,stop,Full wash + strobes
+Q11.298,Chorus lasers — Diamonds,Lasers,Act 11 — Diamonds,01:05:04:00,10,20,Yes,stop,Beam array full house
+Q11.299,CO2 jets — Diamonds,SFX,Act 11 — Diamonds,01:05:08:00,12,,Yes,stop,CO2 x4 downstage
+Q11.300,Verse 2 — Diamonds,Lighting,Act 11 — Diamonds,01:05:55:00,5,25,Yes,stop,"Warm wash, medium"
+Q11.301,Verse 2 content — Diamonds,Video,Act 11 — Diamonds,01:05:59:00,8,25,Yes,stop,Band cam + graphics
+Q11.311,Silver rain — Diamonds,Pyro,Act 11 — Diamonds,01:06:15:00,15,,Yes,stop,Silver spark rain full stage
+Q11.302,Bridge — Diamonds,Lighting,Act 11 — Diamonds,01:06:54:00,5,20,Yes,stop,Intimate spot only
+Q11.303,Set piece move — Diamonds,Rigging,Act 11 — Diamonds,01:07:01:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q11.312,Mylar confetti — Diamonds,SFX,Act 11 — Diamonds,01:07:13:00,10,,Yes,stop,Silver mylar confetti drop
+Q11.304,Final chorus — Diamonds,Lighting,Act 11 — Diamonds,01:07:52:00,5,25,Yes,stop,Maximum intensity
+Q11.305,Spots wide — Diamonds,Follow Spots,Act 11 — Diamonds,01:07:56:00,8,,Yes,stop,Widen to full stage
+Q11.313,Chandelier retract — Diamonds,Rigging,Act 11 — Diamonds,01:08:31:00,15,12,Yes,stop,Lower diamond piece
+Q11.306,Quick change standby — Diamonds,Wardrobe,Act 11 — Diamonds,01:08:43:00,10,,Yes,stop,Next costume ready SR
+Q11.307,Outro fade — Diamonds,Lighting,Act 11 — Diamonds,01:08:58:00,5,8,Yes,stop,Slow fade to specials
+Q11.308,Blackout — End Diamonds,Lighting,Act 11 — Diamonds,01:09:22:00,5,3,Yes,stop,Full blackout
+Q12.314,Blackout — Pre We Found Love,Lighting,Act 12 — We Found Love (Finale),01:10:00:00,5,3,Yes,stop,Full stage blackout
+Q12.315,Standby We Found Love,Stage Mgr,Act 12 — We Found Love (Finale),01:10:01:00,5,,Yes,stop,All depts standby
+Q12.316,Channel check — We Found Love,Comms,Act 12 — We Found Love (Finale),01:10:02:00,3,,Yes,stop,Verify all channels clear
+Q12.317,Track start — We Found Love,Sound,Act 12 — We Found Love (Finale),01:10:03:00,8,225,Yes,stop,Main playback
+Q12.318,Content load — We Found Love,Video,Act 12 — We Found Love (Finale),01:10:03:00,8,220,Yes,stop,Main screen content
+Q12.319,Opening look — We Found Love,Lighting,Act 12 — We Found Love (Finale),01:10:06:00,5,15,Yes,auto_continue,Wash + key from DSR
+Q12.320,Spots pick up — We Found Love,Follow Spots,Act 12 — We Found Love (Finale),01:10:07:00,8,,Yes,stop,Pick up artist CS
+Q12.321,Opening lasers — We Found Love,Lasers,Act 12 — We Found Love (Finale),01:10:09:00,10,20,Yes,stop,Fan pattern green
+Q12.322,Verse 1 — We Found Love,Lighting,Act 12 — We Found Love (Finale),01:10:24:00,5,30,Yes,stop,"Cool wash, low intensity"
+Q12.339,Opening volley — WFL Finale,Pyro,Act 12 — We Found Love (Finale),01:10:24:00,15,,Yes,stop,Concussion x8 + gerbs x12
+Q12.323,Verse 1 content — We Found Love,Video,Act 12 — We Found Love (Finale),01:10:26:00,8,25,Yes,stop,Lyrics + abstract
+Q12.324,Instrument preset — We Found Love,Backline,Act 12 — We Found Love (Finale),01:10:28:00,5,,Yes,stop,Verify guitar/keys preset
+Q12.340,Full CO2 — WFL Finale,SFX,Act 12 — We Found Love (Finale),01:10:36:00,12,,Yes,stop,Every CO2 jet simultaneous
+Q12.341,Full array — WFL Finale,Lasers,Act 12 — We Found Love (Finale),01:10:48:00,10,60,Yes,stop,All laser units max output
+Q12.325,Pre-chorus build — We Found Love,Lighting,Act 12 — We Found Love (Finale),01:11:00:00,5,12,Yes,auto_continue,Intensity ramp 50→80%
+Q12.326,Chorus hit — We Found Love,Pyro,Act 12 — We Found Love (Finale),01:11:12:00,15,,Yes,stop,Gerbs x8 DSL/DSR
+Q12.342,Confetti cannons — WFL Finale,SFX,Act 12 — We Found Love (Finale),01:11:12:00,10,,Yes,stop,All confetti cannons fire
+Q12.327,Chorus — We Found Love,Lighting,Act 12 — We Found Love (Finale),01:11:14:00,5,25,Yes,stop,Full wash + strobes
+Q12.328,Chorus lasers — We Found Love,Lasers,Act 12 — We Found Love (Finale),01:11:16:00,10,20,Yes,stop,Beam array full house
+Q12.329,CO2 jets — We Found Love,SFX,Act 12 — We Found Love (Finale),01:11:19:00,12,,Yes,stop,CO2 x4 downstage
+Q12.343,Flame bars max — WFL Finale,Pyro,Act 12 — We Found Love (Finale),01:11:36:00,15,,Yes,stop,All flame bars sustained
+Q12.330,Verse 2 — We Found Love,Lighting,Act 12 — We Found Love (Finale),01:11:48:00,5,25,Yes,stop,"Warm wash, medium"
+Q12.331,Verse 2 content — We Found Love,Video,Act 12 — We Found Love (Finale),01:11:50:00,8,25,Yes,stop,Band cam + graphics
+Q12.344,Streamers + CO2 — WFL Finale,SFX,Act 12 — We Found Love (Finale),01:12:00:00,12,,Yes,stop,Streamers + cryo combo
+Q12.332,Bridge — We Found Love,Lighting,Act 12 — We Found Love (Finale),01:12:24:00,5,20,Yes,stop,Intimate spot only
+Q12.345,Comet rockets — WFL Finale,Pyro,Act 12 — We Found Love (Finale),01:12:24:00,15,,Yes,stop,Comet x12 all positions
+Q12.333,Set piece move — We Found Love,Rigging,Act 12 — We Found Love (Finale),01:12:28:00,15,10,Yes,stop,"Platform raise 2m, safety check before move"
+Q12.346,Final confetti — WFL Finale,SFX,Act 12 — We Found Love (Finale),01:12:48:00,10,,Yes,stop,Gold + silver full house drop
+Q12.334,Final chorus — We Found Love,Lighting,Act 12 — We Found Love (Finale),01:13:00:00,5,25,Yes,stop,Maximum intensity
+Q12.335,Spots wide — We Found Love,Follow Spots,Act 12 — We Found Love (Finale),01:13:02:00,8,,Yes,stop,Widen to full stage
+Q12.347,Finale waterfall — WFL Finale,Pyro,Act 12 — We Found Love (Finale),01:13:12:00,15,,Yes,stop,Waterfall gerbs every truss
+Q12.348,Banner drop — WFL Finale,Rigging,Act 12 — We Found Love (Finale),01:13:24:00,15,,Yes,stop,Tour banner unfurl US
+Q12.336,Quick change standby — We Found Love,Wardrobe,Act 12 — We Found Love (Finale),01:13:31:00,10,,Yes,stop,Next costume ready SR
+Q12.337,Outro fade — We Found Love,Lighting,Act 12 — We Found Love (Finale),01:13:40:00,5,8,Yes,stop,Slow fade to specials
+Q12.338,Blackout — End We Found Love,Lighting,Act 12 — We Found Love (Finale),01:13:55:00,5,3,Yes,stop,Full blackout

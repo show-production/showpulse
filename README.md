@@ -20,7 +20,8 @@ Self-hosted, local-WiFi show management platform for live productions. Reads SMP
 - **Multi-department support:** Lighting, Sound, Video, Pyro, Automation, Stage Management — each with color coding and per-department filtering
 - **Cue numbering:** Auto-generated (Q1, Q2, Q3...) or custom, displayed throughout the UI
 - **Cue fields:** Armed/disarmed toggle, optional duration, per-cue color override, continue mode (stop/auto-continue/auto-follow), post-wait timing
-- **Editor tab:** Act-grouped cue list with collapsible headers, drag-and-drop reordering (within/between acts), inline quick edit (double-click), multi-select with bulk operations (move/duplicate/delete/arm/disarm), visual timeline strip with department-colored markers and synced playhead, one-click cue duplicate (TC+5s offset), act duplication with time offset prompt
+- **Editor tab:** Act-grouped cue list with collapsible headers, drag-and-drop reordering (within/between acts), inline quick edit (double-click), multi-select with bulk operations (move/duplicate/delete/arm/disarm), interactive timeline strip (zoom/pan, click-to-scrub, minimap, rich tooltips, two-way selection sync), one-click cue duplicate (TC+5s offset), act duplication with time offset prompt
+- **Branding:** Inline SVG favicon, login/loading logomarks with breathing animation, nav bar horizontal logo, print report logos — all inlined for offline/single-binary use
 - **Full cue management:** CRUD for departments, cues, and acts, department filtering, bulk CSV/JSON import
 - **Show name:** Configurable show name displayed in the navbar
 - **User-based authentication:** 5 roles (Viewer/CrewLead/Operator/Manager/Admin), per-user department assignment, exclusive timer lock for Managers
@@ -48,6 +49,7 @@ For other devices on the same WiFi: `http://<your-ip>:8080`
 - [Project Overview](PROJECT_OVERVIEW.md) — architecture, implementation status, API reference
 - [Implementation Plan](IMPLEMENTATION_PLAN.md) — original design spec and phases
 - [Next Steps](NEXT_IMPLEMENTATION_PLAN.md) — remaining work roadmap
+- [Contributing](CONTRIBUTING.md) — git workflow, coding standards, environment variables
 
 ## Tech Stack
 
@@ -62,4 +64,4 @@ For other devices on the same WiFi: `http://<your-ip>:8080`
 
 ## Current Status
 
-All core features are complete: LTC/MTC decoding, timecode generator, cue management with bulk import (including armed/duration/color/continue-mode fields), per-department countdown engine with backend-driven Go state, act grouping with collapsible dividers, floating flow controls (Now/Auto/Collapse/Expand), always-visible T-/T+ countdown, warning entry easing, vivid department colors, full UI/UX polish, animated Ready/Go countdown with traffic-light colors, clean dashboard layout with passed count badge, active strips, uniform-size cue cards (color-only differentiation), cue navigation (click-to-goto, prev/next), show name, user-based authentication with 5 roles and timer lock, QR onboarding, security hardening, and 73 unit/integration tests. The Editor tab provides act-grouped cue lists with drag-and-drop, inline editing, multi-select bulk operations, visual timeline strip, and cue/act duplication. 43 API endpoints + WebSocket. Remaining work: multi-show support, generator presets, print view, rate limiting, and portable single-binary distribution. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the roadmap.
+All core features are complete: LTC/MTC decoding, timecode generator, cue management with bulk import (including armed/duration/color/continue-mode fields), per-department countdown engine with backend-driven Go state, act grouping with collapsible dividers, flow controls (Now/Auto/Collapse/Expand), always-visible T-/T+ countdown, warning entry easing, vivid department colors, full UI/UX polish, animated Ready/Go countdown with traffic-light colors, clean dashboard layout with passed count badge, active strips, uniform-size cue cards (color-only differentiation), cue navigation (click-to-goto, prev/next), show name, user-based authentication with 5 roles and timer lock, QR onboarding, security hardening, and 73 unit/integration tests. The Editor tab provides act-grouped cue lists with drag-and-drop, inline editing, multi-select bulk operations, interactive timeline editor (zoom/pan, scrub, minimap, tooltips, selection sync), and cue/act duplication. Branding with inline SVG logos throughout. Analytical print cue sheet with charts and act breakdown. 44 REST API endpoints + WebSocket. Remaining work: multi-show support, generator presets, and portable single-binary distribution. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the roadmap.
