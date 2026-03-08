@@ -20,7 +20,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 | Act data model (name, sort_order) + CRUD + act shift | Done |
 | Show name (get/set, displayed in navbar) | Done |
 | Cue numbering (auto-generated Q1/Q2/Q3, editable) | Done |
-| 43 REST API endpoints + 1 WebSocket = 44 total routes | Done |
+| 44 REST API endpoints + 1 WebSocket | Done |
 | WebSocket hub with per-department filtering | Done |
 | 10Hz countdown engine with per-department cue state tracking | Done |
 | Frontend: Show view (timer, Ready/Go, act-grouped cues, floating controls) | Done |
@@ -31,7 +31,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 | UI/UX: Responsive table scroll, 44px touch targets, favicon | Done |
 | UI/UX: Speed suffix, live color preview, TC size slider label | Done |
 | Acts & collapsible act groups (double-click header or floating controls) | Done |
-| Floating flow controls pill (Now, Auto, Collapse All, Expand All) | Done |
+| Flow controls in timer panel (Now, Auto, Collapse All, Expand All) | Done |
 | Always-visible T- countdown + T+ elapsed time after trigger | Done |
 | Warning entry easing (CSS animation chain) | Done |
 | Vivid department colors (per-element opacity, dept-dot in card tags) | Done |
@@ -241,12 +241,12 @@ Remaining: rate limiting on login endpoint, CSP headers
 
 ---
 
-## Phase 16: Floating Controls & Act Header Polish -- Done
-**Goal:** Move flow controls to a floating pill, polish act dividers.
+## Phase 16: Flow Controls & Act Header Polish -- Done
+**Goal:** Add flow controls for cue list navigation, polish act dividers.
 
-- Auto-scroll (Auto) and jump-to-current (Now) buttons moved from transport bar to floating pill
-- Floating pill: bottom-right of flow area, semi-transparent with backdrop blur
-- Added Collapse All / Expand All list controls to the pill
+- Auto-scroll (Auto) and jump-to-current (Now) buttons added as flow controls
+- Collapse All / Expand All list controls added
+- Controls placed in timer panel bottom row (same row as GoTo — GoTo left, controls right)
 - Act header styling: increased spacing between act groups, colored separator lines
 - Keyboard shortcuts: A (auto-scroll toggle), C (jump to current)
 
@@ -319,6 +319,7 @@ All vanilla JS, zero external dependencies.
 - **Timeline scoping:** CSS `#view-manage.active ~ .timeline-strip` — only visible on Editor tab
 - **Show name centering:** Absolute positioning (`left: 50%; transform: translateX(-50%)`) for true center regardless of nav content
 - **Sidebar overlap fix:** Increased sidebar top padding to 3.5rem to clear hamburger toggle button
+- **Flow controls relocation:** Moved cue list controls (Now, Auto, Collapse, Expand) from floating bottom-right pill into the timer panel bottom row alongside GoTo
 - **Auth fix:** `clearAuth()` on open-access mode to prevent stale localStorage tokens blocking permissions
 
 ### Data Generator
@@ -335,7 +336,7 @@ All vanilla JS, zero external dependencies.
 | **QR code** | Generate QR with server URL for crew onboarding | Done (`GET /api/qr`) |
 | **Multi-show** | Extend `ShowData` with show switching, show archiving | Planned |
 | **Generator presets** | Save/load named configs in data file | Planned |
-| **Print view** | CSS print stylesheet for cue list | Planned |
+| **Print view** | CSS `@media print` stylesheet (analytical print report with charts already exists in `import-export.js`) | Planned |
 | **Wake lock** | Prevent screen sleep on crew devices during show | Planned |
 | **Audio/vibration alerts** | Warning threshold alerts on crew devices | Planned |
 | **Portable dist** | Embed `static/` into binary, auto-open browser, USB-ready | Planned |

@@ -74,7 +74,7 @@ TimecodeSource (Generator / LTC / MTC)
 ### File Structure
 ```
 static/
-  index.html          <- Skeleton HTML (~470 lines)
+  index.html          <- Skeleton HTML (~543 lines)
   css/                <- 7 CSS files
     variables.css     <- :root custom properties
     base.css          <- Reset, shared patterns, utilities
@@ -83,14 +83,15 @@ static/
     manage.css        <- Manage view components
     settings.css      <- Settings view components
     modals.css        <- All modal dialogs
-  js/                 <- 8 JS files
+  js/                 <- 9 JS files
     state.js          <- Constants, state, DOM cache, helpers, CRUD helpers
     api.js            <- HTTP + WebSocket
     auth.js           <- Login, role gating, user management, timer lock
     show.js           <- Show view rendering + interaction
-    manage.js         <- CRUD operations + table
+    manage.js         <- Editor: act-grouped cue list, drag-drop, inline edit, multi-select, bulk ops
+    timeline.js       <- Timeline editor: zoom/pan, scrub, minimap, tooltips, selection sync
     settings.js       <- Source, devices, generator, theme
-    import-export.js  <- Show/cue import & export
+    import-export.js  <- Show/cue import & export, analytical print report
     ui-helpers.js     <- Toasts, modals, keyboard, init
   docs/               <- Developer documentation
 ```
@@ -102,9 +103,10 @@ Scripts are loaded synchronously in order:
 3. `auth.js` -- needs state.js + api.js
 4. `show.js` -- needs state.js + api.js + auth.js
 5. `manage.js` -- needs state.js + api.js
-6. `settings.js` -- needs state.js + api.js
-7. `import-export.js` -- needs state.js + api.js
-8. `ui-helpers.js` -- needs everything above; calls `initDOM()` and `init()`
+6. `timeline.js` -- needs state.js + manage.js
+7. `settings.js` -- needs state.js + api.js
+8. `import-export.js` -- needs state.js + api.js
+9. `ui-helpers.js` -- needs everything above; calls `initDOM()` and `init()`
 
 ### State Management
 Global variables in `state.js`:

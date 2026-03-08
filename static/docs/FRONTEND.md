@@ -4,22 +4,23 @@
 
 | File | Purpose | ~Lines |
 |------|---------|--------|
-| `index.html` | Skeleton HTML (markup only) | 471 |
-| `css/variables.css` | CSS custom properties (design tokens) | 61 |
-| `css/base.css` | Reset, shared patterns (.dot, .dept-bar), utilities | 73 |
-| `css/shell.css` | TopNav, DisconnectBanner, LoginOverlay, LoadingOverlay, Toast | 268 |
-| `css/show.css` | Sidebar, FlowArea, FloatingControls, FlowCard tiers, act headers | 509 |
-| `css/manage.css` | Panel, DeptPanel, ActPanel, CueTable, icon buttons | 149 |
-| `css/settings.css` | Settings grid, groups, radio, slider, speed, user panel | 131 |
-| `css/modals.css` | Modal overlay, dialog, form groups, confirm | 97 |
-| `js/state.js` | CONST, global state, DOM cache, shared helpers, CRUD helpers | 326 |
+| `index.html` | Skeleton HTML (markup only) | 543 |
+| `css/variables.css` | CSS custom properties (design tokens) | 81 |
+| `css/base.css` | Reset, shared patterns (.dot, .dept-bar), utilities | 74 |
+| `css/shell.css` | TopNav, DisconnectBanner, LoginOverlay, LoadingOverlay, Toast, branding logos | 276 |
+| `css/show.css` | Sidebar, FlowArea, FlowControls, FlowCard tiers, act headers | 500 |
+| `css/manage.css` | Panel, DeptPanel, ActPanel, CueList, timeline strip, bulk ops, inline edit | 522 |
+| `css/settings.css` | Settings grid, groups, radio, slider, speed, user panel, dashboard | 251 |
+| `css/modals.css` | Modal overlay, dialog, form groups, confirm | 233 |
+| `js/state.js` | CONST, global state, DOM cache, shared helpers, CRUD helpers | 341 |
 | `js/api.js` | api() wrapper, connectWS(), WS message validation | 77 |
-| `js/auth.js` | Login, role gating, user CRUD, timer lock UI | 350 |
+| `js/auth.js` | Login, role gating, user CRUD, timer lock UI, dashboard | 450 |
 | `js/show.js` | ShowView rendering, sidebar, transport, AutoPulse, act grouping | 664 |
-| `js/manage.js` | Dept/cue/act CRUD, table render, sort | 348 |
-| `js/settings.js` | Source, device refresh, generator, theme | 178 |
-| `js/import-export.js` | Show export/import, CSV parsing, cue import | 166 |
-| `js/ui-helpers.js` | Toasts, modals, keyboard, view switching, init | 164 |
+| `js/manage.js` | Editor: act-grouped cue list, drag-drop, inline edit, multi-select, bulk ops | 1047 |
+| `js/timeline.js` | Timeline editor: zoom/pan, scrub, minimap, tooltips, selection sync | 374 |
+| `js/settings.js` | Source, device refresh, generator, theme | 209 |
+| `js/import-export.js` | Show export/import, CSV parsing, cue import, analytical print report | 708 |
+| `js/ui-helpers.js` | Toasts, modals, keyboard, view switching, init | 193 |
 
 ## Component Terminology
 
@@ -33,13 +34,13 @@
 | Sidebar | `#show-sidebar` | show.css |
 | FlowArea | `.flow-area` | show.css |
 | TimecodeDisplay | `#flow-timecode` | show.css |
-| FloatingControls | `#flow-controls` | show.css |
+| FlowControls | `#flow-controls` | show.css |
 | CueList | `#flow-upcoming` | show.css |
 | FlowCard | `.flow-card` | show.css |
 | ActHeader | `.act-header` | show.css |
 | DeptPanel | `#dept-list` | manage.css |
 | ActPanel | `#act-list` | manage.css |
-| CueTable | `.cue-table` | manage.css |
+| Editor (CueList) | `#cue-list-body` | manage.css |
 | DeptModal | `#dept-modal` | modals.css |
 | CueModal | `#cue-modal` | modals.css |
 | ActModal | `#act-modal` | modals.css |

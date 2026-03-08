@@ -48,6 +48,7 @@ function connectWS() {
 
   ws.onopen = () => {
     wsConnected = true;
+    wsReconnectDelay = CONST.WS_RECONNECT_DELAY;
     DOM.wsDot.classList.add('connected');
     DOM.disconnectBanner.classList.remove('visible');
     DOM.flowTimecode.classList.remove('disconnected');
@@ -58,7 +59,8 @@ function connectWS() {
     DOM.wsDot.classList.remove('connected');
     DOM.disconnectBanner.classList.add('visible');
     DOM.flowTimecode.classList.add('disconnected');
-    setTimeout(connectWS, CONST.WS_RECONNECT_DELAY);
+    setTimeout(connectWS, wsReconnectDelay);
+    wsReconnectDelay = Math.min(wsReconnectDelay * 2, 30000);
   };
 
   ws.onmessage = (event) => {

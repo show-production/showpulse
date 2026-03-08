@@ -107,22 +107,22 @@
           <span class="timer-lock-status" id="timer-lock-status"></span>
         </span>
       </div>
-      <div class="tc-goto-row">
+      <div class="tc-bottom-row">
         <div class="tc-goto-group">
           <button class="tc-btn" onclick="gotoTC()" title="Goto (G)">Go To</button>
           <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF" oninput="updateGotoCueInfo()">
+          <span class="tc-goto-info" id="goto-info"></span>
         </div>
-        <span class="tc-goto-info" id="goto-info"></span>
+        <div class="flow-controls" id="flow-controls">
+          <button class="fc-btn" onclick="jumpToCurrent()" title="Jump to current (C)">&#x2907; Now</button>
+          <button class="fc-btn active" id="autopulse-btn" onclick="toggleAutoPulse()" title="Auto-scroll (A)">Auto</button>
+          <span class="fc-sep"></span>
+          <button class="fc-btn" id="collapse-all-btn" onclick="collapseAllActs()" title="Collapse all acts">&#x25B4; Collapse</button>
+          <button class="fc-btn" id="expand-all-btn" onclick="expandAllActs()" title="Expand all acts">&#x25BE; Expand</button>
+        </div>
       </div>
     </div>
     <div class="flow-upcoming" id="flow-upcoming"></div>
-    <div class="flow-controls" id="flow-controls">
-      <button class="fc-btn" onclick="jumpToCurrent()" title="Jump to current (C)">&#x2907; Now</button>
-      <button class="fc-btn active" id="autopulse-btn" onclick="toggleAutoPulse()" title="Auto-scroll (A)">Auto</button>
-      <span class="fc-sep"></span>
-      <button class="fc-btn" id="collapse-all-btn" onclick="collapseAllActs()" title="Collapse all acts">&#x25B4; Collapse</button>
-      <button class="fc-btn" id="expand-all-btn" onclick="expandAllActs()" title="Expand all acts">&#x25BE; Expand</button>
-    </div>
   </div>
 </div>
 
