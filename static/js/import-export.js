@@ -556,6 +556,7 @@ function printCueSheet() {
   html += `</body></html>`;
 
   const win = window.open('', '_blank');
+  if (!win) { showToast('Popup blocked — please allow popups for this site', 'error'); return; }
   win.document.write(html);
   win.document.close();
   win.focus();
