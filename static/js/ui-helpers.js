@@ -8,6 +8,7 @@
      Modal helpers    — closeModal, overlay click-to-close, color picker sync
      Keyboard         — global shortcuts (Space/Esc/P/S/G/N/B/A/C)
      Initialization   — initDOM, initAuth, data load, WS connect, fallback poll
+     Wake Lock        — prevent screen sleep on crew devices
    Loaded last. Dependencies: all other JS files.
    ══════════════════════════════════════════ */
 
@@ -210,3 +211,22 @@ setInterval(async () => {
 
 // Update timeline playhead from current TC (5 Hz)
 setInterval(updateTimelinePlayhead, 200);
+
+// ── Wake Lock (prevent screen sleep on crew devices) ──
+
+let wakeLock = null;
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch (e) {
+    // Wake lock request failed (e.g. low battery) — silently ignore
+  }
+}
+
+requestWakeLock();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') requestWakeLock();
+});

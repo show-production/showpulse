@@ -368,7 +368,7 @@ All vanilla JS, zero external dependencies.
 | **Multi-show** | Extend `ShowData` with show switching, show archiving | Planned |
 | **Generator presets** | Save/load named configs in data file | Planned |
 | **Print view** | CSS `@media print` stylesheet (analytical print report with charts already exists in `import-export.js`) | Planned |
-| **Wake lock** | Prevent screen sleep on crew devices during show | Planned |
+| **Wake lock** | Prevent screen sleep on crew devices during show | Done |
 | **Audio/vibration alerts** | Warning threshold alerts on crew devices | Planned |
 | **Portable dist** | Embed `static/` into binary, auto-open browser, USB-ready | Planned |
 | **Rate limiting** | Rate-limit login endpoint (tower middleware) | Planned |
