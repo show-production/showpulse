@@ -122,12 +122,9 @@ async fn main() {
         login_limiter,
     };
 
-    // CORS: only allow same-origin requests
+    // CORS: allow any origin (LAN tool — crew connect from various IPs/hostnames)
     let cors = CorsLayer::new()
-        .allow_origin(AllowOrigin::exact(
-            HeaderValue::from_str(&format!("http://localhost:{}", config.port))
-                .expect("valid origin"),
-        ));
+        .allow_origin(AllowOrigin::any());
 
     let app = api_router()
         // WebSocket
@@ -152,6 +149,10 @@ async fn main() {
         .layer(SetResponseHeaderLayer::overriding(
             axum::http::header::X_FRAME_OPTIONS,
             HeaderValue::from_static("DENY"),
+        ))
+        .layer(SetResponseHeaderLayer::overriding(
+            axum::http::header::CONTENT_SECURITY_POLICY,
+            HeaderValue::from_static("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:; font-src 'self'"),
         ))
         // Static files (UI)
         .fallback_service(ServeDir::new("static"));

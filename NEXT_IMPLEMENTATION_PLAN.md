@@ -371,8 +371,8 @@ All vanilla JS, zero external dependencies.
 | **Wake lock** | Prevent screen sleep on crew devices during show | Done |
 | **Audio/vibration alerts** | Warning threshold alerts on crew devices | Planned |
 | **Portable dist** | Embed `static/` into binary, auto-open browser, USB-ready | Planned |
-| **Rate limiting** | Rate-limit login endpoint (tower middleware) | Planned |
-| **CSP headers** | Content-Security-Policy header | Planned |
+| **Rate limiting** | Rate-limit login endpoint (tower middleware) | Done (5 attempts/60s per IP) |
+| **CSP headers** | Content-Security-Policy header | Done |
 
 ---
 
