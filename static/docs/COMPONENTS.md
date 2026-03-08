@@ -59,11 +59,11 @@
 - **State**: `DOM.tcValue`, `DOM.tcState`, `DOM.tcFps`
 - **Role gating**: Transport controls hidden for roles below Manager (`auth.js:applyRole()`)
 
-### FloatingControls
-- **Visual**: Semi-transparent pill at bottom-right of flow area with backdrop blur
-- **HTML**: `<div class="flow-controls" id="flow-controls">`
+### FlowControls
+- **Visual**: Inline button group at the right side of the timer bottom row (same row as GoTo)
+- **HTML**: `<div class="flow-controls" id="flow-controls">` inside `.tc-bottom-row`
 - **JS**: `toggleAutoPulse()`, `jumpToCurrent()`, `collapseAllActs()`, `expandAllActs()` in `show.js`
-- **CSS**: `show.css` -- `.flow-controls`, `.fc-btn`, `.fc-btn.active`, `.fc-sep`
+- **CSS**: `show.css` -- `.flow-controls`, `.fc-btn`, `.fc-btn.active`, `.fc-sep`, `.tc-bottom-row`
 - **Buttons**: Now (jump to current, `C` key), Auto (auto-scroll toggle, `A` key), Collapse All, Expand All
 
 ### CueList
@@ -100,12 +100,19 @@
 - **JS**: `renderActList()`, `openActModal()`, `deleteAct()` in `manage.js`
 - **CSS**: `manage.css` -- `.dept-item` (reused)
 
-### CueTable
-- **Visual**: Sortable table with department filter dropdown, import button
-- **HTML**: `<table class="cue-table">` with `<tbody id="cue-table-body">`
-- **JS**: `renderCueTable()`, `sortCueTable()` in `manage.js`
-- **CSS**: `manage.css` -- `.cue-table`, `.sortable`
-- **State**: `cueTableSort`
+### Editor (CueList)
+- **Visual**: Act-grouped cue list with collapsible headers, drag-and-drop reordering, inline quick edit, multi-select with bulk operations, interactive timeline strip
+- **HTML**: `<div id="cue-list-body">` with `.act-group` wrappers containing `.cue-row` items
+- **JS**: `renderCueList()`, `renderTimelineStrip()` in `manage.js`; timeline zoom/pan/scrub/minimap/tooltips in `timeline.js`
+- **CSS**: `manage.css` -- `.cue-row`, `.act-group-header`, `.bulk-bar`, `.tl-*` timeline classes
+- **Features**:
+  - **Drag & Drop**: Grip handle per cue, reorder within/between acts via HTML5 Drag & Drop
+  - **Inline Edit**: Double-click label, timecode, department, or warning time to edit in place
+  - **Multi-Select**: Checkbox per cue, shift-click range, act header select-all
+  - **Bulk Ops**: Floating bar with move/duplicate/delete/arm/disarm actions
+  - **Timeline Strip**: Zoomable/pannable horizontal strip with act regions, dept-colored markers, playhead, minimap, tooltips, two-way selection sync
+  - **Duplicate**: One-click cue duplicate (TC+5s), act duplicate with time offset prompt
+- **State**: `selectedCues` (Set), `cueListCollapsed` (Set), `dragCueId`, `lastSelectedCueId`
 
 ## Settings View Components
 
