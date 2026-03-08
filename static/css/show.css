@@ -240,17 +240,29 @@
 }
 @media (max-width: 640px) {
   .show-sidebar { width: 100%; }
-  .tc-btn { min-height: var(--touch-min); min-width: var(--touch-min); padding: 0.5rem 0.75rem; font-size: var(--font-size-sm); }
-  .tc-btn-sm { min-height: 38px; padding: 0.4rem 0.6rem; }
-  .fc-btn { min-height: 38px; padding: 0.5rem 0.7rem; font-size: var(--font-size-sm); }
+  /* Transport: 38px height, keep width auto so 5 buttons fit */
+  .tc-btn { min-height: 38px; padding: 0.4rem 0.65rem; font-size: var(--font-size-sm); }
+  .tc-btn-sm { min-height: 38px; padding: 0.4rem 0.5rem; }
+  .fc-btn { min-height: 34px; padding: 0.35rem 0.5rem; font-size: var(--font-size-xs); }
   .tc-goto-group input { width: 90px; }
+  /* Stack tc-left below tc-value on narrow screens */
+  .flow-timecode .tc-row { flex-direction: column; gap: 0.15rem; }
+  .flow-timecode .tc-left { text-align: center; display: flex; gap: 0.5rem; justify-content: center; }
+  /* Controls row: allow wrapping */
+  .flow-timecode .tc-controls { width: 100%; justify-content: center; }
+  .timer-lock-group { flex-wrap: wrap; justify-content: center; }
 }
 @media (max-width: 480px) {
-  .tc-bottom-row { flex-wrap: wrap; gap: 0.4rem; }
-  .tc-goto-group { width: 100%; }
-  .flow-controls { width: 100%; justify-content: center; }
-  .flow-area { padding: 0 0.5rem; }
-  .flow-timecode { padding: 0.5rem 0.75rem; }
+  .flow-area { padding: 0 0.25rem; }
+  .flow-timecode { padding: 0.4rem 0.5rem; margin-top: 0.25rem; }
+  /* Stack bottom row vertically */
+  .tc-bottom-row { flex-direction: column; gap: 0.3rem; align-items: stretch; }
+  .tc-goto-group { width: 100%; justify-content: center; }
+  .flow-controls { width: 100%; justify-content: center; flex-wrap: wrap; }
+  /* Smaller transport buttons for very small phones */
+  .tc-btn { padding: 0.35rem 0.45rem; font-size: var(--font-size-xs); }
+  .tc-btn-sm { padding: 0.35rem 0.4rem; font-size: var(--font-size-xs); }
+  .tc-transport { gap: 0.25rem; }
 }
 .flow-upcoming .flow-card { cursor: pointer; }
 .flow-timecode.disconnected .tc-value {

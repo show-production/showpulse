@@ -48,7 +48,8 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 | QR code onboarding (`GET /api/qr`) | Done |
 | Security hardening (CORS, body limit, concurrency limit, WS limit, headers) | Done |
 | 73 unit & integration tests | Done |
-| Hebrew / RTL internationalization (i18n engine, DOM tagging, JS externalization) | Phase D done |
+| Hebrew / RTL internationalization (i18n engine, DOM tagging, JS externalization) | Done |
+| Mobile-first responsive overhaul (PWA meta, touch targets, modal/nav/timer fixes) | Done |
 
 ### Completed Phases
 
@@ -330,20 +331,32 @@ All vanilla JS, zero external dependencies.
 
 ---
 
-## Phase 21: Hebrew / RTL Internationalization -- In Progress
+## Phase 21: Hebrew / RTL Internationalization -- Done
 **Goal:** Full Hebrew translation and RTL layout support for Israeli production crews.
 
-### Completed
 - **Phase A — i18n infrastructure:** `i18n.js` module with `t(key, params)` lookup, `{param}` interpolation, `setLanguage()`, `applyLanguage()`. English and Hebrew dictionaries (~120 keys each). Language radio toggle in Settings with localStorage persistence. Script loaded second (after state.js).
 - **Phase B — HTML `data-i18n` attributes:** All 5 modals (department, cue, act, user, confirm) tagged with `data-i18n`, `data-i18n-placeholder`, `data-i18n-title` attributes for static text translation.
 - **Phase C — `applyI18nToDOM()` wiring:** DOM scanner function applies translations from `data-i18n*` attributes. Called at init and on language change via `refreshAllViews()`.
 - **Phase D — JS string externalization:** ~100 hardcoded English strings across 9 JS files replaced with `t()` calls. Covers toasts, error messages, modal titles, button labels, status text, dashboard labels, filter labels, bulk operation feedback. Entity name keys (`entity.department/cue/act/user`) for generic CRUD helpers.
-
-### Remaining
-- **Phase E:** Hebrew translation review by native speaker
-- **Phase F:** RTL visual regression testing, mobile layout verification
+- **Phase E — Hebrew review:** Native speaker review complete. Ready/Go kept in English for all languages. Nav logo RTL fix (`direction: ltr`).
+- **Phase F — Mobile + RTL verification:** Mobile-first responsive overhaul (8 sub-phases). Timer panel overflow fix. Touch targets, full-screen modals, `hover:none` action reveals.
 
 **Key files:** `static/js/i18n.js` (dictionaries + engine), all 9 other JS files (t() calls), `static/index.html` (data-i18n attributes)
+
+---
+
+## Phase 22: Mobile-First Responsive Overhaul -- Done
+**Goal:** Production-ready mobile experience for crew on phones/tablets.
+
+- PWA meta tags (theme-color, apple-mobile-web-app)
+- CSS variables: `--touch-min: 44px`, `--nav-height: 48px`
+- Nav: hide logo/auth label at 640px, hide show name at 480px
+- Show view: 38px transport buttons, stacked tc-left, full-width sidebar, hidden shortcuts
+- Editor: 44px cue items, reduced timeline, bulk bar wrap
+- Settings: data buttons wrap + touch sizing
+- Modals: full-screen on phones, 44px footer buttons
+- Touch: `@media (hover: none)` reveals hover-only actions, tap highlight suppression
+- Timer panel overflow fix: removed min-width on buttons, stacked bottom row vertically at 480px
 
 ---
 
