@@ -139,7 +139,7 @@
 .cue-act-meta {
   font-size: var(--font-size-xs);
   color: var(--text-dim);
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 .cue-act-add {
   width: 22px;
@@ -229,7 +229,7 @@
   color: var(--text-dim);
   white-space: nowrap;
   min-width: 28px;
-  text-align: right;
+  text-align: end;
 }
 .cue-item .cue-actions {
   display: flex;
@@ -245,6 +245,7 @@
   bottom: 0;
   left: 0;
   right: 0;
+  direction: ltr; /* time flows left-to-right universally */
   padding: 0.5rem 0.75rem 0.4rem;
   border-top: 1px solid var(--border);
   background: var(--bg-card);
@@ -266,7 +267,7 @@
   top: 0;
   height: 100%;
   background: var(--bg-input);
-  border-right: 1px solid var(--border);
+  border-inline-end: 1px solid var(--border);
 }
 .tl-cue {
   position: absolute;

@@ -144,6 +144,25 @@ document.addEventListener('keydown', (e) => {
 // ── Initialization ─────────────────────────
 
 loadTheme();
+applyLanguage();
+applyI18nToDOM();
+// Restore language radio state
+if (currentLang === 'he') {
+  const heRadio = document.getElementById('lang-he');
+  const enLabel = document.querySelector('#lang-radio label[for="lang-en"]');
+  const heLabel = document.querySelector('#lang-radio label[for="lang-he"]');
+  if (heRadio) heRadio.checked = true;
+  if (enLabel) enLabel.classList.remove('selected');
+  if (heLabel) heLabel.classList.add('selected');
+}
+
+/**
+ * Re-render all views after language change.
+ * Called by setLanguage() in i18n.js.
+ */
+function refreshAllViews() {
+  applyI18nToDOM();
+}
 
 (async function init() {
   initDOM();

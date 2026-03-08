@@ -488,6 +488,12 @@
 [dir="rtl"] .show-sidebar { transform: translateX(100%); }
 [dir="rtl"] .show-sidebar.open { transform: translateX(0); }
 [dir="rtl"] .flow-card .progress-fill { border-radius: 2px 0 0 2px; }
+/* Timecode elements stay LTR in RTL mode */
+[dir="rtl"] .tc-value,
+[dir="rtl"] .tc-goto-group,
+[dir="rtl"] .card-tc,
+[dir="rtl"] .card-countdown,
+[dir="rtl"] .card-countdown-row { direction: ltr; }
 
 /* ── Animations ── */
 @keyframes active-glow {
