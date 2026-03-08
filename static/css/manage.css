@@ -101,53 +101,6 @@
 }
 .add-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── CueTable (legacy, unused — kept for reference) ── */
-.cue-table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.cue-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--font-size-md);
-}
-.cue-table th {
-  text-align: start;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
-  font-weight: var(--font-weight-medium);
-  border-bottom: 1px solid var(--border);
-}
-.cue-table td {
-  padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-.cue-table tr:hover { background: var(--bg-surface); }
-.cue-table .tc-cell {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  color: var(--text-label);
-}
-.cue-table .dept-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.cue-table .dept-cell .dot {
-  flex-shrink: 0;
-}
-.cue-table .actions-cell {
-  display: flex;
-  gap: var(--gap-xs);
-  justify-content: end;
-}
-.cue-table th.sortable { cursor: pointer; user-select: none; }
-.cue-table th.sortable:hover { color: var(--text-primary); }
-
 /* ── Cue List (act-grouped editor) ── */
 .cue-list-empty {
   padding: 1.5rem;

@@ -1,6 +1,15 @@
 /target
 showpulse-data.json
+showpulse-data-backup.json
 .claude/
 *.png
 *.pdf
+
+# Dev tools & mock data (keep local, not tracked)
+gen-rihanna*.py
+setup-users.sh
+rihanna-*.json
+rihanna-*.csv
+test-import-*
 users-backup.json
+static/brand.html

@@ -203,34 +203,6 @@
   white-space: nowrap;
 }
 
-/* ── User management ── */
-.user-item {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 0.8rem;
-  border-bottom: 1px solid var(--border);
-}
-.user-item:last-child { border-bottom: none; }
-.user-info {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-.user-name {
-  font-size: var(--font-size-md);
-  color: var(--text-primary);
-}
-.user-role {
-  font-size: var(--font-size-xs);
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.user-actions {
-  display: flex;
-  gap: 0.3rem;
-}
 .dept-checks {
   display: flex;
   flex-wrap: wrap;

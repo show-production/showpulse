@@ -36,12 +36,6 @@ body {
   flex-shrink: 0;
 }
 
-/** Thin scrollbar for scrollable panels. */
-.scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-
 /* ── Utility classes ── */
 .hidden { display: none; }
 .inline-row { display: flex; gap: var(--gap-sm); align-items: center; }
