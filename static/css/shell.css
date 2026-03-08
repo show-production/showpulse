@@ -184,7 +184,7 @@
   gap: 0.8rem;
   flex-shrink: 0;
 }
-.nav-logo { flex-shrink: 0; height: 39px; width: auto; opacity: 0.8; }
+.nav-logo { flex-shrink: 0; height: 39px; width: auto; opacity: 0.8; direction: ltr; }
 .auth-user-label {
   font-size: var(--font-size-xs);
   color: var(--text-dim);

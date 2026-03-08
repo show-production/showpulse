@@ -412,7 +412,7 @@ const I18N = {
 
   he: {
     // Nav
-    'nav.show': '\u05EA\u05E6\u05D5\u05D2\u05D4',
+    'nav.show': '\u05D4\u05E6\u05D2\u05D4',
     'nav.editor': '\u05E2\u05D5\u05E8\u05DA',
     'nav.settings': '\u05D4\u05D2\u05D3\u05E8\u05D5\u05EA',
     'nav.logout': '\u05D4\u05EA\u05E0\u05EA\u05E7',
@@ -472,9 +472,7 @@ const I18N = {
     'shortcut.jumpCurrent': '\u05E7\u05E4\u05D5\u05E5 \u05DC\u05E0\u05D5\u05DB\u05D7\u05D9',
     'shortcut.sidebar': '\u05E1\u05E8\u05D2\u05DC \u05E6\u05D3',
 
-    // Show view cue states
-    'cue.ready': '\u05DE\u05D5\u05DB\u05DF',
-    'cue.go': '!GO',
+    // Show view cue states (ready/go kept in English for all languages)
     'cue.now': '\u05E2\u05DB\u05E9\u05D9\u05D5',
     'cue.noCues': '\u05D0\u05D9\u05DF \u05E7\u05D9\u05D5\u05D9\u05DD \u05E2\u05D3\u05D9\u05D9\u05DF. \u05E2\u05D1\u05D5\u05E8 \u05DC\u05E2\u05D5\u05E8\u05DA \u05DB\u05D3\u05D9 \u05DC\u05D4\u05D5\u05E1\u05D9\u05E3.',
     'cue.noMatch': '\u05D0\u05D9\u05DF \u05E7\u05D9\u05D5\u05D9\u05DD \u05EA\u05D5\u05D0\u05DE\u05D9\u05DD.',
