@@ -370,7 +370,7 @@ All vanilla JS, zero external dependencies.
 | **Print view** | CSS `@media print` stylesheet (analytical print report with charts already exists in `import-export.js`) | Planned |
 | **Wake lock** | Prevent screen sleep on crew devices during show | Done |
 | **Audio/vibration alerts** | Warning threshold alerts on crew devices | Planned |
-| **Portable dist** | Embed `static/` into binary, auto-open browser, USB-ready | Planned |
+| **Portable dist** | Embed `static/` into binary via rust-embed, single 4.1 MB .exe | Done |
 | **Rate limiting** | Rate-limit login endpoint (tower middleware) | Done (5 attempts/60s per IP) |
 | **CSP headers** | Content-Security-Policy header | Done |
 

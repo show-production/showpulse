@@ -4,17 +4,22 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use axum::{
     extract::{DefaultBodyLimit, Query, State, WebSocketUpgrade},
-    http::{HeaderValue, StatusCode},
+    http::{HeaderValue, StatusCode, Uri, header},
     middleware,
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     routing::get,
 };
+use rust_embed::Embed;
 use serde::Deserialize;
 use tower::limit::ConcurrencyLimitLayer;
 use tower_http::cors::{AllowOrigin, CorsLayer};
-use tower_http::services::ServeDir;
 use tower_http::set_header::SetResponseHeaderLayer;
 use tracing::{info, warn};
+
+
+#[derive(Embed)]
+#[folder = "static/"]
+struct Asset;
 
 use showpulse::auth::{LoginLimiter, Role, SessionStore};
 use showpulse::cue::store::CueStore;
@@ -61,6 +66,30 @@ async fn ws_handler(
     Ok(ws.on_upgrade(move |socket| async move {
         state.ws_hub.handle_connection(socket, session_info).await;
     }))
+}
+
+async fn static_handler(uri: Uri) -> Response {
+    let path = uri.path().trim_start_matches('/');
+    let path = if path.is_empty() { "index.html" } else { path };
+
+    match Asset::get(path) {
+        Some(content) => {
+            let mime = mime_guess::from_path(path).first_or_octet_stream();
+            (
+                [(header::CONTENT_TYPE, mime.as_ref())],
+                content.data,
+            )
+                .into_response()
+        }
+        None => match Asset::get("index.html") {
+            Some(content) => (
+                [(header::CONTENT_TYPE, "text/html")],
+                content.data,
+            )
+                .into_response(),
+            None => StatusCode::NOT_FOUND.into_response(),
+        },
+    }
 }
 
 #[tokio::main]
@@ -154,8 +183,8 @@ async fn main() {
             axum::http::header::CONTENT_SECURITY_POLICY,
             HeaderValue::from_static("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:; font-src 'self'"),
         ))
-        // Static files (UI)
-        .fallback_service(ServeDir::new("static"));
+        // Static files (embedded in binary)
+        .fallback(static_handler);
 
     let addr = SocketAddr::from((config.bind_address, config.port));
 
