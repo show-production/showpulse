@@ -24,7 +24,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 | WebSocket hub with per-department filtering | Done |
 | 10Hz countdown engine with per-department cue state tracking | Done |
 | Frontend: Show view (timer, Ready/Go, act-grouped cues, floating controls) | Done |
-| Frontend: Manage view (dept + cue + act CRUD, sorting, filtering, CSV/JSON import) | Done |
+| Frontend: Editor view (act-grouped cue list, drag-and-drop, inline edit, multi-select bulk ops, timeline strip, cue/act duplication, dept + act CRUD, CSV/JSON import) | Done |
 | Frontend: Settings (source, frame rate, theme, LTC/MTC devices, show name, export/import) | Done |
 | UI/UX: Disconnection banner, keyboard hints, confirm modals | Done |
 | UI/UX: Toast notifications, loading spinner, passed cues toggle | Done |
@@ -57,7 +57,7 @@ ShowPulse is a self-hosted Rust/Axum live show management platform. The full pip
 
 **Phase 3 — UI/UX Improvements (15 items):** Disconnection banner, keyboard hints, confirm modals replacing native `confirm()`, "Lead Time" column rename, speed suffix, data panel separation, `setSource()` fix, table scroll, touch targets, loading spinner, toast notifications, passed cues toggle, TC size label, live color preview, favicon.
 
-**Phase 4 — CSV/JSON Cue Import:** `POST /api/cues/import` bulk endpoint that replaces all existing cues, department validation, single persist. Frontend CSV parser with column aliases, JSON array/wrapper support, import button in Manage view. `importShow()` deletes all existing departments+cues before importing new ones.
+**Phase 4 — CSV/JSON Cue Import:** `POST /api/cues/import` bulk endpoint that replaces all existing cues, department validation, single persist. Frontend CSV parser with column aliases, JSON array/wrapper support, import button in Editor view. `importShow()` deletes all existing departments+cues before importing new ones.
 
 **Phase 5 — User Feedback Items:**
 1. Sticky timecode display + transport at top of Show view
@@ -173,9 +173,9 @@ Remaining: rate limiting on login endpoint, CSP headers
 |------|-------|------|--------|----------|---------------|-----------|
 | Viewer | 1 | View (filtered to assigned depts) | -- | -- | -- | -- |
 | Crew Lead | 2 | View (filtered to assigned depts) | -- | -- | -- | -- |
-| Operator | 3 | View | Full | -- | -- | -- |
-| Manager | 4 | View | Full | Full | Yes (must acquire lock) | -- |
-| Admin | 5 | View | Full | Full | Yes (bypasses lock) | Full |
+| Operator | 3 | View | Full (Editor) | -- | -- | -- |
+| Manager | 4 | View | Full (Editor) | Full | Yes (must acquire lock) | -- |
+| Admin | 5 | View | Full (Editor) | Full | Yes (bypasses lock) | Full |
 
 ### Timer Lock
 - Only one Manager can control the timer at a time (exclusive lock)
@@ -202,7 +202,7 @@ Remaining: rate limiting on login endpoint, CSP headers
 
 **Frontend (`static/js/auth.js`):**
 - Login overlay (z-index 310, above loading spinner)
-- Role-based tab gating: Viewer/CrewLead -> Show only, Operator -> +Manage, Manager -> +Settings, Admin -> +Users panel
+- Role-based tab gating: Viewer/CrewLead -> Show only, Operator -> +Editor, Manager -> +Settings, Admin -> +Users panel
 - Transport controls hidden for roles below Manager
 - Timer lock UI: "Take Control" / "Release" button for Managers
 - User management panel in Settings (Admin): list, add, edit, delete users with role + department assignment
@@ -225,7 +225,7 @@ Remaining: rate limiting on login endpoint, CSP headers
 - Flow view groups cues by act with divider headers (line + inline text)
 - Act groups collapsible: double-click header, or floating controls (Collapse All / Expand All)
 - Collapsed state preserved across re-renders via `data-act-id` DOM attributes
-- Manage view: Act CRUD panel with cue count per act, act selector in cue modal
+- Editor view: Act CRUD panel with cue count per act, act selector in cue modal
 - Demo seed: 3 acts (Pre-show, Act 1, Act 2) with cues assigned
 
 ### Show Name
@@ -272,6 +272,59 @@ Results: -501 lines (-18% total JS), zero new features added.
 2. **T+ elapsed time**: After trigger, shows `T+Xm XXs` using `elapsed_sec` from WS broadcast (replaces checkmark)
 3. **Warning entry easing**: CSS animation chain — `warn-enter` (0.6s smooth border/glow transition) followed by `warn-pulse` (1.5s infinite loop at 0.6s delay). Countdown row slides open with `max-height`/`opacity`/`padding-top` transitions
 4. **Vivid department colors**: Removed card-level opacity, applied per-element dimming to text/countdown only. Dept-bar and dept-dot stay at full brightness across all tiers. `updateFlowCard()` refreshes dept-bar and dept-dot colors every render cycle
+
+---
+
+## Phase 19: Editor Tab Overhaul -- Done
+**Goal:** Transform the Manage tab into a full-featured Editor with professional cue list editing capabilities.
+
+7 milestones implemented (M1-M7):
+
+1. **Act-Grouped Cue List (M1):** Cues grouped by act with collapsible headers showing cue count and time span. Replaces old flat cue table
+2. **Drag & Drop (M2):** Grip handle to drag cues within and between acts. Drop on act headers to move cues. Auto-calculates new timecodes. Uses HTML5 Drag & Drop API with grip handle activation
+3. **Inline Quick Edit (M3):** Double-click label, timecode, department, or warning time to edit in place. Enter saves, Escape cancels. Uses event delegation with dblclick
+4. **Multi-Select & Bulk Ops (M4):** Checkbox per cue, shift-click range select, act header select-all. Floating bulk action bar: move to act, duplicate, delete, arm/disarm. Bulk ops run in parallel via Promise.all
+5. **Visual Timeline Strip (M5):** Horizontal timeline above cue list with act regions, department-colored cue markers, green playhead synced to current TC at 5Hz. Click markers to scroll to cue
+6. **Duplicate Cue (M6):** One-click duplicate with TC+5s offset. Add-cue-to-act button on act headers
+7. **Duplicate Act (M7):** Clone entire act with all cues, prompt for time offset
+
+**Key files:** `static/js/manage.js` (all editor logic), `static/css/manage.css` (all editor styles), `static/js/state.js` (DOM cache: cueListBody, timelineStrip; secondsToTcObj utility), `static/js/ui-helpers.js` (init calls, playhead interval), `static/index.html` (timeline strip div, cue list container)
+
+**State additions:** `selectedCues` (Set), `cueListCollapsed` (Set), `dragCueId`, `lastSelectedCueId`
+
+All vanilla JS, zero external dependencies.
+
+---
+
+## Phase 20: Timeline Editor + Branding + Polish -- Done
+**Goal:** Evolve the timeline strip into an interactive editor, integrate brand identity, polish UI.
+
+### Timeline Editor (Phases 1-5)
+1. **Zoom & Pan (Phase 1):** Mouse wheel cursor-anchored zoom (0.8/1.25 factor, min 5s visible), drag-to-pan on zoomed track. View state: `tlView.start`, `tlView.end`, `tlView.fullMin`, `tlView.fullMax`
+2. **Click-to-Scrub (Phase 3):** Clicking unzoomed timeline track sends `POST /api/generator/goto` with computed timecode
+3. **Minimap (Phase 4):** When zoomed, a 10px minimap shows full timeline with viewport indicator rect (accent border + 15% opacity fill)
+4. **Tooltips (Phase 5):** Rich tooltips on cue marker hover via event delegation on single reused DOM element. Shows label, timecode, department (with color dot), and warning time
+5. **Selection Sync (Phase 5):** Two-way sync between timeline markers and cue list checkboxes. `.tl-cue--selected` class with scaleX(2.5) + glow
+
+### Branding Integration
+- **Favicon:** Inline pulse waveform SVG data URI (no external files)
+- **Login overlay:** Logomark SVG above h2 title
+- **Loading overlay:** Logomark with breathing animation + "ShowPulse" text (replaces spinner)
+- **Nav bar:** Full horizontal logo (waveform + text) top-left before tabs, 39px height
+- **Print reports:** Horizontal logo in page headers, small logomark in footer
+- All SVGs inlined for offline/single-binary compatibility, system font stack (no Google Fonts)
+
+### UI Polish
+- **Checkboxes:** Reduced to 12px, opacity 0.45 default / 0.7 hover / 0.85 checked
+- **Timeline scoping:** CSS `#view-manage.active ~ .timeline-strip` — only visible on Editor tab
+- **Show name centering:** Absolute positioning (`left: 50%; transform: translateX(-50%)`) for true center regardless of nav content
+- **Sidebar overlap fix:** Increased sidebar top padding to 3.5rem to clear hamburger toggle button
+- **Auth fix:** `clearAuth()` on open-access mode to prevent stale localStorage tokens blocking permissions
+
+### Data Generator
+- `gen-rihanna.py`: Generates realistic 106-cue Rihanna concert (5 acts, 8 departments, 15+ songs, timecodes 00:15:00–01:25:00)
+
+**Key files:** `static/js/timeline.js` (extracted timeline module), `static/js/manage.js`, `static/js/state.js` (CONST.NAV_LOGO), `static/js/import-export.js` (printLogo/printMark), `static/css/manage.css` (timeline/tooltip/minimap styles), `static/css/shell.css` (nav logo, show name, login/loading logo), `static/css/show.css` (sidebar padding fix), `static/index.html` (favicon, logos, meta tags)
 
 ---
 

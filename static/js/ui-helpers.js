@@ -150,6 +150,7 @@ loadTheme();
   initCueDrag();
   initCueInlineEdit();
   initCueBulkOps();
+  initTimelineInteraction();
   // Auth check first
   await initAuth();
   try {
@@ -187,3 +188,6 @@ setInterval(async () => {
     // Silently ignore poll errors when disconnected
   }
 }, CONST.POLL_INTERVAL);
+
+// Update timeline playhead from current TC (5 Hz)
+setInterval(updateTimelinePlayhead, 200);

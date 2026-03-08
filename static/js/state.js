@@ -48,6 +48,9 @@ const CONST = {
   // Text
   EMPTY_CUES_MSG: 'No cues yet. Go to Manage to add some.',
   NO_MATCH_MSG: 'No matching cues.',
+
+  // Branding — nav logomark (favicon SVG at 20px)
+  NAV_LOGO: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="20" height="20" style="vertical-align:-3px;margin-right:4px"><defs><filter id="ng" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 0 0 0 0 0 1 0 0 0 0 0.533 0 0 0 0.5 0" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><line x1="2" y1="32" x2="12" y2="32" stroke="#8888A0" stroke-width="3" stroke-linecap="round"/><line x1="52" y1="32" x2="62" y2="32" stroke="#8888A0" stroke-width="3" stroke-linecap="round"/><polyline points="12,32 20,52 32,10 44,52 52,32" fill="none" stroke="#00FF88" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#ng)"/></svg>',
 };
 
 // ── Global state ───────────────────────────
@@ -72,9 +75,6 @@ let ws = null;
 
 /** Whether the WebSocket is currently connected. */
 let wsConnected = false;
-
-/** Current sort configuration for the cue table. */
-let cueTableSort = { key: 'trigger_tc', asc: true };
 
 /** Resolve function for the confirm modal promise. */
 let confirmResolve = null;
@@ -127,6 +127,7 @@ function initDOM() {
   DOM.toastContainer = document.getElementById('toast-container');
   DOM.deptList = document.getElementById('dept-list');
   DOM.cueListBody = document.getElementById('cue-list-body');
+  DOM.timelineStrip = document.getElementById('timeline-strip');
   DOM.manageDeptFilter = document.getElementById('manage-dept-filter');
   DOM.deptFilters = document.getElementById('dept-filters');
   DOM.showSidebar = document.getElementById('show-sidebar');

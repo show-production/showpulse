@@ -37,12 +37,12 @@ Dependencies: Rust toolchain + cpal (audio) + midir (MIDI). On Windows, requires
 
 ## Frontend (Web UI)
 
-Single-page app served from `static/index.html` with three tabs:
+Single-page app served from `static/index.html` with three tabs (Show, Editor, Settings):
 
 | Tab | Purpose |
 |-----|---------|
 | **Show** | Clean dashboard: passed cues count badge (click to expand dropdown), active cue strips (compact rows with dept color + checkmark), centered timer with 2-row transport controls (Prev/Play/Pause/Stop/Next + Goto), animated Ready/Go countdown zone (READY stays visible while 3-2-1 digits appear alongside, then GO! with dept name — traffic-light colors, fixed-height layout, pop/flash effects), scrollable coming cues with uniform-size cards (color-only tier differentiation, no layout shifts). Act-grouped cue list with collapsible groups (double-click header or floating controls). Floating controls pill (Now/Auto/Collapse/Expand) at bottom-right. Always-visible T- countdown and T+ elapsed time. Warning entry easing animation. Vivid department colors across all tiers. Click any cue to load TC into Goto. Prev/Next cue navigation. Department filter sidebar, DOM-diffed cue cards. Frame-accurate timecode display (10Hz). Show name in navbar |
-| **Manage** | Department CRUD (left panel), Act CRUD (name + sort order), cue list table (right panel) with # column, department dropdown filter, act selector in cue modal, sortable column headers, CSV/JSON bulk import, add/edit/delete modals with cue number field |
+| **Editor** | Act-grouped cue list with collapsible headers (cue count + time span), drag-and-drop reordering (grip handle, within/between acts, auto-timecode recalculation), inline quick edit (double-click label/timecode/department/warning time), multi-select with bulk operations (checkbox + shift-click range, floating action bar: move to act/duplicate/delete/arm/disarm), interactive timeline strip (zoom/pan, click-to-scrub, minimap when zoomed, rich tooltips on hover, two-way selection sync with cue list, act regions, department-colored cue markers, green playhead synced at 5Hz), one-click cue duplicate (TC+5s offset, add-cue button on act headers), act duplication (clone all cues with time offset prompt). Department CRUD (left panel), Act CRUD (name + sort order), CSV/JSON bulk import |
 | **Settings** | Timecode source selector (Generator/LTC/MTC) with device selectors, frame rate, generator mode, speed, start TC, show name editor, theme colors (live preview), TC size slider, show data export/import JSON |
 
 | **Auth** | Login overlay (name+PIN), role-based tab gating, timer lock acquire/release for Managers, user management panel for Admins, logout button + user label in navbar |
@@ -80,9 +80,11 @@ Single-page app served from `static/index.html` with three tabs:
 | Timer lock | `src/api/timer_lock.rs` | Full: Exclusive timer control — acquire (Manager+, 409 if taken), release, status |
 | Server entrypoint | `src/main.rs` | Full: Axum router with 43 API routes + WS, auth middleware, CORS (same-origin), body limit (1MB), concurrency limit (50), security headers, state wiring, user seeding from SHOWPULSE_PIN, seed on startup, static file fallback |
 | Web UI - Show view | `static/index.html`, `static/js/show.js` | Full: Clean dashboard with centered timer + 2-row transport (Prev/Next/Play/Pause/Stop + GoTo), act-grouped cue list with collapsible groups (double-click header), floating controls pill (Now/Auto/Collapse/Expand), traffic-light countdown colors, always-visible T-/T+ countdown, warning entry easing, vivid dept colors, DOM-diffed cards, department sidebar filters, disconnection banner. Show name in navbar |
-| Web UI - Manage view | `static/index.html`, `static/js/manage.js` | Full: Department CRUD, Act CRUD (name + sort order), cue table with # column + sortable headers + department filter + act selector, bulk CSV/JSON import, add/edit/delete modals |
+| Web UI - Editor view | `static/index.html`, `static/js/manage.js`, `static/css/manage.css` | Full: Act-grouped cue list with collapsible headers, drag-and-drop reordering (HTML5 Drag & Drop API with grip handle), inline quick edit (dblclick event delegation), multi-select with bulk ops (floating action bar), visual timeline strip (5Hz playhead, department-colored markers), cue duplicate (TC+5s), act duplicate (with time offset). Department CRUD, Act CRUD, CSV/JSON bulk import |
 | Web UI - Settings view | `static/index.html`, `static/js/settings.js` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show name editor, show data export/import |
-| Web UI - UX polish | `static/index.html` | Full: Toast notifications, confirm modals (replaces native confirm), loading spinner, responsive table scroll, 44px touch targets, favicon, DOM diffing for flicker-free cue updates |
+| Web UI - Timeline editor | `static/js/timeline.js`, `static/css/manage.css` | Full: Zoom/pan (cursor-anchored wheel zoom, drag-to-pan), click-to-scrub, minimap with viewport indicator, rich tooltips (label/TC/dept/warn), two-way selection sync with cue list checkboxes |
+| Web UI - Branding | `static/index.html`, `static/css/shell.css` | Full: Inline SVG favicon, login/loading logomarks, nav bar horizontal logo (39px), print report logos. All SVGs inlined (offline compatible), system font stack |
+| Web UI - UX polish | `static/index.html` | Full: Toast notifications, confirm modals (replaces native confirm), loading overlay with breathing logo, responsive table scroll, 44px touch targets, favicon, DOM diffing for flicker-free cue updates |
 | Demo seed data | `src/cue/store.rs` | 6 departments, 3 acts, 22 fully populated cues (cue numbers, notes, durations, colors, continue modes, post_wait, act assignments) from 00:00:10 to 00:08:00 |
 | Unit & integration tests | `src/`, `tests/api.rs` | 73 tests: timecode unit tests (34), cue store unit tests (24), REST endpoint integration tests (15) |
 
@@ -134,7 +136,7 @@ Single-page app served from `static/index.html` with three tabs:
 | JavaScript (`static/js/`) | ~2,270 |
 | CSS (`static/css/`) | ~1,290 |
 
-Frontend JS modules (loaded in order): `state.js` -> `api.js` -> `auth.js` -> `show.js` -> `manage.js` -> `settings.js` -> `import-export.js` -> `ui-helpers.js`
+Frontend JS modules (loaded in order): `state.js` -> `api.js` -> `auth.js` -> `show.js` -> `manage.js` -> `timeline.js` -> `settings.js` -> `import-export.js` -> `ui-helpers.js`
 
 ## API Endpoints (43 + WS)
 
@@ -209,7 +211,7 @@ qrcode = { version = "0.14", default-features = false, features = ["svg"] }
 2. **Watch channels for timecode** - `tokio::sync::watch` provides latest-value semantics perfect for timecode (readers always get the most recent value, no backpressure).
 3. **Broadcast channel for WebSocket** - `tokio::sync::broadcast` for fan-out to all connected clients.
 4. **Frame-accurate broadcast with caching** - The countdown engine broadcasts at 10Hz for frame-accurate timecode display. Cue states are cached and only recomputed on second boundaries (expensive operation), while timecode strings update every tick (cheap).
-5. **Department filtering** - Clients subscribe to specific departments, receiving only relevant cue data. Available in both Show view (filter chips) and Manage view (dropdown).
+5. **Department filtering** - Clients subscribe to specific departments, receiving only relevant cue data. Available in both Show view (filter chips) and Editor view (dropdown).
 6. **Drop-frame timecode** - Proper 29.97df frame math with correct drop compensation in both directions (to/from total frames).
 7. **Auto-seed on empty store** - First launch populates demo data so the app is immediately usable for testing.
 8. **Serde defaults on Cue** - Only `department_id` is mandatory; all other fields have sensible defaults for quick cue creation.

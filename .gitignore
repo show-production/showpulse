@@ -2,6 +2,7 @@
 showpulse-data.json
 .claude/
 *.pdf
+users-backup.json
 
 # Branding: keep SVG sources, ignore generated exports
 branding/export/

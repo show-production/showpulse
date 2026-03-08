@@ -4,7 +4,12 @@
    Sections:
      Data loading    — loadDepartments, loadCues, loadActs, loadShowName
      Dept panel      — renderDeptList, openDeptModal, saveDept, deleteDept
-     Cue table       — renderCueTable, sortCueTable, openCueModal, saveCue, deleteCue
+     Cue list        — renderCueList (act-grouped), openCueModal, saveCue, deleteCue
+     Drag & drop     — initCueDrag, handleCueDrop, handleCueDropToAct, calcDropTc
+     Inline edit     — initCueInlineEdit, startInlineEdit
+     Multi-select    — initCueBulkOps, handleCueCheck, selectAllInAct, bulkMoveToAct,
+                       bulkDuplicate, bulkDelete, bulkArm
+     Duplicate/add   — duplicateCue, duplicateAct, addCueToAct
      Act panel       — renderActList, openActModal, saveAct, deleteAct
      Show name       — saveShowName
    Dependencies: state.js, api.js (apiSave, apiDelete, showToast, closeModal)
@@ -46,7 +51,10 @@ async function loadActs() {
 async function loadShowName() {
   const res = await api('/show/name');
   showName = res.name || '';
-  if (DOM.showNameLabel) DOM.showNameLabel.textContent = showName || 'ShowPulse';
+  if (DOM.showNameLabel) {
+    if (showName) { DOM.showNameLabel.textContent = showName; }
+    else { DOM.showNameLabel.innerHTML = CONST.NAV_LOGO + 'ShowPulse'; }
+  }
   const input = document.getElementById('show-name-input');
   if (input) input.value = showName;
 }
@@ -104,6 +112,7 @@ function renderCueList() {
 
   if (filtered.length === 0) {
     DOM.cueListBody.innerHTML = '<div class="cue-list-empty">No cues yet.</div>';
+    renderTimeline();
     return;
   }
 
@@ -164,6 +173,7 @@ function renderCueList() {
 
   DOM.cueListBody.innerHTML = html;
   updateBulkBar();
+  renderTimeline();
 }
 
 /**
@@ -223,6 +233,7 @@ function cueListActSpan(actCues) {
   const s = Math.floor(span % 60);
   return m > 0 ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
 }
+
 
 // ── Drag & Drop ─────────────────────────────
 
@@ -556,6 +567,7 @@ function handleCueCheck(cueId, checked, event) {
   }
   lastSelectedCueId = cueId;
   updateBulkBar();
+  syncTimelineSelection();
 }
 
 /**
@@ -572,6 +584,7 @@ function selectAllInAct(actId, checked) {
     if (cb) cb.checked = checked;
   });
   updateBulkBar();
+  syncTimelineSelection();
 }
 
 /** Show/hide and update the bulk action bar. */
@@ -599,6 +612,7 @@ function clearSelection() {
   DOM.cueListBody.querySelectorAll('.cue-item.selected').forEach(el => el.classList.remove('selected'));
   DOM.cueListBody.querySelectorAll('.cue-check input, .cue-act-check input').forEach(cb => cb.checked = false);
   updateBulkBar();
+  syncTimelineSelection();
 }
 
 /** Bulk move selected cues to an act. */
@@ -935,6 +949,7 @@ function renderActList() {
     return `<div class="dept-item">
       <div class="dept-name">${esc(a.name)} <span style="color:var(--text-dim);font-size:0.75rem">(${cueCount} cues)</span></div>
       <div class="dept-actions">
+        <button class="icon-btn" onclick="duplicateAct('${a.id}')" title="Duplicate act">&#x2295;</button>
         <button class="icon-btn" onclick="openActModal('${a.id}')" title="Edit">&#9998;</button>
         <button class="icon-btn danger" onclick="deleteAct('${a.id}')" title="Delete">&times;</button>
       </div>
@@ -985,13 +1000,46 @@ async function deleteAct(id) {
   }
 }
 
+/**
+ * Duplicate an entire act and all its cues with a time offset.
+ * @param {string} actId - Act UUID to duplicate.
+ */
+async function duplicateAct(actId) {
+  const act = acts.find(a => a.id === actId);
+  if (!act) return;
+  const offsetStr = prompt('Time offset for duplicated cues (seconds):', '0');
+  if (offsetStr === null) return;
+  const offsetSec = parseFloat(offsetStr) || 0;
+  try {
+    const newAct = await api('/acts', { method: 'POST', body: {
+      id: CONST.NULL_UUID,
+      name: act.name + ' (copy)',
+      sort_order: act.sort_order + 1,
+    }});
+    const actCues = cues.filter(c => c.act_id === actId);
+    if (newAct && newAct.id && actCues.length > 0) {
+      await Promise.all(actCues.map(c => api('/cues', { method: 'POST', body: {
+        ...c, id: CONST.NULL_UUID, act_id: newAct.id, cue_number: '',
+        trigger_tc: secondsToTcObj(tcObjToSeconds(c.trigger_tc) + offsetSec),
+      }})));
+    }
+    await refreshManageView();
+    showToast(`Duplicated "${act.name}" with ${actCues.length} cues`, 'success');
+  } catch (e) {
+    showToast('Failed to duplicate act', 'error');
+  }
+}
+
 /** Save the show name from the Settings view input. */
 async function saveShowName() {
   const name = document.getElementById('show-name-input').value;
   try {
     await api('/show/name', { method: 'PUT', body: { name } });
     showName = name;
-    if (DOM.showNameLabel) DOM.showNameLabel.textContent = name || 'ShowPulse';
+    if (DOM.showNameLabel) {
+      if (name) { DOM.showNameLabel.textContent = name; }
+      else { DOM.showNameLabel.innerHTML = CONST.NAV_LOGO + 'ShowPulse'; }
+    }
     showToast('Show name updated', 'success');
   } catch (e) {
     showToast('Failed to update show name', 'error');

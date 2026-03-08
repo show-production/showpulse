@@ -1,7 +1,7 @@
 /* ══════════════════════════════════════════
-   manage.css — ManageView: DeptPanel, CuePanel, CueTable
+   manage.css — ManageView: DeptPanel, CueList, Timeline, Drag, Inline Edit, Bulk Ops
    ══════════════════════════════════════════
-   CRUD interface for departments and cues.
+   Editor interface for departments, cues, acts, and timeline.
    Dependencies: variables.css, base.css
    ══════════════════════════════════════════ */
 
@@ -101,7 +101,7 @@
 }
 .add-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── CueTable ── */
+/* ── CueTable (legacy, unused — kept for reference) ── */
 .cue-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -286,6 +286,136 @@
 }
 .cue-item:hover .cue-actions { opacity: 1; }
 
+/* ── Timeline strip (fixed bottom, always visible) ── */
+.timeline-strip {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.5rem 0.75rem 0.4rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  z-index: 60;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
+}
+.timeline-strip:empty { display: none; }
+.timeline-strip { display: none; }
+#view-manage.active ~ .timeline-strip { display: block; }
+.tl-track {
+  position: relative;
+  height: 40px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.tl-act {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: var(--bg-input);
+  border-right: 1px solid var(--border);
+}
+.tl-cue {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: 4px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.tl-cue:hover { transform: scaleX(2.5); z-index: 3; }
+.tl-cue--selected {
+  transform: scaleX(2.5);
+  z-index: 1;
+  box-shadow: 0 0 6px currentColor;
+}
+.tl-cue--selected:hover { z-index: 3; }
+.tl-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 4px var(--accent);
+  pointer-events: none;
+  z-index: 2;
+  transition: left 0.2s linear;
+}
+.tl-track { cursor: crosshair; }
+.tl-labels {
+  position: relative;
+  height: 14px;
+  margin-top: 2px;
+}
+.tl-labels span {
+  position: absolute;
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* ── Timeline minimap (visible when zoomed) ── */
+.tl-minimap {
+  margin-top: 4px;
+}
+.tl-mini-track {
+  position: relative;
+  height: 10px;
+  background: var(--bg-surface);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.tl-mini-cue {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 2px;
+  border-radius: 1px;
+  opacity: 0.5;
+}
+.tl-mini-viewport {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.15;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+/* ── Timeline tooltip ── */
+.tl-tooltip {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+}
+.tl-tooltip.visible { opacity: 1; }
+.tl-tip-label { font-weight: var(--font-weight-medium); margin-bottom: 2px; }
+.tl-tip-tc { font-family: var(--font-mono); color: var(--text-label); font-size: var(--font-size-xs); }
+.tl-tip-dept { display: flex; align-items: center; gap: 4px; color: var(--text-dim); font-size: var(--font-size-xs); margin-top: 2px; }
+.tl-tip-dot { width: 6px; height: 6px; border-radius: 2px; flex-shrink: 0; }
+.tl-tip-warn { color: var(--text-dim); font-size: var(--font-size-xs); margin-top: 1px; }
+
+/* ── Cue highlight flash ── */
+.cue-item.cue-highlight { animation: cue-flash 1.5s; }
+@keyframes cue-flash {
+  0%, 100% { background: transparent; }
+  20% { background: var(--bg-input); }
+}
+
 /* ── Multi-select ── */
 .cue-check, .cue-act-check {
   display: flex;
@@ -293,19 +423,23 @@
   cursor: pointer;
 }
 .cue-check input, .cue-act-check input {
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
   accent-color: var(--accent);
   cursor: pointer;
   margin: 0;
+  opacity: 0.45;
+  transition: opacity 0.15s;
 }
+.cue-check input:checked, .cue-act-check input:checked { opacity: 0.85; }
+.cue-item:hover .cue-check input, .cue-act-header:hover .cue-act-check input { opacity: 0.7; }
 .cue-item.selected { background: var(--bg-surface); }
 
 /* ── Bulk action bar ── */
 .bulk-bar {
   display: none;
   position: fixed;
-  bottom: 0;
+  bottom: 80px;
   left: 0;
   right: 0;
   align-items: center;
