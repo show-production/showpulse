@@ -427,7 +427,7 @@ function renderDashboard(data, users) {
       <td class="dash-dur">${duration}</td>
       <td class="dash-actions">
         <button class="icon-btn" onclick="openUserModal('${u.id}')" title="Edit">&#9998;</button>
-        <button class="icon-btn danger" onclick="deleteUser('${u.id}', '${esc(u.name)}')" title="Delete">&times;</button>
+        <button class="icon-btn danger" onclick="deleteUser('${u.id}', '${esc(u.name).replace(/'/g, "&#39;")}')" title="Delete">&times;</button>
       </td>
     </tr>`;
   }).join('');

@@ -76,6 +76,9 @@ let ws = null;
 /** Whether the WebSocket is currently connected. */
 let wsConnected = false;
 
+/** Current WebSocket reconnect delay (exponential backoff, resets on connect). */
+let wsReconnectDelay = CONST.WS_RECONNECT_DELAY;
+
 /** Resolve function for the confirm modal promise. */
 let confirmResolve = null;
 
