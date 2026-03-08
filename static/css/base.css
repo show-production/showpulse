@@ -17,6 +17,9 @@ body {
   overflow-x: hidden;
   padding-bottom: 85px;
 }
+@media (max-width: 640px) {
+  body { padding-bottom: 65px; }
+}
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
@@ -65,4 +68,17 @@ body {
 .confirm-message {
   font-size: var(--font-size-base);
   color: var(--text-primary);
+}
+
+/* ── Touch devices: reveal hover-only actions ── */
+@media (hover: none) {
+  .dept-item .dept-actions,
+  .cue-item .cue-actions,
+  .dash-actions,
+  .cue-act-header .cue-act-add { opacity: 1; }
+}
+
+/* ── Tap highlight suppression ── */
+button, .tab, .dept-chip, .fc-btn, .tc-btn, .flow-card {
+  -webkit-tap-highlight-color: transparent;
 }

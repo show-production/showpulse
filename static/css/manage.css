@@ -473,4 +473,10 @@
   .cue-item .cue-warn { display: none; }
   .cue-item .cue-actions { opacity: 1; }
   .cue-grip { opacity: 0.3 !important; }
+  .cue-item { padding: 0.65rem 0.5rem; min-height: var(--touch-min); }
+  .icon-btn { width: 36px; height: 36px; }
+  .tl-track { height: 30px; }
+  .timeline-strip { padding: 0.4rem 0.5rem 0.3rem; }
+  .bulk-bar { flex-wrap: wrap; bottom: 60px; padding: 0.5rem; }
+  .bulk-actions { width: 100%; }
 }

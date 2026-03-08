@@ -246,3 +246,19 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Mobile: Nav ── */
+@media (max-width: 640px) {
+  .nav-logo { display: none; }
+  .auth-user-label { display: none; }
+  .topnav .tab { padding: var(--gap-md) 0.6rem; }
+  .show-name-label { max-width: 30%; }
+  .toast-container { inset-inline-end: 0.5rem; bottom: 1rem; }
+  .toast { max-width: calc(100vw - 1rem); }
+}
+@media (max-width: 480px) {
+  .topnav { padding: 0 0.5rem; }
+  .topnav .tab { font-size: var(--font-size-xs); }
+  .show-name-label { display: none; }
+  .login-box { width: calc(100vw - 2rem); }
+}

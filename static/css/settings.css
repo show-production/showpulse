@@ -249,3 +249,9 @@
 }
 
 .text-dim { color: var(--text-dim); }
+
+/* ── Mobile: Settings ── */
+@media (max-width: 480px) {
+  .data-actions { flex-wrap: wrap; }
+  .data-actions button { flex: 1; min-width: 120px; min-height: var(--touch-min); }
+}

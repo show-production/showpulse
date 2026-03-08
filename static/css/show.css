@@ -235,10 +235,22 @@
   color: var(--text-primary);
   font-weight: 500;
 }
+@media (max-width: 768px) {
+  .sidebar-shortcuts { display: none; }
+}
 @media (max-width: 640px) {
-  .tc-btn { padding: 0.3rem 0.5rem; font-size: var(--font-size-xs); }
-  .tc-btn-sm { padding: 0.2rem 0.4rem; font-size: calc(var(--font-size-xs) * 0.85); }
+  .show-sidebar { width: 100%; }
+  .tc-btn { min-height: var(--touch-min); min-width: var(--touch-min); padding: 0.5rem 0.75rem; font-size: var(--font-size-sm); }
+  .tc-btn-sm { min-height: 38px; padding: 0.4rem 0.6rem; }
+  .fc-btn { min-height: 38px; padding: 0.5rem 0.7rem; font-size: var(--font-size-sm); }
   .tc-goto-group input { width: 90px; }
+}
+@media (max-width: 480px) {
+  .tc-bottom-row { flex-wrap: wrap; gap: 0.4rem; }
+  .tc-goto-group { width: 100%; }
+  .flow-controls { width: 100%; justify-content: center; }
+  .flow-area { padding: 0 0.5rem; }
+  .flow-timecode { padding: 0.5rem 0.75rem; }
 }
 .flow-upcoming .flow-card { cursor: pointer; }
 .flow-timecode.disconnected .tc-value {

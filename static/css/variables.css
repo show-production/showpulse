@@ -55,6 +55,10 @@
   /* ── Transitions ── */
   --transition-fast: all 0.15s ease;
 
+  /* ── Mobile ── */
+  --touch-min: 44px;
+  --nav-height: 48px;
+
   /* ── Overlays ── */
   --overlay-dark: rgba(0, 0, 0, 0.7);
   --overlay-medium: rgba(0, 0, 0, 0.4);
