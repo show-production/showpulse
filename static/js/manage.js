@@ -66,7 +66,7 @@ async function loadShowName() {
  */
 function renderDeptList() {
   if (departments.length === 0) {
-    DOM.deptList.innerHTML = '<div class="panel-body--padded" style="color:var(--text-dim);font-size:0.85rem">No departments yet.</div>';
+    DOM.deptList.innerHTML = `<div class="panel-body--padded" style="color:var(--text-dim);font-size:0.85rem">${esc(t('editor.noDepts'))}</div>`;
     return;
   }
   DOM.deptList.innerHTML = departments.map(d => `
@@ -98,7 +98,7 @@ let lastSelectedCueId = null;
 function renderCueList() {
   // Populate department filter dropdown
   const curFilter = DOM.manageDeptFilter.value;
-  DOM.manageDeptFilter.innerHTML = '<option value="">All Departments</option>' +
+  DOM.manageDeptFilter.innerHTML = `<option value="">${esc(t('editor.allDepartments'))}</option>` +
     departments.map(d => `<option value="${d.id}"${d.id === curFilter ? ' selected' : ''}>${esc(d.name)}</option>`).join('');
 
   // Filter
@@ -111,7 +111,7 @@ function renderCueList() {
   filtered = [...filtered].sort((a, b) => tcObjToSeconds(a.trigger_tc) - tcObjToSeconds(b.trigger_tc));
 
   if (filtered.length === 0) {
-    DOM.cueListBody.innerHTML = '<div class="cue-list-empty">No cues yet.</div>';
+    DOM.cueListBody.innerHTML = `<div class="cue-list-empty">${esc(t('editor.noCues'))}</div>`;
     renderTimeline();
     return;
   }
@@ -145,7 +145,7 @@ function renderCueList() {
       <label class="cue-act-check" onclick="event.stopPropagation()"><input type="checkbox" onclick="selectAllInAct('${act.id}', this.checked)"></label>
       <span class="cue-act-chevron">&#x25BE;</span>
       <span class="cue-act-title">${esc(act.name)}</span>
-      <span class="cue-act-meta">${actCues.length} cue${actCues.length !== 1 ? 's' : ''}${span ? ' \u00b7 ' + span : ''}</span>
+      <span class="cue-act-meta">${actCues.length !== 1 ? t('editor.cueCountPlural', {n: actCues.length}) : t('editor.cueCount', {n: actCues.length})}${span ? ' \u00b7 ' + span : ''}</span>
       <button class="cue-act-add" onclick="event.stopPropagation(); addCueToAct('${act.id}')" title="Add cue to this act">+</button>
     </div>`;
 
@@ -161,8 +161,8 @@ function renderCueList() {
     if (actGroups.size > 0) {
       html += '<div class="cue-act-group">';
       html += `<div class="cue-act-header cue-act-header--dim">
-        <span class="cue-act-title">Ungrouped</span>
-        <span class="cue-act-meta">${ungrouped.length} cue${ungrouped.length !== 1 ? 's' : ''}</span>
+        <span class="cue-act-title">${esc(t('editor.ungrouped'))}</span>
+        <span class="cue-act-meta">${ungrouped.length !== 1 ? t('editor.cueCountPlural', {n: ungrouped.length}) : t('editor.cueCount', {n: ungrouped.length})}</span>
       </div>`;
     }
     for (const c of ungrouped) {
@@ -411,9 +411,9 @@ async function saveCueDrop(cue, updates) {
   try {
     await api(`/cues/${cue.id}`, { method: 'PUT', body });
     await refreshManageView();
-    showToast('Cue moved', 'success');
+    showToast(t('toast.cueMoved'), 'success');
   } catch (e) {
-    showToast('Failed to move cue', 'error');
+    showToast(t('toast.cueMoveFail'), 'error');
   }
 }
 
@@ -500,7 +500,7 @@ function startInlineEdit(item, cueId, fieldEl) {
       await api(`/cues/${cue.id}`, { method: 'PUT', body: { ...cue, ...updates } });
       await refreshManageView();
     } catch (e) {
-      showToast('Failed to update cue', 'error');
+      showToast(t('toast.cueUpdateFail'), 'error');
       fieldEl.innerHTML = originalHTML;
     }
   };
@@ -598,11 +598,11 @@ function updateBulkBar() {
   if (selectedCues.size === 0) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
   document.getElementById('bulk-count').textContent =
-    `${selectedCues.size} cue${selectedCues.size !== 1 ? 's' : ''} selected`;
+    t('bulk.selected', { n: selectedCues.size });
   const sel = document.getElementById('bulk-move-act');
-  sel.innerHTML = '<option value="">Move to...</option>' +
+  sel.innerHTML = `<option value="">${esc(t('bulk.moveTo'))}</option>` +
     acts.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('') +
-    '<option value="__none__">Ungrouped</option>';
+    `<option value="__none__">${esc(t('bulk.ungrouped'))}</option>`;
 }
 
 /** Clear all selections. */
@@ -624,10 +624,10 @@ async function bulkMoveToAct(actId) {
       const c = cues.find(c => c.id === id);
       return c ? api(`/cues/${id}`, { method: 'PUT', body: { ...c, act_id: target } }) : null;
     }));
-    showToast(`Moved ${selectedCues.size} cues`, 'success');
+    showToast(t('bulk.moved', { n: selectedCues.size }), 'success');
     clearSelection();
     await refreshManageView();
-  } catch (e) { showToast('Failed to move cues', 'error'); }
+  } catch (e) { showToast(t('bulk.moveFail'), 'error'); }
 }
 
 /** Bulk duplicate selected cues. */
@@ -638,27 +638,27 @@ async function bulkDuplicate() {
       const c = cues.find(c => c.id === id);
       if (!c) return null;
       return api('/cues', { method: 'POST', body: {
-        ...c, id: CONST.NULL_UUID, label: c.label + ' (copy)',
+        ...c, id: CONST.NULL_UUID, label: c.label + t('copy.suffix'),
         trigger_tc: secondsToTcObj(tcObjToSeconds(c.trigger_tc) + 5), cue_number: '',
       }});
     }));
-    showToast(`Duplicated ${selectedCues.size} cues`, 'success');
+    showToast(t('bulk.duplicated', { n: selectedCues.size }), 'success');
     clearSelection();
     await refreshManageView();
-  } catch (e) { showToast('Failed to duplicate cues', 'error'); }
+  } catch (e) { showToast(t('bulk.dupFail'), 'error'); }
 }
 
 /** Bulk delete selected cues. */
 async function bulkDelete() {
   if (selectedCues.size === 0) return;
-  const ok = await showConfirm('Delete Cues', `Delete ${selectedCues.size} selected cue${selectedCues.size !== 1 ? 's' : ''}?`);
+  const ok = await showConfirm(t('confirm.deleteCues'), t('confirm.deleteCuesMsg', { n: selectedCues.size }));
   if (!ok) return;
   try {
     await Promise.all([...selectedCues].map(id => api(`/cues/${id}`, { method: 'DELETE' })));
-    showToast(`Deleted ${selectedCues.size} cues`, 'success');
+    showToast(t('bulk.deleted', { n: selectedCues.size }), 'success');
     clearSelection();
     await refreshManageView();
-  } catch (e) { showToast('Failed to delete cues', 'error'); }
+  } catch (e) { showToast(t('bulk.delFail'), 'error'); }
 }
 
 /** Bulk arm or disarm selected cues. */
@@ -669,10 +669,10 @@ async function bulkArm(armed) {
       const c = cues.find(c => c.id === id);
       return c ? api(`/cues/${id}`, { method: 'PUT', body: { ...c, armed } }) : null;
     }));
-    showToast(`${armed ? 'Armed' : 'Disarmed'} ${selectedCues.size} cues`, 'success');
+    showToast(t(armed ? 'bulk.armed' : 'bulk.disarmed', { n: selectedCues.size }), 'success');
     clearSelection();
     await refreshManageView();
-  } catch (e) { showToast(`Failed to ${armed ? 'arm' : 'disarm'} cues`, 'error'); }
+  } catch (e) { showToast(t(armed ? 'bulk.armFail' : 'bulk.disarmFail'), 'error'); }
 }
 
 // ── Department CRUD ────────────────────────
@@ -686,12 +686,12 @@ function openDeptModal(editId) {
   document.getElementById('dept-edit-id').value = editId || '';
   if (editId) {
     const d = departments.find(d => d.id === editId);
-    document.getElementById('dept-modal-title').textContent = 'Edit Department';
+    document.getElementById('dept-modal-title').textContent = t('modal.dept.editTitle');
     document.getElementById('dept-name').value = d.name;
     document.getElementById('dept-color').value = d.color;
     document.getElementById('dept-color-text').value = d.color;
   } else {
-    document.getElementById('dept-modal-title').textContent = 'Add Department';
+    document.getElementById('dept-modal-title').textContent = t('modal.dept.addTitle');
     document.getElementById('dept-name').value = '';
     document.getElementById('dept-color').value = CONST.DEFAULT_NEW_DEPT_COLOR;
     document.getElementById('dept-color-text').value = CONST.DEFAULT_NEW_DEPT_COLOR;
@@ -719,7 +719,7 @@ async function saveDept() {
  * @param {string} id - Department UUID.
  */
 async function deleteDept(id) {
-  if (await apiDelete(`/departments/${id}`, 'Delete Department', 'Delete this department and all its cues?', 'Department')) {
+  if (await apiDelete(`/departments/${id}`, t('confirm.deleteDept'), t('confirm.deleteDeptMsg'), 'Department')) {
     refreshManageView();
   }
 }
@@ -738,12 +738,12 @@ function openCueModal(editId) {
   ).join('');
 
   const actSel = document.getElementById('cue-act');
-  actSel.innerHTML = '<option value="">— No Act —</option>' +
+  actSel.innerHTML = `<option value="">${esc(t('modal.cue.noAct'))}</option>` +
     acts.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
 
   const isEdit = !!editId;
   document.getElementById('cue-edit-id').value = editId || '';
-  document.getElementById('cue-modal-title').textContent = isEdit ? 'Edit Cue' : 'Add Cue';
+  document.getElementById('cue-modal-title').textContent = isEdit ? t('modal.cue.editTitle') : t('modal.cue.addTitle');
 
   // "Save & Add Another" only in create mode
   const anotherBtn = document.getElementById('cue-save-another-btn');
@@ -763,7 +763,7 @@ function openCueModal(editId) {
     document.getElementById('cue-number').value = c.cue_number || '';
     document.getElementById('cue-duration').value = c.duration != null ? c.duration : '';
     document.getElementById('cue-armed').checked = c.armed !== false;
-    document.getElementById('cue-armed-label').textContent = c.armed !== false ? 'Yes' : 'No';
+    document.getElementById('cue-armed-label').textContent = c.armed !== false ? t('modal.cue.armedYes') : t('modal.cue.armedNo');
     document.getElementById('cue-continue').value = c.continue_mode || 'stop';
     document.getElementById('cue-postwait').value = c.post_wait || 0;
     document.getElementById('cue-notes').value = c.notes || '';
@@ -788,7 +788,7 @@ function resetCueForm() {
   document.getElementById('cue-warn').value = String(CONST.DEFAULT_WARN_SEC);
   document.getElementById('cue-duration').value = '';
   document.getElementById('cue-armed').checked = true;
-  document.getElementById('cue-armed-label').textContent = 'Yes';
+  document.getElementById('cue-armed-label').textContent = t('modal.cue.armedYes');
   document.getElementById('cue-continue').value = 'stop';
   document.getElementById('cue-postwait').value = '0';
   document.getElementById('cue-notes').value = '';
@@ -883,7 +883,7 @@ async function saveCue(addAnother) {
       // Reset for another cue, keep dept + act
       await refreshManageView();
       resetCueForm();
-      document.getElementById('cue-modal-title').textContent = 'Add Cue';
+      document.getElementById('cue-modal-title').textContent = t('modal.cue.addTitle');
       document.getElementById('cue-label').focus();
     } else {
       closeModal('cue-modal');
@@ -897,7 +897,7 @@ async function saveCue(addAnother) {
  * @param {string} id - Cue UUID.
  */
 async function deleteCue(id) {
-  if (await apiDelete(`/cues/${id}`, 'Delete Cue', 'Delete this cue?', 'Cue')) {
+  if (await apiDelete(`/cues/${id}`, t('confirm.deleteCue'), t('confirm.deleteCueMsg'), 'Cue')) {
     refreshManageView();
   }
 }
@@ -912,16 +912,16 @@ async function duplicateCue(id) {
   const body = {
     ...cue,
     id: CONST.NULL_UUID,
-    label: cue.label + ' (copy)',
+    label: cue.label + t('copy.suffix'),
     trigger_tc: secondsToTcObj(tcObjToSeconds(cue.trigger_tc) + 5),
     cue_number: '',
   };
   try {
     await api('/cues', { method: 'POST', body });
     await refreshManageView();
-    showToast('Cue duplicated', 'success');
+    showToast(t('toast.cueDuplicated'), 'success');
   } catch (e) {
-    showToast('Failed to duplicate cue', 'error');
+    showToast(t('toast.cueDupFail'), 'error');
   }
 }
 
@@ -941,7 +941,7 @@ function renderActList() {
   if (!DOM.actList) return;
   const el = DOM.actList;
   if (acts.length === 0) {
-    el.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem;padding:0.5rem">No acts yet.</div>';
+    el.innerHTML = `<div style="color:var(--text-dim);font-size:0.85rem;padding:0.5rem">${esc(t('editor.noActs'))}</div>`;
     return;
   }
   el.innerHTML = acts.map(a => {
@@ -966,11 +966,11 @@ function openActModal(editId) {
   document.getElementById('act-edit-id').value = editId || '';
   if (editId) {
     const a = acts.find(a => a.id === editId);
-    document.getElementById('act-modal-title').textContent = 'Edit Act';
+    document.getElementById('act-modal-title').textContent = t('modal.act.editTitle');
     document.getElementById('act-name').value = a.name;
     document.getElementById('act-sort-order').value = a.sort_order;
   } else {
-    document.getElementById('act-modal-title').textContent = 'Add Act';
+    document.getElementById('act-modal-title').textContent = t('modal.act.addTitle');
     document.getElementById('act-name').value = '';
     document.getElementById('act-sort-order').value = acts.length + 1;
   }
@@ -995,7 +995,7 @@ async function saveAct() {
  * @param {string} id - Act UUID.
  */
 async function deleteAct(id) {
-  if (await apiDelete(`/acts/${id}`, 'Delete Act', 'Delete this act? Cues will be unassigned.', 'Act')) {
+  if (await apiDelete(`/acts/${id}`, t('confirm.deleteAct'), t('confirm.deleteActMsg'), 'Act')) {
     refreshManageView();
   }
 }
@@ -1007,13 +1007,13 @@ async function deleteAct(id) {
 async function duplicateAct(actId) {
   const act = acts.find(a => a.id === actId);
   if (!act) return;
-  const offsetStr = prompt('Time offset for duplicated cues (seconds):', '0');
+  const offsetStr = prompt(t('prompt.timeOffset'), '0');
   if (offsetStr === null) return;
   const offsetSec = parseFloat(offsetStr) || 0;
   try {
     const newAct = await api('/acts', { method: 'POST', body: {
       id: CONST.NULL_UUID,
-      name: act.name + ' (copy)',
+      name: act.name + t('copy.suffix'),
       sort_order: act.sort_order + 1,
     }});
     const actCues = cues.filter(c => c.act_id === actId);
@@ -1024,9 +1024,9 @@ async function duplicateAct(actId) {
       }})));
     }
     await refreshManageView();
-    showToast(`Duplicated "${act.name}" with ${actCues.length} cues`, 'success');
+    showToast(t('toast.actDuplicated', { name: act.name, n: actCues.length }), 'success');
   } catch (e) {
-    showToast('Failed to duplicate act', 'error');
+    showToast(t('toast.cueDupFail'), 'error');
   }
 }
 
@@ -1040,8 +1040,8 @@ async function saveShowName() {
       if (name) { DOM.showNameLabel.textContent = name; }
       else { DOM.showNameLabel.innerHTML = CONST.NAV_LOGO + 'ShowPulse'; }
     }
-    showToast('Show name updated', 'success');
+    showToast(t('toast.showNameUpdated'), 'success');
   } catch (e) {
-    showToast('Failed to update show name', 'error');
+    showToast(t('toast.showNameFail'), 'error');
   }
 }

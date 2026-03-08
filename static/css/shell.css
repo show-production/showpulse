@@ -176,6 +176,11 @@
   max-width: 40%;
   pointer-events: none;
 }
+[dir="rtl"] .show-name-label {
+  left: auto;
+  right: 50%;
+  transform: translateX(50%);
+}
 
 /* ── Nav right section ── */
 .nav-right {

@@ -154,9 +154,9 @@
   flex-direction: column;
   align-items: center;
   padding: 0.75rem 0.5rem;
-  border-right: 1px solid var(--border);
+  border-inline-end: 1px solid var(--border);
 }
-.dash-stat:last-child { border-right: none; }
+.dash-stat:last-child { border-inline-end: none; }
 .dash-stat-value {
   font-size: 1.4rem;
   font-weight: 700;
@@ -185,7 +185,7 @@
   font-size: var(--font-size-sm);
 }
 .dash-table th {
-  text-align: left;
+  text-align: start;
   padding: 0.5rem 0.75rem;
   color: var(--text-dim);
   font-weight: var(--font-weight-medium);
@@ -210,7 +210,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  margin-right: 0.4rem;
+  margin-inline-end: 0.4rem;
   vertical-align: middle;
 }
 .dash-dot--on { background: var(--accent); box-shadow: 0 0 6px var(--active-glow); }
@@ -236,7 +236,7 @@
 /* Control badge */
 .dash-badge {
   display: inline-block;
-  margin-left: 0.4rem;
+  margin-inline-start: 0.4rem;
   padding: 0.1rem 0.35rem;
   font-size: 0.6rem;
   font-weight: 700;

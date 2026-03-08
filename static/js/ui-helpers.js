@@ -36,6 +36,7 @@ document.querySelectorAll('.tab[data-view]').forEach(tab => {
 function showToast(message, type = 'info', duration = CONST.TOAST_DURATION) {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
+  toast.dir = 'auto';
   toast.textContent = message;
   DOM.toastContainer.appendChild(toast);
   setTimeout(() => {
@@ -108,7 +109,7 @@ document.querySelectorAll('.tc-field').forEach(field => {
 const armedCb = document.getElementById('cue-armed');
 if (armedCb) {
   armedCb.addEventListener('change', () => {
-    document.getElementById('cue-armed-label').textContent = armedCb.checked ? 'Yes' : 'No';
+    document.getElementById('cue-armed-label').textContent = armedCb.checked ? t('modal.cue.armedYes') : t('modal.cue.armedNo');
   });
 }
 
@@ -147,6 +148,8 @@ loadTheme();
 
 (async function init() {
   initDOM();
+  // Load i18n before anything that renders strings
+  await initI18n();
   initCueDrag();
   initCueInlineEdit();
   initCueBulkOps();
@@ -157,7 +160,7 @@ loadTheme();
     await Promise.all([loadDepartments(), loadCues(), loadActs(), loadShowName()]);
     renderDeptFilters();
   } catch (e) {
-    showToast('Failed to load initial data', 'error');
+    showToast(t('toast.loadFail'), 'error');
   }
   // Restore sidebar state
   if (sidebarOpen) toggleSidebar(true);

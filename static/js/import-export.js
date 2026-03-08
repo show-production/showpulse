@@ -582,13 +582,13 @@ function importShow(event) {
       const result = await api('/show/import', { method: 'POST', body: { departments: depts, cues: importedCues } });
 
       refreshManageView();
-      let msg = `Replaced show: ${depts.length} department(s), ${result.imported} cue(s)`;
+      let msg = t('import.replacedShow', { depts: depts.length, cues: result.imported });
       if (result.errors.length > 0) {
-        msg += ` (${result.errors.length} cue error(s))`;
+        msg += t('import.cueErrors', { n: result.errors.length });
       }
       showToast(msg, result.errors.length > 0 ? 'info' : 'success');
     } catch (err) {
-      showToast(`Import failed: ${err.message}`, 'error');
+      showToast(t('import.fail', { error: err.message }), 'error');
     }
   };
   reader.readAsText(file);
@@ -684,24 +684,24 @@ async function importCues(event) {
       }
 
       if (cuesPayload.length === 0) {
-        showToast('No cues found in file', 'info');
+        showToast(t('import.noCues'), 'info');
         return;
       }
 
       const result = await api('/cues/import', { method: 'POST', body: cuesPayload });
 
       if (result.errors.length === 0) {
-        showToast(`Imported ${result.imported} cue(s) successfully`, 'success');
+        showToast(t('import.success', { n: result.imported }), 'success');
       } else {
         showToast(
-          `Imported ${result.imported}, failed ${result.errors.length}. First error: ${result.errors[0].message}`,
+          t('import.partial', { imported: result.imported, failed: result.errors.length, error: result.errors[0].message }),
           result.imported > 0 ? 'info' : 'error',
           5000
         );
       }
       refreshManageView();
     } catch (err) {
-      showToast(`Import failed: ${err.message}`, 'error');
+      showToast(t('import.fail', { error: err.message }), 'error');
     }
   };
   reader.readAsText(file);

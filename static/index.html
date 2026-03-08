@@ -22,20 +22,20 @@
 <nav class="topnav">
   <svg class="nav-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200"><defs><filter id="ng" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 0 0 0 0 0 1 0 0 0 0 0.533 0 0 0 0.45 0" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><polyline points="20,100 50,100 60,88 68,112 76,92" fill="none" stroke="#8888A0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="76,92 90,148 106,42 122,148 140,42 170,100" fill="none" stroke="#00FF88" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#ng)"/><polygon points="122,148 140,42 170,100" fill="#00FF8812" stroke="none"/><line x1="170" y1="100" x2="220" y2="100" stroke="#8888A0" stroke-width="4.5" stroke-linecap="round"/><text x="260" y="122" style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;font-size:72px;font-weight:600"><tspan fill="#E0E0E8">Show</tspan><tspan fill="#00FF88">Pulse</tspan></text></svg>
   <div class="tabs">
-    <button class="tab active" data-view="show">Show</button>
-    <button class="tab" data-view="manage">Editor</button>
-    <button class="tab" data-view="settings">Settings</button>
+    <button class="tab active" data-view="show" data-i18n="nav.show">Show</button>
+    <button class="tab" data-view="manage" data-i18n="nav.editor">Editor</button>
+    <button class="tab" data-view="settings" data-i18n="nav.settings">Settings</button>
   </div>
   <span class="show-name-label" id="show-name-label">ShowPulse</span>
   <div class="nav-right">
     <span class="ws-dot" id="ws-dot"></span>
     <span class="auth-user-label" id="auth-user-label"></span>
-    <button class="tab" id="logout-btn" style="display:none" onclick="handleLogout()">Logout</button>
+    <button class="tab" id="logout-btn" style="display:none" onclick="handleLogout()" data-i18n="nav.logout">Logout</button>
   </div>
 </nav>
 
 <!-- DisconnectBanner -->
-<div class="disconnect-banner" id="disconnect-banner">Connection Lost — Reconnecting...</div>
+<div class="disconnect-banner" id="disconnect-banner" data-i18n="banner.disconnected">Connection Lost &#x2014; Reconnecting&#x2026;</div>
 
 <!-- LoadingOverlay -->
 <div class="loading-overlay" id="loading-overlay">
@@ -52,10 +52,10 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="120" height="100"><defs><filter id="lglow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 0 0 0 0 0 1 0 0 0 0 0.533 0 0 0 0.45 0" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><polyline points="10,100 40,100 50,88 58,112 66,92" fill="none" stroke="#8888A0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="66,92 80,148 96,42 112,148 130,42 160,100" fill="none" stroke="#00FF88" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#lglow)"/><polygon points="112,148 130,42 160,100" fill="#00FF8812" stroke="none"/><line x1="160" y1="100" x2="230" y2="100" stroke="#8888A0" stroke-width="4.5" stroke-linecap="round"/></svg>
     </div>
     <h2>ShowPulse</h2>
-    <input type="text" id="login-name" placeholder="Name" autocomplete="username">
-    <input type="password" id="login-pin" placeholder="PIN" autocomplete="current-password">
+    <input type="text" id="login-name" data-i18n-placeholder="login.name" placeholder="Name" autocomplete="username">
+    <input type="password" id="login-pin" data-i18n-placeholder="login.pin" placeholder="PIN" autocomplete="current-password">
     <div class="login-error" id="login-error"></div>
-    <button type="submit" class="login-submit" id="login-btn" onclick="handleLogin(event)">Login</button>
+    <button type="submit" class="login-submit" id="login-btn" onclick="handleLogin(event)" data-i18n="login.submit">Login</button>
   </form>
 </div>
 
@@ -64,61 +64,61 @@
 
 <!-- ═══ SHOW VIEW ═══ -->
 <div class="view active" id="view-show">
-  <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar (S)">&#9776;</button>
+  <button class="sidebar-toggle" onclick="toggleSidebar()" data-i18n-title="sidebar.toggle" title="Toggle sidebar (S)">&#9776;</button>
   <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
   <aside class="show-sidebar" id="show-sidebar">
-    <div class="sidebar-section-title">Departments</div>
+    <div class="sidebar-section-title" data-i18n="sidebar.departments">Departments</div>
     <div class="sidebar-dept-filters" id="dept-filters"></div>
 
-    <div class="sidebar-section-title">Shortcuts</div>
-    <div class="sidebar-shortcuts">
-      <kbd>Space</kbd> Play<br>
-      <kbd>P</kbd> Pause<br>
-      <kbd>Esc</kbd> Stop<br>
-      <kbd>N</kbd> Next Cue<br>
-      <kbd>B</kbd> Prev Cue<br>
-      <kbd>G</kbd> Goto TC<br>
-      <kbd>A</kbd> Auto-scroll<br>
-      <kbd>C</kbd> Jump to current<br>
-      <kbd>S</kbd> Sidebar
+    <div class="sidebar-section-title" data-i18n="sidebar.shortcuts">Shortcuts</div>
+    <div class="sidebar-shortcuts" id="sidebar-shortcuts">
+      <kbd>Space</kbd> <span data-i18n="shortcut.play">Play</span><br>
+      <kbd>P</kbd> <span data-i18n="shortcut.pause">Pause</span><br>
+      <kbd>Esc</kbd> <span data-i18n="shortcut.stop">Stop</span><br>
+      <kbd>N</kbd> <span data-i18n="shortcut.nextCue">Next Cue</span><br>
+      <kbd>B</kbd> <span data-i18n="shortcut.prevCue">Prev Cue</span><br>
+      <kbd>G</kbd> <span data-i18n="shortcut.goto">Goto TC</span><br>
+      <kbd>A</kbd> <span data-i18n="shortcut.autoScroll">Auto-scroll</span><br>
+      <kbd>C</kbd> <span data-i18n="shortcut.jumpCurrent">Jump to current</span><br>
+      <kbd>S</kbd> <span data-i18n="shortcut.sidebar">Sidebar</span>
     </div>
   </aside>
 
   <div class="flow-area">
     <div class="flow-timecode" id="flow-timecode">
       <div class="tc-row">
-        <div class="tc-left">
-          <div id="tc-state" class="stopped">STOPPED</div>
+        <div class="tc-left" dir="ltr">
+          <div id="tc-state" class="stopped" data-i18n="tc.stopped">STOPPED</div>
           <div id="tc-fps">30 fps</div>
-          <div id="tc-source">Generator</div>
+          <div id="tc-source" data-i18n="tc.source.generator">Generator</div>
         </div>
-        <div class="tc-value" id="tc-value">00:00:00:00</div>
+        <div class="tc-value" id="tc-value" dir="ltr">00:00:00:00</div>
       </div>
       <div class="tc-controls">
         <div class="tc-transport">
-          <button class="tc-btn tc-btn-sm" onclick="prevCue()" title="Previous cue (B)">&#9198;</button>
-          <button class="tc-btn tc-btn-sm" onclick="genCmd('play')" title="Play (Space)">&#9654;</button>
-          <button class="tc-btn tc-btn-sm" onclick="genCmd('pause')" title="Pause (P)">&#9646;&#9646;</button>
-          <button class="tc-btn tc-btn-sm" onclick="genCmd('stop')" title="Stop (Esc)">&#9632;</button>
-          <button class="tc-btn tc-btn-sm" onclick="nextCue()" title="Next cue (N)">&#9197;</button>
+          <button class="tc-btn tc-btn-sm" onclick="prevCue()" data-i18n-title="transport.prev" title="Previous cue (B)">&#9198;</button>
+          <button class="tc-btn tc-btn-sm" onclick="genCmd('play')" data-i18n-title="transport.play" title="Play (Space)">&#9654;</button>
+          <button class="tc-btn tc-btn-sm" onclick="genCmd('pause')" data-i18n-title="transport.pause" title="Pause (P)">&#9646;&#9646;</button>
+          <button class="tc-btn tc-btn-sm" onclick="genCmd('stop')" data-i18n-title="transport.stop" title="Stop (Esc)">&#9632;</button>
+          <button class="tc-btn tc-btn-sm" onclick="nextCue()" data-i18n-title="transport.next" title="Next cue (N)">&#9197;</button>
         </div>
         <span class="timer-lock-group">
-          <button class="tc-btn tc-btn-sm" id="timer-lock-btn" style="display:none" onclick="acquireTimerLock()">Take Control</button>
+          <button class="tc-btn tc-btn-sm" id="timer-lock-btn" style="display:none" onclick="acquireTimerLock()" data-i18n="transport.takeControl">Take Control</button>
           <span class="timer-lock-status" id="timer-lock-status"></span>
         </span>
       </div>
       <div class="tc-bottom-row">
         <div class="tc-goto-group">
-          <button class="tc-btn" onclick="gotoTC()" title="Goto (G)">Go To</button>
-          <input type="text" id="goto-tc" placeholder="HH:MM:SS:FF" oninput="updateGotoCueInfo()">
+          <button class="tc-btn" onclick="gotoTC()" data-i18n-title="transport.gotoKey" data-i18n="transport.goto" title="Goto (G)">Go To</button>
+          <input type="text" id="goto-tc" dir="ltr" placeholder="HH:MM:SS:FF" oninput="updateGotoCueInfo()">
           <span class="tc-goto-info" id="goto-info"></span>
         </div>
         <div class="flow-controls" id="flow-controls">
-          <button class="fc-btn" onclick="jumpToCurrent()" title="Jump to current (C)">&#x2907; Now</button>
-          <button class="fc-btn active" id="autopulse-btn" onclick="toggleAutoPulse()" title="Auto-scroll (A)">Auto</button>
+          <button class="fc-btn" onclick="jumpToCurrent()" data-i18n-title="flow.jumpCurrent" data-i18n-html="flow.now" title="Jump to current (C)">&#x2907; Now</button>
+          <button class="fc-btn active" id="autopulse-btn" onclick="toggleAutoPulse()" data-i18n-title="flow.autoScroll" data-i18n="flow.auto" title="Auto-scroll (A)">Auto</button>
           <span class="fc-sep"></span>
-          <button class="fc-btn" id="collapse-all-btn" onclick="collapseAllActs()" title="Collapse all acts">&#x25B4; Collapse</button>
-          <button class="fc-btn" id="expand-all-btn" onclick="expandAllActs()" title="Expand all acts">&#x25BE; Expand</button>
+          <button class="fc-btn" id="collapse-all-btn" onclick="collapseAllActs()" data-i18n-title="flow.collapseAll" data-i18n-html="flow.collapse" title="Collapse all acts">&#x25B4; Collapse</button>
+          <button class="fc-btn" id="expand-all-btn" onclick="expandAllActs()" data-i18n-title="flow.expandAll" data-i18n-html="flow.expand" title="Expand all acts">&#x25BE; Expand</button>
         </div>
       </div>
     </div>
@@ -132,29 +132,29 @@
     <div class="manage-sidebar">
       <div class="panel">
         <div class="panel-header">
-          <h3>Departments</h3>
-          <button class="add-btn" onclick="openDeptModal()">+ Add</button>
+          <h3 data-i18n="editor.departments">Departments</h3>
+          <button class="add-btn" onclick="openDeptModal()" data-i18n="editor.addBtn">+ Add</button>
         </div>
         <div class="panel-body" id="dept-list"></div>
       </div>
       <div class="panel">
         <div class="panel-header">
-          <h3>Acts</h3>
-          <button class="add-btn" onclick="openActModal()">+ Add</button>
+          <h3 data-i18n="editor.acts">Acts</h3>
+          <button class="add-btn" onclick="openActModal()" data-i18n="editor.addBtn">+ Add</button>
         </div>
         <div class="panel-body" id="act-list"></div>
       </div>
     </div>
     <div class="panel">
       <div class="panel-header">
-        <h3>Cue List</h3>
+        <h3 data-i18n="editor.cueList">Cue List</h3>
         <div class="inline-row">
           <select id="manage-dept-filter" class="filter-select" onchange="renderCueList()">
-            <option value="">All Departments</option>
+            <option value="" data-i18n="editor.allDepartments">All Departments</option>
           </select>
-          <button class="add-btn" onclick="document.getElementById('import-cues-file').click()">&#x21E7; Import</button>
+          <button class="add-btn" onclick="document.getElementById('import-cues-file').click()" data-i18n-html="editor.import">&#x21E7; Import</button>
           <input type="file" id="import-cues-file" accept=".json,.csv" class="hidden" onchange="importCues(event)">
-          <button class="add-btn" onclick="openCueModal()">+ Add</button>
+          <button class="add-btn" onclick="openCueModal()" data-i18n="editor.addBtn">+ Add</button>
         </div>
       </div>
       <div class="panel-body panel-body--flush">
@@ -169,65 +169,65 @@
   <div class="settings-grid">
     <div class="panel panel--wide" id="dashboard-panel" style="display:none">
       <div class="panel-header">
-        <h3>Users</h3>
+        <h3 data-i18n="dashboard.users">Users</h3>
         <div class="panel-header-actions">
           <button class="add-btn" onclick="loadDashboard()">&#x21bb;</button>
-          <button class="add-btn" onclick="openUserModal()">+ Add User</button>
+          <button class="add-btn" onclick="openUserModal()" data-i18n="dashboard.addUser">+ Add User</button>
         </div>
       </div>
       <div class="panel-body panel-body--flush" id="dashboard-body">
-        <div style="color:var(--text-dim);font-size:0.85rem;padding:0.75rem">Loading...</div>
+        <div style="color:var(--text-dim);font-size:0.85rem;padding:0.75rem" data-i18n="dashboard.loading">Loading&#x2026;</div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-header"><h3>Show</h3></div>
+      <div class="panel-header"><h3 data-i18n="settings.show">Show</h3></div>
       <div class="panel-body panel-body--padded">
         <div class="setting-group">
-          <label>Show Name</label>
+          <label data-i18n="settings.showName">Show Name</label>
           <div class="inline-row">
-            <input type="text" id="show-name-input" placeholder="My Show" class="flex-1">
-            <button class="btn-sm" onclick="saveShowName()">Save</button>
+            <input type="text" id="show-name-input" data-i18n-placeholder="settings.showNamePlaceholder" placeholder="My Show" class="flex-1">
+            <button class="btn-sm" onclick="saveShowName()" data-i18n="settings.save">Save</button>
           </div>
         </div>
       </div>
     </div>
     <div class="panel">
-      <div class="panel-header"><h3>Timecode</h3></div>
+      <div class="panel-header"><h3 data-i18n="settings.timecode">Timecode</h3></div>
       <div class="panel-body panel-body--padded">
         <div class="setting-group">
-          <label>Source</label>
+          <label data-i18n="settings.source">Source</label>
           <div class="radio-group" id="source-radio">
             <input type="radio" name="source" value="generator" id="src-gen" checked>
-            <label for="src-gen" class="selected" onclick="setSource('generator', this)">Generator</label>
+            <label for="src-gen" class="selected" onclick="setSource('generator', this)" data-i18n="tc.source.generator">Generator</label>
             <input type="radio" name="source" value="ltc" id="src-ltc">
-            <label for="src-ltc" onclick="setSource('ltc', this)">LTC</label>
+            <label for="src-ltc" onclick="setSource('ltc', this)" data-i18n="tc.source.ltc">LTC</label>
             <input type="radio" name="source" value="mtc" id="src-mtc">
-            <label for="src-mtc" onclick="setSource('mtc', this)">MTC</label>
+            <label for="src-mtc" onclick="setSource('mtc', this)" data-i18n="tc.source.mtc">MTC</label>
           </div>
         </div>
         <div class="setting-group hidden" id="ltc-device-group">
-          <label>Audio Input Device</label>
+          <label data-i18n="settings.ltc.label">Audio Input Device</label>
           <div class="inline-row">
             <select id="ltc-device-select" class="flex-1" onchange="selectLtcDevice()">
-              <option value="">-- Select audio device --</option>
+              <option value="" data-i18n="settings.ltc.selectDevice">-- Select audio device --</option>
             </select>
             <button class="btn-sm" onclick="refreshLtcDevices()" title="Refresh device list">&#x21bb;</button>
           </div>
           <div id="ltc-status" class="device-hint"></div>
         </div>
         <div class="setting-group hidden" id="mtc-device-group">
-          <label>MIDI Input Port</label>
+          <label data-i18n="settings.mtc.label">MIDI Input Port</label>
           <div class="inline-row">
             <select id="mtc-device-select" class="flex-1" onchange="selectMtcDevice()">
-              <option value="">-- Select MIDI port --</option>
+              <option value="" data-i18n="settings.mtc.selectPort">-- Select MIDI port --</option>
             </select>
             <button class="btn-sm" onclick="refreshMtcDevices()" title="Refresh port list">&#x21bb;</button>
           </div>
           <div id="mtc-status" class="device-hint"></div>
         </div>
         <div class="setting-group">
-          <label>Frame Rate</label>
+          <label data-i18n="settings.frameRate">Frame Rate</label>
           <select id="set-fps" onchange="updateGenConfig()">
             <option value="24">24 fps</option>
             <option value="25">25 fps</option>
@@ -236,22 +236,22 @@
           </select>
         </div>
         <div class="setting-group">
-          <label>Generator Mode</label>
+          <label data-i18n="settings.generatorMode">Generator Mode</label>
           <select id="set-mode" onchange="updateGenConfig()">
-            <option value="freerun">Freerun</option>
-            <option value="countdown">Countdown</option>
-            <option value="clock">Clock</option>
-            <option value="loop">Loop</option>
+            <option value="freerun" data-i18n="settings.modeFreerun">Freerun</option>
+            <option value="countdown" data-i18n="settings.modeCountdown">Countdown</option>
+            <option value="clock" data-i18n="settings.modeClock">Clock</option>
+            <option value="loop" data-i18n="settings.modeLoop">Loop</option>
           </select>
         </div>
         <div class="setting-group">
-          <label>Start Timecode</label>
-          <input type="text" id="set-start-tc" value="00:00:00:00" placeholder="HH:MM:SS:FF" onchange="updateGenConfig()">
+          <label data-i18n="settings.startTimecode">Start Timecode</label>
+          <input type="text" id="set-start-tc" value="00:00:00:00" placeholder="HH:MM:SS:FF" dir="ltr" onchange="updateGenConfig()">
         </div>
         <div class="setting-group">
-          <label>Speed</label>
+          <label data-i18n="settings.speed">Speed</label>
           <div class="speed-row">
-            <input type="number" id="set-speed" value="1.0" step="0.1" min="0.1" max="10" onchange="updateGenConfig()">
+            <input type="number" id="set-speed" value="1.0" step="0.1" min="0.1" max="10" dir="ltr" onchange="updateGenConfig()">
             <span class="speed-suffix">x</span>
           </div>
         </div>
@@ -259,40 +259,47 @@
     </div>
 
     <div class="panel">
-      <div class="panel-header"><h3>Appearance</h3></div>
+      <div class="panel-header"><h3 data-i18n="settings.appearance">Appearance</h3></div>
       <div class="panel-body panel-body--padded">
         <div class="setting-group">
-          <label>Theme</label>
+          <label data-i18n="settings.theme">Theme</label>
           <div class="radio-group" id="theme-radio">
             <input type="radio" name="theme" value="dark" id="theme-dark" checked>
-            <label for="theme-dark" class="selected" onclick="setTheme('dark', this)">Dark</label>
+            <label for="theme-dark" class="selected" onclick="setTheme('dark', this)" data-i18n="settings.themeDark">Dark</label>
             <input type="radio" name="theme" value="light" id="theme-light">
-            <label for="theme-light" onclick="setTheme('light', this)">Light</label>
+            <label for="theme-light" onclick="setTheme('light', this)" data-i18n="settings.themeLight">Light</label>
           </div>
         </div>
         <div class="setting-group">
-          <label>Background</label>
+          <label data-i18n="settings.language">Language</label>
+          <select id="lang-select" onchange="setLang(this.value)">
+            <option value="en">English</option>
+            <option value="he">עברית</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label data-i18n="settings.background">Background</label>
           <div class="color-row">
             <input type="color" value="#0a0a0f" oninput="setThemeColor('--bg-primary', this.value)">
-            <input type="text" value="#0a0a0f" onchange="setThemeColor('--bg-primary', this.value)" data-var="--bg-primary">
+            <input type="text" value="#0a0a0f" dir="ltr" onchange="setThemeColor('--bg-primary', this.value)" data-var="--bg-primary">
           </div>
         </div>
         <div class="setting-group">
-          <label>Accent Color</label>
+          <label data-i18n="settings.accentColor">Accent Color</label>
           <div class="color-row">
             <input type="color" value="#00ff88" oninput="setThemeColor('--accent', this.value); setThemeColor('--active-glow', this.value+'40')">
-            <input type="text" value="#00ff88" onchange="setThemeColor('--accent', this.value)" data-var="--accent">
+            <input type="text" value="#00ff88" dir="ltr" onchange="setThemeColor('--accent', this.value)" data-var="--accent">
           </div>
         </div>
         <div class="setting-group">
-          <label>Warning Color</label>
+          <label data-i18n="settings.warningColor">Warning Color</label>
           <div class="color-row">
             <input type="color" value="#ffaa00" oninput="setThemeColor('--warning', this.value); setThemeColor('--warning-glow', this.value+'40')">
-            <input type="text" value="#ffaa00" onchange="setThemeColor('--warning', this.value)" data-var="--warning">
+            <input type="text" value="#ffaa00" dir="ltr" onchange="setThemeColor('--warning', this.value)" data-var="--warning">
           </div>
         </div>
         <div class="setting-group">
-          <label>Timecode Size</label>
+          <label data-i18n="settings.timecodeSize">Timecode Size</label>
           <div class="slider-row">
             <input type="range" min="2" max="12" step="0.5" value="6" id="tc-size-slider" oninput="setThemeColor('--tc-size', this.value+'rem'); document.getElementById('tc-size-label').textContent=this.value+'rem'">
             <span class="slider-value" id="tc-size-label">6rem</span>
@@ -302,16 +309,16 @@
     </div>
 
     <div class="panel">
-      <div class="panel-header"><h3>Show Data</h3></div>
+      <div class="panel-header"><h3 data-i18n="settings.showData">Show Data</h3></div>
       <div class="panel-body panel-body--padded">
         <div class="data-actions">
-          <button onclick="exportShow()">Export JSON</button>
-          <button onclick="document.getElementById('import-file').click()">Import JSON</button>
+          <button onclick="exportShow()" data-i18n="settings.exportJson">Export JSON</button>
+          <button onclick="document.getElementById('import-file').click()" data-i18n="settings.importJson">Import JSON</button>
           <input type="file" id="import-file" accept=".json" class="hidden" onchange="importShow(event)">
         </div>
         <div class="data-actions">
-          <button onclick="exportCSV()">Export CSV</button>
-          <button onclick="printCueSheet()">Print Cue Sheet</button>
+          <button onclick="exportCSV()" data-i18n="settings.exportCsv">Export CSV</button>
+          <button onclick="printCueSheet()" data-i18n="settings.printCueSheet">Print Cue Sheet</button>
         </div>
       </div>
     </div>
@@ -322,26 +329,26 @@
 <div class="modal-overlay" id="dept-modal">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="dept-modal-title">Add Department</h3>
+      <h3 id="dept-modal-title" data-i18n="modal.dept.addTitle">Add Department</h3>
       <button class="icon-btn" onclick="closeModal('dept-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="dept-edit-id">
       <div class="form-group">
-        <label>Name</label>
-        <input type="text" id="dept-name" placeholder="e.g. Lighting">
+        <label data-i18n="modal.dept.name">Name</label>
+        <input type="text" id="dept-name" data-i18n-placeholder="modal.dept.namePlaceholder" placeholder="e.g. Lighting">
       </div>
       <div class="form-group">
-        <label>Color</label>
+        <label data-i18n="modal.dept.color">Color</label>
         <div class="color-row">
           <input type="color" id="dept-color" value="#ffcc00">
-          <input type="text" id="dept-color-text" value="#ffcc00">
+          <input type="text" id="dept-color-text" value="#ffcc00" dir="ltr">
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('dept-modal')">Cancel</button>
-      <button class="btn-save" onclick="saveDept()">Save</button>
+      <button class="btn-cancel" onclick="closeModal('dept-modal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-save" onclick="saveDept()" data-i18n="modal.save">Save</button>
     </div>
   </div>
 </div>
@@ -350,32 +357,32 @@
 <div class="modal-overlay" id="cue-modal">
   <div class="modal modal--wide">
     <div class="modal-header">
-      <h3 id="cue-modal-title">Add Cue</h3>
+      <h3 id="cue-modal-title" data-i18n="modal.cue.addTitle">Add Cue</h3>
       <button class="icon-btn" onclick="closeModal('cue-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="cue-edit-id">
       <div class="form-group">
-        <label>Label</label>
-        <input type="text" id="cue-label" placeholder="e.g. House lights down">
+        <label data-i18n="modal.cue.label">Label</label>
+        <input type="text" id="cue-label" data-i18n-placeholder="modal.cue.labelPlaceholder" placeholder="e.g. House lights down">
       </div>
       <div class="form-row">
         <div class="form-group form-group--flex">
-          <label>Department</label>
+          <label data-i18n="modal.cue.department">Department</label>
           <div class="select-with-dot">
             <span class="select-dot" id="cue-dept-dot"></span>
             <select id="cue-dept" onchange="updateCueDeptDot()"></select>
           </div>
         </div>
         <div class="form-group form-group--flex form-group--highlight">
-          <label>Act</label>
-          <select id="cue-act"><option value="">— No Act —</option></select>
+          <label data-i18n="modal.cue.act">Act</label>
+          <select id="cue-act"><option value="" data-i18n="modal.cue.noAct">&#x2014; No Act &#x2014;</option></select>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group form-group--flex">
-          <label>Trigger Timecode</label>
-          <div class="tc-input-group">
+          <label data-i18n="modal.cue.triggerTc">Trigger Timecode</label>
+          <div class="tc-input-group" dir="ltr">
             <input type="number" id="cue-tc-hh" min="0" max="23" value="0" class="tc-field" data-next="cue-tc-mm">
             <span class="tc-sep">:</span>
             <input type="number" id="cue-tc-mm" min="0" max="59" value="0" class="tc-field" data-next="cue-tc-ss">
@@ -386,62 +393,62 @@
           </div>
         </div>
         <div class="form-group form-group--sm">
-          <label>Warning</label>
+          <label data-i18n="modal.cue.warning">Warning</label>
           <div class="input-suffix">
-            <input type="number" id="cue-warn" value="10" min="0" max="999">
-            <span>sec</span>
+            <input type="number" id="cue-warn" value="10" min="0" max="999" dir="ltr">
+            <span data-i18n="modal.cue.sec">sec</span>
           </div>
         </div>
       </div>
       <details class="cue-advanced" id="cue-advanced">
-        <summary>Advanced</summary>
+        <summary data-i18n="modal.cue.advanced">Advanced</summary>
         <div class="form-row">
           <div class="form-group form-group--sm">
-            <label>Cue #</label>
-            <input type="text" id="cue-number" placeholder="Auto">
+            <label data-i18n="modal.cue.cueNumber">Cue #</label>
+            <input type="text" id="cue-number" data-i18n-placeholder="modal.cue.cueNumberPlaceholder" placeholder="Auto">
           </div>
           <div class="form-group form-group--sm">
-            <label>Duration</label>
+            <label data-i18n="modal.cue.duration">Duration</label>
             <div class="input-suffix">
-              <input type="number" id="cue-duration" min="0" placeholder="—">
-              <span>sec</span>
+              <input type="number" id="cue-duration" min="0" placeholder="&#x2014;" dir="ltr">
+              <span data-i18n="modal.cue.sec">sec</span>
             </div>
           </div>
           <div class="form-group form-group--sm">
-            <label>Armed</label>
+            <label data-i18n="modal.cue.armed">Armed</label>
             <label class="toggle-label">
               <input type="checkbox" id="cue-armed" checked>
-              <span class="toggle-text" id="cue-armed-label">Yes</span>
+              <span class="toggle-text" id="cue-armed-label" data-i18n="modal.cue.armedYes">Yes</span>
             </label>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group form-group--flex">
-            <label>Continue Mode</label>
+            <label data-i18n="modal.cue.continueMode">Continue Mode</label>
             <select id="cue-continue" onchange="togglePostWait()">
-              <option value="stop">Stop</option>
-              <option value="auto_continue">Auto Continue</option>
-              <option value="auto_follow">Auto Follow</option>
+              <option value="stop" data-i18n="modal.cue.continueStop">Stop</option>
+              <option value="auto_continue" data-i18n="modal.cue.continueAuto">Auto Continue</option>
+              <option value="auto_follow" data-i18n="modal.cue.continueFollow">Auto Follow</option>
             </select>
           </div>
           <div class="form-group form-group--sm" id="cue-postwait-group" style="display:none">
-            <label>Post Wait</label>
+            <label data-i18n="modal.cue.postWait">Post Wait</label>
             <div class="input-suffix">
-              <input type="number" id="cue-postwait" min="0" step="0.5" value="0">
-              <span>sec</span>
+              <input type="number" id="cue-postwait" min="0" step="0.5" value="0" dir="ltr">
+              <span data-i18n="modal.cue.sec">sec</span>
             </div>
           </div>
         </div>
         <div class="form-group">
-          <label>Notes</label>
-          <textarea id="cue-notes" placeholder="Optional notes..." rows="2"></textarea>
+          <label data-i18n="modal.cue.notes">Notes</label>
+          <textarea id="cue-notes" data-i18n-placeholder="modal.cue.notesPlaceholder" placeholder="Optional notes&#x2026;" rows="2"></textarea>
         </div>
       </details>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('cue-modal')">Cancel</button>
-      <button class="btn-save" id="cue-save-another-btn" onclick="saveCue(true)" style="display:none">Save &amp; Add Another</button>
-      <button class="btn-save" onclick="saveCue()">Save</button>
+      <button class="btn-cancel" onclick="closeModal('cue-modal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-save" id="cue-save-another-btn" onclick="saveCue(true)" style="display:none" data-i18n="modal.cue.saveAnother">Save &amp; Add Another</button>
+      <button class="btn-save" onclick="saveCue()" data-i18n="modal.save">Save</button>
     </div>
   </div>
 </div>
@@ -450,23 +457,23 @@
 <div class="modal-overlay" id="act-modal">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="act-modal-title">Add Act</h3>
+      <h3 id="act-modal-title" data-i18n="modal.act.addTitle">Add Act</h3>
       <button class="icon-btn" onclick="closeModal('act-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="act-edit-id">
       <div class="form-group">
-        <label>Name</label>
-        <input type="text" id="act-name" placeholder="e.g. Act 1 — Opening">
+        <label data-i18n="modal.act.name">Name</label>
+        <input type="text" id="act-name" data-i18n-placeholder="modal.act.namePlaceholder" placeholder="e.g. Act 1 &#x2014; Opening">
       </div>
       <div class="form-group">
-        <label>Sort Order</label>
-        <input type="number" id="act-sort-order" value="1" min="1">
+        <label data-i18n="modal.act.sortOrder">Sort Order</label>
+        <input type="number" id="act-sort-order" value="1" min="1" dir="ltr">
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('act-modal')">Cancel</button>
-      <button class="btn-save" onclick="saveAct()">Save</button>
+      <button class="btn-cancel" onclick="closeModal('act-modal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-save" onclick="saveAct()" data-i18n="modal.save">Save</button>
     </div>
   </div>
 </div>
@@ -475,37 +482,37 @@
 <div class="modal-overlay" id="user-modal">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="user-modal-title">Add User</h3>
+      <h3 id="user-modal-title" data-i18n="modal.user.addTitle">Add User</h3>
       <button class="icon-btn" onclick="closeModal('user-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="user-edit-id">
       <div class="form-group">
-        <label>Name</label>
-        <input type="text" id="user-name-input" placeholder="e.g. John">
+        <label data-i18n="modal.user.name">Name</label>
+        <input type="text" id="user-name-input" data-i18n-placeholder="modal.user.namePlaceholder" placeholder="e.g. John">
       </div>
       <div class="form-group">
-        <label>PIN</label>
-        <input type="password" id="user-pin-input" placeholder="PIN">
+        <label data-i18n="modal.user.pin">PIN</label>
+        <input type="password" id="user-pin-input" data-i18n-placeholder="modal.user.pin" placeholder="PIN">
       </div>
       <div class="form-group">
-        <label>Role</label>
+        <label data-i18n="modal.user.role">Role</label>
         <select id="user-role-select">
-          <option value="viewer">Viewer</option>
-          <option value="crew_lead">Crew Lead</option>
-          <option value="operator" selected>Operator</option>
-          <option value="manager">Manager</option>
-          <option value="admin">Admin</option>
+          <option value="viewer" data-i18n="role.viewer">Viewer</option>
+          <option value="crew_lead" data-i18n="role.crew_lead">Crew Lead</option>
+          <option value="operator" selected data-i18n="role.operator">Operator</option>
+          <option value="manager" data-i18n="role.manager">Manager</option>
+          <option value="admin" data-i18n="role.admin">Admin</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Departments (Viewer/Crew Lead filter)</label>
+        <label data-i18n="modal.user.deptFilter">Departments (Viewer/Crew Lead filter)</label>
         <div class="dept-checks" id="user-dept-checks"></div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('user-modal')">Cancel</button>
-      <button class="btn-save" onclick="saveUser()">Save</button>
+      <button class="btn-cancel" onclick="closeModal('user-modal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-save" onclick="saveUser()" data-i18n="modal.save">Save</button>
     </div>
   </div>
 </div>
@@ -514,22 +521,23 @@
 <div class="modal-overlay" id="confirm-modal">
   <div class="modal modal--narrow">
     <div class="modal-header">
-      <h3 id="confirm-modal-title">Confirm</h3>
+      <h3 id="confirm-modal-title" data-i18n="modal.confirm.title">Confirm</h3>
       <button class="icon-btn" onclick="closeConfirm(false)">&times;</button>
     </div>
     <div class="modal-body">
-      <p id="confirm-modal-message" class="confirm-message"></p>
+      <p id="confirm-modal-message" class="confirm-message" dir="auto"></p>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeConfirm(false)">Cancel</button>
-      <button class="btn-danger" id="confirm-modal-ok" onclick="closeConfirm(true)">Delete</button>
+      <button class="btn-cancel" onclick="closeConfirm(false)" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-danger" id="confirm-modal-ok" onclick="closeConfirm(true)" data-i18n="modal.delete">Delete</button>
     </div>
   </div>
 </div>
 
 <!-- Timeline (fixed bottom bar, always visible) -->
-<div class="timeline-strip" id="timeline-strip"></div>
+<div class="timeline-strip" id="timeline-strip" dir="ltr"></div>
 
+<script src="js/i18n.js"></script>
 <script src="js/state.js"></script>
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>

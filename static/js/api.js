@@ -26,7 +26,7 @@ async function api(path, opts = {}) {
   if (r.status === 401 && authEnabled && path !== '/auth/login' && path !== '/auth/status') {
     clearAuth();
     showLoginOverlay();
-    throw new Error('Session expired');
+    throw new Error(t('toast.sessionExpired'));
   }
   if (!r.ok) {
     const t = await r.text();

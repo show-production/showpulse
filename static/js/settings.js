@@ -18,7 +18,7 @@ async function setSource(source, el) {
   try {
     await api('/timecode/source', { method: 'PUT', body: { source } });
   } catch (e) {
-    showToast(`Failed to set source: ${e.message}`, 'error');
+    showToast(t('toast.sourceFail', { error: e.message }), 'error');
   }
   DOM.tcSource.textContent = source.charAt(0).toUpperCase() + source.slice(1);
   // Update radio visual
@@ -56,12 +56,12 @@ async function refreshDeviceList(endpoint, selectId, statusId, placeholder, devi
         opt.textContent = item.name;
         select.appendChild(opt);
       });
-      statusEl.textContent = `${items.length} ${deviceLabel}(s) found`;
+      statusEl.textContent = t('settings.devices.found', { n: items.length, label: deviceLabel });
     } else {
-      statusEl.textContent = `No ${deviceLabel}s found`;
+      statusEl.textContent = t('settings.devices.none', { label: deviceLabel });
     }
   } catch (e) {
-    statusEl.textContent = `Error loading ${deviceLabel}s`;
+    statusEl.textContent = t('settings.devices.error', { label: deviceLabel });
   }
 }
 
@@ -69,14 +69,14 @@ async function refreshDeviceList(endpoint, selectId, statusId, placeholder, devi
  * Refresh the LTC audio device list.
  */
 function refreshLtcDevices() {
-  return refreshDeviceList('/ltc/devices', 'ltc-device-select', 'ltc-status', '-- Select audio device --', 'device');
+  return refreshDeviceList('/ltc/devices', 'ltc-device-select', 'ltc-status', t('settings.ltc.selectDevice'), 'device');
 }
 
 /**
  * Refresh the MTC MIDI port list.
  */
 function refreshMtcDevices() {
-  return refreshDeviceList('/mtc/devices', 'mtc-device-select', 'mtc-status', '-- Select MIDI port --', 'port');
+  return refreshDeviceList('/mtc/devices', 'mtc-device-select', 'mtc-status', t('settings.mtc.selectPort'), 'port');
 }
 
 // ── Device selection ───────────────────────
@@ -90,15 +90,15 @@ async function selectLtcDevice() {
   const idx = select.value;
   if (idx === '') {
     await api('/ltc/stop', { method: 'POST' });
-    statusEl.textContent = 'LTC stopped';
+    statusEl.textContent = t('settings.ltc.stopped');
     return;
   }
   try {
     await api('/ltc/device', { method: 'PUT', body: { device_index: parseInt(idx) } });
-    statusEl.textContent = `Listening on: ${select.options[select.selectedIndex].text}`;
+    statusEl.textContent = t('settings.ltc.listening', { name: select.options[select.selectedIndex].text });
     statusEl.style.color = 'var(--accent)';
   } catch (e) {
-    statusEl.textContent = 'Failed to open device';
+    statusEl.textContent = t('settings.ltc.failOpen');
     statusEl.style.color = 'var(--danger, #ff4444)';
   }
 }
@@ -112,15 +112,15 @@ async function selectMtcDevice() {
   const idx = select.value;
   if (idx === '') {
     await api('/mtc/stop', { method: 'POST' });
-    statusEl.textContent = 'MTC stopped';
+    statusEl.textContent = t('settings.mtc.stopped');
     return;
   }
   try {
     await api('/mtc/device', { method: 'PUT', body: { port_index: parseInt(idx) } });
-    statusEl.textContent = `Listening on: ${select.options[select.selectedIndex].text}`;
+    statusEl.textContent = t('settings.mtc.listening', { name: select.options[select.selectedIndex].text });
     statusEl.style.color = 'var(--accent)';
   } catch (e) {
-    statusEl.textContent = 'Failed to open MIDI port';
+    statusEl.textContent = t('settings.mtc.failOpen');
     statusEl.style.color = 'var(--danger, #ff4444)';
   }
 }
@@ -149,7 +149,7 @@ async function updateGenConfig() {
       }
     });
   } catch (e) {
-    showToast(`Config update failed: ${e.message}`, 'error');
+    showToast(t('toast.configFail', { error: e.message }), 'error');
   }
 }
 

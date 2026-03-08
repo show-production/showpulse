@@ -18,7 +18,7 @@ const ROLE_LEVELS = { viewer: 1, crew_lead: 2, operator: 3, manager: 4, admin: 5
 const ROLE_LABELS = { viewer: 'Viewer', crew_lead: 'Crew Lead', operator: 'Operator', manager: 'Manager', admin: 'Admin' };
 
 function roleLevel(role) { return ROLE_LEVELS[role] || 0; }
-function roleLabel(role) { return ROLE_LABELS[role] || role; }
+function roleLabel(role) { return t('role.' + role) || ROLE_LABELS[role] || role; }
 
 // ── Auth state helpers ──────────────────────
 
@@ -65,7 +65,7 @@ async function handleLogin(e) {
   const name = DOM.loginName.value.trim();
   const pin = DOM.loginPin.value.trim();
   if (!name || !pin) {
-    DOM.loginError.textContent = 'Name and PIN required';
+    DOM.loginError.textContent = t('login.error.required');
     return;
   }
   DOM.loginBtn.disabled = true;
@@ -82,9 +82,9 @@ async function handleLogin(e) {
       renderDeptFilters();
     } catch (e2) { /* ignore — data may not be available for this role */ }
     refreshTimerLock();
-    showToast(`Welcome, ${resp.name}`, 'success');
+    showToast(t('login.welcome', { name: resp.name }), 'success');
   } catch (err) {
-    DOM.loginError.textContent = 'Invalid name or PIN';
+    DOM.loginError.textContent = t('login.error.invalid');
   } finally {
     DOM.loginBtn.disabled = false;
   }
@@ -203,20 +203,20 @@ function updateTimerLockUI(status) {
     const isMe = status.holder.user_name === authName;
     hasTimerLock = isMe;
     if (isMe) {
-      DOM.timerLockBtn.textContent = 'Release';
+      DOM.timerLockBtn.textContent = t('timer.release');
       DOM.timerLockBtn.classList.add('active');
       DOM.timerLockBtn.onclick = releaseTimerLock;
     } else {
-      DOM.timerLockBtn.textContent = 'Locked';
+      DOM.timerLockBtn.textContent = t('timer.locked');
       DOM.timerLockBtn.classList.remove('active');
       DOM.timerLockBtn.disabled = true;
     }
     if (DOM.timerLockStatus) {
-      DOM.timerLockStatus.textContent = isMe ? 'You have control' : `${status.holder.user_name} has control`;
+      DOM.timerLockStatus.textContent = isMe ? t('timer.youHaveControl') : t('timer.otherHasControl', { name: status.holder.user_name });
     }
   } else {
     hasTimerLock = false;
-    DOM.timerLockBtn.textContent = 'Take Control';
+    DOM.timerLockBtn.textContent = t('timer.takeControl');
     DOM.timerLockBtn.classList.remove('active');
     DOM.timerLockBtn.disabled = false;
     DOM.timerLockBtn.onclick = acquireTimerLock;
@@ -230,10 +230,10 @@ async function acquireTimerLock() {
   try {
     const status = await api('/timer-lock', { method: 'POST' });
     updateTimerLockUI(status);
-    showToast('Timer control acquired', 'success');
+    showToast(t('toast.timerAcquired'), 'success');
   } catch (e) {
     if (e.message.includes('409') || e.message.includes('Conflict')) {
-      showToast('Timer is locked by another manager', 'error');
+      showToast(t('toast.timerLocked'), 'error');
     } else {
       showToast(`Failed: ${e.message}`, 'error');
     }
@@ -246,7 +246,7 @@ async function releaseTimerLock() {
     await api('/timer-lock', { method: 'DELETE' });
     hasTimerLock = false;
     refreshTimerLock();
-    showToast('Timer control released', 'success');
+    showToast(t('toast.timerReleased'), 'success');
   } catch (e) {
     showToast(`Failed: ${e.message}`, 'error');
   }
@@ -268,23 +268,23 @@ function openUserModal(editId) {
   document.getElementById('user-edit-id').value = editId || '';
 
   if (editId) {
-    document.getElementById('user-modal-title').textContent = 'Edit User';
+    document.getElementById('user-modal-title').textContent = t('modal.user.editTitle');
     // Fetch user data
     api(`/users`).then(users => {
       const u = users.find(x => x.id === editId);
       if (u) {
         document.getElementById('user-name-input').value = u.name;
         document.getElementById('user-pin-input').value = '';
-        document.getElementById('user-pin-input').placeholder = 'Leave empty to keep current';
+        document.getElementById('user-pin-input').placeholder = t('modal.user.pinKeep');
         document.getElementById('user-role-select').value = u.role;
         populateUserDepts(u.departments || []);
       }
     });
   } else {
-    document.getElementById('user-modal-title').textContent = 'Add User';
+    document.getElementById('user-modal-title').textContent = t('modal.user.addTitle');
     document.getElementById('user-name-input').value = '';
     document.getElementById('user-pin-input').value = '';
-    document.getElementById('user-pin-input').placeholder = 'PIN';
+    document.getElementById('user-pin-input').placeholder = t('modal.user.pin');
     document.getElementById('user-role-select').value = 'operator';
     populateUserDepts([]);
   }
@@ -316,8 +316,8 @@ async function saveUser() {
     departments: depts,
   };
 
-  if (!body.name) { showToast('Name is required', 'error'); return; }
-  if (!id && !body.pin) { showToast('PIN is required for new users', 'error'); return; }
+  if (!body.name) { showToast(t('toast.nameRequired'), 'error'); return; }
+  if (!id && !body.pin) { showToast(t('toast.pinRequired'), 'error'); return; }
 
   if (await apiSave('/users', id, body, 'User')) {
     closeModal('user-modal');
@@ -326,7 +326,7 @@ async function saveUser() {
 }
 
 async function deleteUser(id, name) {
-  if (await apiDelete(`/users/${id}`, 'Delete User', `Delete user "${name}"?`, 'User')) {
+  if (await apiDelete(`/users/${id}`, t('confirm.deleteUser'), t('confirm.deleteUserMsg', { name }), 'User')) {
     loadDashboard();
   }
 }
@@ -396,19 +396,19 @@ function renderDashboard(data, users) {
     <div class="dash-stats">
       <div class="dash-stat">
         <span class="dash-stat-value">${data.total_connections}</span>
-        <span class="dash-stat-label">Connected</span>
+        <span class="dash-stat-label">${esc(t('dashboard.connected'))}</span>
       </div>
       <div class="dash-stat">
         <span class="dash-stat-value">${onlineMap.size}</span>
-        <span class="dash-stat-label">Users Online</span>
+        <span class="dash-stat-label">${esc(t('dashboard.usersOnline'))}</span>
       </div>
       <div class="dash-stat">
         <span class="dash-stat-value">${users.length}</span>
-        <span class="dash-stat-label">Registered</span>
+        <span class="dash-stat-label">${esc(t('dashboard.registered'))}</span>
       </div>
       <div class="dash-stat">
         <span class="dash-stat-value dash-stat-lock">${lockHolder ? esc(lockHolder) : '—'}</span>
-        <span class="dash-stat-label">Timer Control</span>
+        <span class="dash-stat-label">${esc(t('dashboard.timerControl'))}</span>
       </div>
     </div>`;
 
@@ -420,7 +420,7 @@ function renderDashboard(data, users) {
       : '<span class="dash-dot dash-dot--off" title="Offline"></span>';
     const duration = online ? fmtDuration(online.connected_seconds) : '';
     const isLockHolder = lockHolder === u.name;
-    const lockBadge = isLockHolder ? '<span class="dash-badge">CONTROL</span>' : '';
+    const lockBadge = isLockHolder ? `<span class="dash-badge">${esc(t('dashboard.control'))}</span>` : '';
     return `<tr class="${online ? 'dash-row--online' : ''}">
       <td>${statusDot} ${esc(u.name)}</td>
       <td>${roleLabel(u.role)}${lockBadge}</td>
@@ -434,17 +434,17 @@ function renderDashboard(data, users) {
 
   // Anonymous connections row
   const anonRow = anonCount > 0
-    ? `<tr><td><span class="dash-dot dash-dot--anon"></span> <span class="text-dim">Anonymous</span></td><td class="text-dim" colspan="3">${anonCount} connection${anonCount > 1 ? 's' : ''}</td></tr>`
+    ? `<tr><td><span class="dash-dot dash-dot--anon"></span> <span class="text-dim">${esc(t('dashboard.anonymous'))}</span></td><td class="text-dim" colspan="3">${esc(t('dashboard.connections', { n: anonCount }))}</td></tr>`
     : '';
 
   DOM.dashboardBody.innerHTML = `
     ${stats}
     <div class="dash-table-wrap">
     <table class="dash-table">
-      <thead><tr><th>User</th><th>Role</th><th>Online</th><th></th></tr></thead>
+      <thead><tr><th>${esc(t('dashboard.user'))}</th><th>${esc(t('dashboard.role'))}</th><th>${esc(t('dashboard.online'))}</th><th></th></tr></thead>
       <tbody>${userRows}${anonRow}</tbody>
     </table>
     </div>
-    ${users.length === 0 ? '<div class="text-dim" style="padding:0.75rem">No users configured. Click + Add User to create one.</div>' : ''}
+    ${users.length === 0 ? `<div class="text-dim" style="padding:0.75rem">${esc(t('dashboard.noUsers'))}</div>` : ''}
   `;
 }
