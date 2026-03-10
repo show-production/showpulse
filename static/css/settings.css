@@ -248,6 +248,44 @@
   vertical-align: middle;
 }
 
+/* ── Server info panel ── */
+.server-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.server-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.server-info-label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  font-weight: var(--font-weight-medium);
+  min-width: 3rem;
+}
+.server-info-value {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-md);
+  color: var(--accent);
+  background: var(--bg-input);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  user-select: all;
+}
+.server-qr {
+  margin-top: 0.75rem;
+  text-align: center;
+}
+.server-qr svg {
+  width: 128px;
+  height: 128px;
+  border-radius: var(--radius-md);
+}
+
 .text-dim { color: var(--text-dim); }
 
 /* ── Mobile: Settings ── */

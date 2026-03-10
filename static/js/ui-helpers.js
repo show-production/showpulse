@@ -186,6 +186,8 @@ function refreshAllViews() {
   initAutoPulseScrollBlock();
   // Timer lock check for managers
   refreshTimerLock();
+  // Populate server info panel
+  initServerInfo();
   // Connect WebSocket AFTER auth is resolved so the initial connection has the token
   connectWS();
   // Hide loading overlay
@@ -211,6 +213,27 @@ setInterval(async () => {
 
 // Update timeline playhead from current TC (5 Hz)
 setInterval(updateTimelinePlayhead, 200);
+
+// ── Server info panel ─────────────────────
+
+function initServerInfo() {
+  const url = location.origin;
+  const host = location.hostname;
+  const port = location.port || (location.protocol === 'https:' ? '443' : '80');
+  const urlEl = document.getElementById('server-url');
+  const hostEl = document.getElementById('server-host');
+  const portEl = document.getElementById('server-port');
+  const qrEl = document.getElementById('server-qr');
+  if (urlEl) urlEl.textContent = url;
+  if (hostEl) hostEl.textContent = host;
+  if (portEl) portEl.textContent = port;
+  // Fetch QR code SVG (raw SVG, not JSON)
+  if (qrEl) {
+    fetch('/api/qr').then(r => r.ok ? r.text() : '').then(svg => {
+      if (svg) qrEl.innerHTML = svg;
+    }).catch(() => {});
+  }
+}
 
 // ── Wake Lock (prevent screen sleep on crew devices) ──
 
