@@ -61,11 +61,20 @@ function connectWS() {
     }
   };
 
-  ws.onclose = () => {
+  ws.onclose = (event) => {
     wsConnected = false;
     DOM.wsDot.classList.remove('connected');
     DOM.disconnectBanner.classList.add('visible');
     DOM.flowTimecode.classList.add('disconnected');
+
+    // Code 4001: session replaced — logged in from another device/tab
+    if (event.code === 4001) {
+      clearAuth();
+      showLoginOverlay();
+      showToast(t('auth.sessionReplaced'), 'info');
+      return; // Don't reconnect — this instance is superseded
+    }
+
     setTimeout(connectWS, wsReconnectDelay);
     wsReconnectDelay = Math.min(wsReconnectDelay * 2, 30000);
   };

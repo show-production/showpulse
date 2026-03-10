@@ -200,6 +200,7 @@ impl SessionStore {
     }
 
     /// Create a session for a user. Returns the token.
+    /// Enforces single-session-per-user: any existing sessions for this user are removed.
     pub async fn create_session(&self, user: &User) -> String {
         let token = Uuid::new_v4().to_string();
         let session = Session {
@@ -209,7 +210,10 @@ impl SessionStore {
             departments: user.departments.clone(),
             created_at: Instant::now(),
         };
-        self.sessions.write().await.insert(token.clone(), session);
+        let mut sessions = self.sessions.write().await;
+        // Single-session enforcement: remove any existing sessions for this user
+        sessions.retain(|_, s| s.user_id != user.id);
+        sessions.insert(token.clone(), session);
         token
     }
 

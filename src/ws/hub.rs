@@ -1,9 +1,9 @@
-use axum::extract::ws::{Message, WebSocket};
+use axum::extract::ws::{CloseFrame, Message, WebSocket};
 use futures::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::{broadcast, oneshot, RwLock};
 use tokio::time::Instant;
 use tracing::info;
 use uuid::Uuid;
@@ -56,6 +56,8 @@ pub struct ConnectedClient {
 pub struct WsHub {
     tx: broadcast::Sender<BroadcastMessage>,
     clients: Arc<RwLock<HashMap<Uuid, ConnectedClient>>>,
+    /// Per-connection kick channels for single-instance enforcement.
+    kick_channels: Arc<RwLock<HashMap<Uuid, oneshot::Sender<()>>>>,
     timer_lock: TimerLockState,
 }
 
@@ -65,6 +67,7 @@ impl WsHub {
         Self {
             tx,
             clients: Arc::new(RwLock::new(HashMap::new())),
+            kick_channels: Arc::new(RwLock::new(HashMap::new())),
             timer_lock,
         }
     }
@@ -86,6 +89,7 @@ impl WsHub {
         let mut rx = self.tx.subscribe();
         let (mut sender, mut receiver) = socket.split();
         let clients = self.clients.clone();
+        let kick_channels = self.kick_channels.clone();
         let timer_lock = self.timer_lock.clone();
 
         let conn_id = Uuid::new_v4();
@@ -95,7 +99,37 @@ impl WsHub {
             role: session.as_ref().map(|s| s.role),
             connected_at: Instant::now(),
         };
+
+        // Single-instance enforcement: kick existing WS connections for this user
+        if let Some(ref s) = session {
+            let clients_read = clients.read().await;
+            let existing: Vec<Uuid> = clients_read
+                .iter()
+                .filter(|(_, c)| c.user_id == Some(s.user_id))
+                .map(|(id, _)| *id)
+                .collect();
+            drop(clients_read);
+
+            if !existing.is_empty() {
+                info!(
+                    "Kicking {} existing connection(s) for user {}",
+                    existing.len(),
+                    s.user_name
+                );
+                let mut kicks = kick_channels.write().await;
+                for old_id in existing {
+                    if let Some(tx) = kicks.remove(&old_id) {
+                        let _ = tx.send(());
+                    }
+                }
+            }
+        }
+
         clients.write().await.insert(conn_id, client);
+
+        // Create kick channel for this connection
+        let (kick_tx, mut kick_rx) = oneshot::channel::<()>();
+        kick_channels.write().await.insert(conn_id, kick_tx);
 
         // Pre-set department filter from session (Viewer/CrewLead)
         let initial_filter = session.as_ref().and_then(|s| s.dept_filter.clone());
@@ -125,7 +159,7 @@ impl WsHub {
             // Returns when client disconnects
         });
 
-        // Broadcast relay task — exits when client disconnects OR broadcast fails
+        // Broadcast relay task — exits when client disconnects, broadcast fails, or kicked
         loop {
             tokio::select! {
                 result = rx.recv() => {
@@ -159,9 +193,19 @@ impl WsHub {
                     // Client disconnected — read stream ended
                     break;
                 }
+                _ = &mut kick_rx => {
+                    // Kicked: another connection for this user replaced us
+                    let _ = sender.send(Message::Close(Some(CloseFrame {
+                        code: 4001,
+                        reason: "session_replaced".into(),
+                    }))).await;
+                    break;
+                }
             }
         }
 
+        // Cleanup
+        kick_channels.write().await.remove(&conn_id);
         clients.write().await.remove(&conn_id);
 
         // Auto-release timer lock if disconnected user held it
