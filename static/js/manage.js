@@ -21,7 +21,11 @@
  * Refresh all Manage view data: departments, cues, and both renders.
  */
 async function refreshManageView() {
-  await Promise.all([loadDepartments(), loadCues(), loadActs()]);
+  const results = await Promise.allSettled([loadDepartments(), loadCues(), loadActs()]);
+  const failures = results.filter(r => r.status === 'rejected');
+  if (failures.length > 0) {
+    showToast(t('init.loadFailed'), 'error');
+  }
   renderDeptList();
   renderCueList();
   renderDeptFilters();
@@ -116,11 +120,12 @@ function renderCueList() {
     return;
   }
 
-  // Group by act
+  // Group by act (cues with unknown act_ids fall into ungrouped)
   const actGroups = new Map();
   const ungrouped = [];
+  const actIds = new Set(acts.map(a => a.id));
   for (const c of filtered) {
-    if (c.act_id) {
+    if (c.act_id && actIds.has(c.act_id)) {
       if (!actGroups.has(c.act_id)) actGroups.set(c.act_id, []);
       actGroups.get(c.act_id).push(c);
     } else {
