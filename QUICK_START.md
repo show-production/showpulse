@@ -6,7 +6,7 @@ ShowPulse is a single executable. No installer, no dependencies, no configuratio
 
 ### Step 1: Download
 
-Download `showpulse.exe` (4.1 MB) from the [Releases page](https://github.com/DGProject2030/showpulse/releases).
+Download `showpulse.exe` (4.1 MB) from the [Releases page](https://github.com/show-production/showpulse/releases).
 
 ### Step 2: Run
 
@@ -84,7 +84,7 @@ The single binary contains everything:
 ## Building From Source
 
 ```
-git clone https://github.com/DGProject2030/showpulse.git
+git clone https://github.com/show-production/showpulse.git
 cd showpulse
 cargo build --release
 ```

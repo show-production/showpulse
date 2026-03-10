@@ -12,7 +12,7 @@
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/DGProject2030/showpulse.git
+git clone https://github.com/show-production/showpulse.git
 cd showpulse
 ```
 

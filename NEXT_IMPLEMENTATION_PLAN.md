@@ -3,7 +3,7 @@
 ## Context
 ShowPulse is a self-hosted Rust/Axum live show management platform. The full pipeline works end-to-end: timecode sources (Generator/LTC/MTC) -> countdown engine -> WebSocket -> crew browsers. All core features, UI/UX polish, authentication, and security hardening are complete. Remaining work focuses on nice-to-have features.
 
-**Repository:** https://github.com/DGProject2030/showpulse
+**Repository:** https://github.com/show-production/showpulse
 
 ---
 
@@ -373,6 +373,9 @@ All vanilla JS, zero external dependencies.
 | **Portable dist** | Embed `static/` into binary via rust-embed, single 4.1 MB .exe | Done |
 | **Rate limiting** | Rate-limit login endpoint (tower middleware) | Done (5 attempts/60s per IP) |
 | **CSP headers** | Content-Security-Policy header | Done |
+| **URL auto-login** | `?user=Name&pin=1234` query param login for kiosk/headless clients | Done |
+| **Admin dashboard** | Live connected users panel with auth status, timer lock, online duration | Done |
+| **WS client cleanup** | Immediate stale connection removal on disconnect (tokio::select!) | Done |
 
 ---
 

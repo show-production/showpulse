@@ -2,7 +2,7 @@
 
 Self-hosted, local-WiFi show management platform for live productions. Reads SMPTE LTC and MIDI MTC timecode, manages cue lists for multiple departments, and pushes real-time countdown alerts to crew devices via web browsers.
 
-**Repository:** https://github.com/DGProject2030/showpulse
+**Repository:** https://github.com/show-production/showpulse
 
 ## Features
 
@@ -34,14 +34,16 @@ Self-hosted, local-WiFi show management platform for live productions. Reads SMP
 ## Quick Start
 
 ```bash
-git clone https://github.com/DGProject2030/showpulse.git
+git clone https://github.com/show-production/showpulse.git
 cd showpulse
 cargo run
 ```
 
-Open http://localhost:8080 — demo data with 6 departments, 3 acts, and 22 cues loads automatically on first run.
+Open http://localhost:8080 — demo data with 12 departments, 12 acts, and 348 cues loads automatically on first run.
 
 For other devices on the same WiFi: `http://<your-ip>:8080`
+
+Set `SHOWPULSE_PORT=4000` to change the port. See [Contributing](CONTRIBUTING.md) for all environment variables.
 
 ## Documentation
 
@@ -64,4 +66,4 @@ For other devices on the same WiFi: `http://<your-ip>:8080`
 
 ## Current Status
 
-All core features are complete: LTC/MTC decoding, timecode generator, cue management with bulk import (including armed/duration/color/continue-mode fields), per-department countdown engine with backend-driven Go state, act grouping with collapsible dividers, flow controls (Now/Auto/Collapse/Expand), always-visible T-/T+ countdown, warning entry easing, vivid department colors, full UI/UX polish, animated Ready/Go countdown with traffic-light colors, clean dashboard layout with passed count badge, active strips, uniform-size cue cards (color-only differentiation), cue navigation (click-to-goto, prev/next), show name, user-based authentication with 5 roles and timer lock, QR onboarding, security hardening, and 73 unit/integration tests. The Editor tab provides act-grouped cue lists with drag-and-drop, inline editing, multi-select bulk operations, interactive timeline editor (zoom/pan, scrub, minimap, tooltips, selection sync), and cue/act duplication. Branding with inline SVG logos throughout. Analytical print cue sheet with charts and act breakdown. 44 REST API endpoints + WebSocket. Remaining work: multi-show support, generator presets, and portable single-binary distribution. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the roadmap.
+All core features are complete and production-tested. Single 4.1 MB binary with all static files embedded via `rust-embed` — no external dependencies at runtime. LTC/MTC decoding, timecode generator, cue management with bulk import, per-department countdown engine with backend-driven Go state, act grouping, flow controls, Ready/Go countdown with traffic-light colors, clean dashboard with live admin panel (connected users, timer lock status), user-based authentication with 5 roles, URL-param auto-login for kiosk/headless clients (`?user=Name&pin=1234`), QR onboarding, security hardening, rate-limited login, CSP headers, and 73 unit/integration tests. Editor tab with drag-and-drop, inline editing, multi-select bulk ops, interactive timeline editor, and cue/act duplication. Hebrew/RTL i18n, mobile-responsive, wake lock for crew devices. 44 REST API endpoints + WebSocket. Remaining nice-to-haves: multi-show support, generator presets, audio/vibration alerts. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the roadmap.
