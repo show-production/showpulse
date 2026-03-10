@@ -163,6 +163,10 @@ if (currentLang === 'he') {
  */
 function refreshAllViews() {
   applyI18nToDOM();
+  // Refresh goto hint in current language
+  if (DOM.gotoInfo && !DOM.gotoTc.value.trim()) {
+    DOM.gotoInfo.innerHTML = `<span class="goto-hint">${t('transport.gotoHint')}</span>`;
+  }
 }
 
 (async function init() {

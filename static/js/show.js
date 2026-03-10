@@ -140,7 +140,7 @@ function showGotoCueInfo(info) {
  */
 function updateGotoCueInfo() {
   const val = DOM.gotoTc.value.trim();
-  if (!val) { DOM.gotoInfo.innerHTML = ''; return; }
+  if (!val) { DOM.gotoInfo.innerHTML = `<span class="goto-hint">${t('transport.gotoHint')}</span>`; return; }
   const sorted = getSortedCueTCs();
   const match = sorted.find(c => c.tc === val);
   if (match) {

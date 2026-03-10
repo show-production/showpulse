@@ -292,6 +292,11 @@
   color: var(--text-primary);
   font-weight: 500;
 }
+.tc-goto-info .goto-hint {
+  color: var(--text-dim);
+  font-style: italic;
+  opacity: 0.7;
+}
 @media (max-width: 768px) {
   .sidebar-shortcuts { display: none; }
 }

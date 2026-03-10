@@ -56,6 +56,7 @@ const I18N = {
     'transport.next': 'Next cue (N)',
     'transport.goto': 'Goto (G)',
     'transport.placeholder': 'HH:MM:SS:FF',
+    'transport.gotoHint': 'Click a cue to go to',
 
     // Timer lock
     'timer.takeControl': 'Take Control',
@@ -440,6 +441,9 @@ const I18N = {
     'login.error.required': '\u05E0\u05D3\u05E8\u05E9\u05D9\u05DD \u05E9\u05DD \u05D5\u05E7\u05D5\u05D3',
     'login.error.invalid': '\u05E9\u05DD \u05D0\u05D5 \u05E7\u05D5\u05D3 \u05E9\u05D2\u05D5\u05D9\u05D9\u05DD',
     'login.success': '\u05E9\u05DC\u05D5\u05DD, {name}',
+
+    // Transport
+    'transport.gotoHint': '\u05DC\u05D7\u05E5 \u05E2\u05DC \u05E7\u05D9\u05D5 \u05DC\u05DE\u05E2\u05D1\u05E8',
 
     // Timecode display
     'tc.stopped': '\u05E2\u05E6\u05D5\u05E8',
