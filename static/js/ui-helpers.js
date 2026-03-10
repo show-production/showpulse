@@ -186,12 +186,12 @@ function refreshAllViews() {
   initAutoPulseScrollBlock();
   // Timer lock check for managers
   refreshTimerLock();
+  // Connect WebSocket AFTER auth is resolved so the initial connection has the token
+  connectWS();
   // Hide loading overlay
   DOM.loadingOverlay.classList.add('hidden');
   setTimeout(() => DOM.loadingOverlay.remove(), 500);
 })();
-
-connectWS();
 
 // Poll timecode status when WS is not delivering (fallback)
 setInterval(async () => {

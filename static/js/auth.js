@@ -121,6 +121,27 @@ async function initAuth() {
     return;
   }
 
+  // Auto-login from URL params: ?user=Name&pin=1234
+  const urlParams = new URLSearchParams(location.search);
+  const autoUser = urlParams.get('user');
+  const autoPin = urlParams.get('pin');
+  if (autoUser && autoPin) {
+    try {
+      const resp = await api('/auth/login', { method: 'POST', body: { name: autoUser, pin: autoPin } });
+      saveAuth(resp.token, resp.role, resp.name, resp.departments);
+      // Clean URL
+      history.replaceState(null, '', location.pathname);
+      hideLoginOverlay();
+      applyRole();
+      // Reconnect WS with token
+      if (ws) { ws.onclose = null; ws.close(); }
+      connectWS();
+      return;
+    } catch (e) {
+      // Auto-login failed, fall through to normal flow
+    }
+  }
+
   // Auth enabled — check saved token
   if (authToken) {
     try {

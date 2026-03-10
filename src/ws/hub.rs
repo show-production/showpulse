@@ -104,7 +104,7 @@ impl WsHub {
         let sub_depts_writer = sub_task_depts.clone();
 
         // Spawn reader task to handle incoming client messages
-        let read_task = tokio::spawn(async move {
+        let mut read_task = tokio::spawn(async move {
             while let Some(Ok(msg)) = receiver.next().await {
                 if let Message::Text(text) = msg {
                     if let Ok(client_msg) = serde_json::from_str::<ClientMessage>(&text) {
@@ -122,39 +122,46 @@ impl WsHub {
                     }
                 }
             }
+            // Returns when client disconnects
         });
 
-        // Broadcast relay task
+        // Broadcast relay task — exits when client disconnects OR broadcast fails
         loop {
-            match rx.recv().await {
-                Ok(msg) => {
-                    // Filter cues by department subscription
-                    let filter = sub_task_depts.read().await;
-                    let filtered_msg = if let Some(ref dept_ids) = *filter {
-                        BroadcastMessage {
-                            cues: msg
-                                .cues
-                                .iter()
-                                .filter(|c| dept_ids.contains(&c.department_id))
-                                .cloned()
-                                .collect(),
-                            ..msg
-                        }
-                    } else {
-                        msg
-                    };
+            tokio::select! {
+                result = rx.recv() => {
+                    match result {
+                        Ok(msg) => {
+                            let filter = sub_task_depts.read().await;
+                            let filtered_msg = if let Some(ref dept_ids) = *filter {
+                                BroadcastMessage {
+                                    cues: msg
+                                        .cues
+                                        .iter()
+                                        .filter(|c| dept_ids.contains(&c.department_id))
+                                        .cloned()
+                                        .collect(),
+                                    ..msg
+                                }
+                            } else {
+                                msg
+                            };
 
-                    let json = serde_json::to_string(&filtered_msg).unwrap_or_default();
-                    if sender.send(Message::Text(json.into())).await.is_err() {
-                        break;
+                            let json = serde_json::to_string(&filtered_msg).unwrap_or_default();
+                            if sender.send(Message::Text(json.into())).await.is_err() {
+                                break;
+                            }
+                        }
+                        Err(broadcast::error::RecvError::Lagged(_)) => continue,
+                        Err(_) => break,
                     }
                 }
-                Err(broadcast::error::RecvError::Lagged(_)) => continue,
-                Err(_) => break,
+                _ = &mut read_task => {
+                    // Client disconnected — read stream ended
+                    break;
+                }
             }
         }
 
-        read_task.abort();
         clients.write().await.remove(&conn_id);
 
         // Auto-release timer lock if disconnected user held it
