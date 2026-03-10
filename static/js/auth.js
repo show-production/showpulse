@@ -82,6 +82,9 @@ async function handleLogin(e) {
       renderDeptFilters();
     } catch (e2) { /* ignore — data may not be available for this role */ }
     refreshTimerLock();
+    // Reconnect WebSocket with auth token so dashboard shows this user
+    if (ws) { ws.onclose = null; ws.close(); }
+    connectWS();
     showToast(t('login.success', { name: resp.name }), 'success');
   } catch (err) {
     DOM.loginError.textContent = t('login.error.invalid');
