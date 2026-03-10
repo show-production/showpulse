@@ -188,6 +188,8 @@ function refreshAllViews() {
   refreshTimerLock();
   // Populate server info panel
   initServerInfo();
+  // Start crew status polling (Show tab sidebar)
+  startCrewPolling();
   // Connect WebSocket AFTER auth is resolved so the initial connection has the token
   connectWS();
   // Hide loading overlay

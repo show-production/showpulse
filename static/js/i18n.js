@@ -82,6 +82,7 @@ const I18N = {
     // Sidebar
     'sidebar.toggle': 'Toggle sidebar (S)',
     'sidebar.departments': 'Departments',
+    'sidebar.crew': 'Crew',
     'sidebar.shortcuts': 'Shortcuts',
     'sidebar.allDepts': 'All',
 
@@ -310,6 +311,10 @@ const I18N = {
     'dash.onlineFor': 'Online {duration}',
     'dash.offline': 'Offline',
 
+    // Crew panel
+    'crew.loading': 'Loading...',
+    'crew.empty': 'No crew assigned.',
+
     // Toast generic
     'toast.created': '{label} created',
     'toast.updated': '{label} updated',
@@ -464,6 +469,7 @@ const I18N = {
     // Sidebar
     'sidebar.toggle': '\u05E1\u05E8\u05D2\u05DC \u05E6\u05D3 (S)',
     'sidebar.departments': '\u05DE\u05D7\u05DC\u05E7\u05D5\u05EA',
+    'sidebar.crew': '\u05E6\u05D5\u05D5\u05EA',
     'sidebar.shortcuts': '\u05E7\u05D9\u05E6\u05D5\u05E8\u05D9\u05DD',
     'sidebar.allDepts': '\u05D4\u05DB\u05DC',
 
@@ -674,6 +680,10 @@ const I18N = {
     'dash.noUsers': '\u05D0\u05D9\u05DF \u05DE\u05E9\u05EA\u05DE\u05E9\u05D9\u05DD. \u05DC\u05D7\u05E5 + \u05D4\u05D5\u05E1\u05E3 \u05DE\u05E9\u05EA\u05DE\u05E9 \u05DC\u05D9\u05E6\u05D9\u05E8\u05D4.',
     'dash.onlineFor': '\u05DE\u05E7\u05D5\u05D5\u05DF {duration}',
     'dash.offline': '\u05DC\u05D0 \u05DE\u05E7\u05D5\u05D5\u05DF',
+
+    // Crew panel
+    'crew.loading': '\u05D8\u05D5\u05E2\u05DF\u2026',
+    'crew.empty': '\u05D0\u05D9\u05DF \u05D0\u05E0\u05E9\u05D9 \u05E6\u05D5\u05D5\u05EA.',
 
     // Toast generic
     'toast.created': '{label} \u05E0\u05D5\u05E6\u05E8',

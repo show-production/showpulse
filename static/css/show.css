@@ -52,6 +52,63 @@
 }
 .sidebar-section-title:first-child { margin-top: 0; }
 
+/* ── Crew panel (sidebar) ── */
+.sidebar-crew-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.crew-dept-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.crew-dept-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0;
+}
+.crew-dept-name .chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.crew-member {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+  padding: 0.1rem 0 0.1rem 1.2rem;
+}
+.crew-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.crew-dot--on {
+  background: var(--accent);
+  box-shadow: 0 0 4px var(--active-glow);
+}
+.crew-dot--off {
+  background: var(--text-dim);
+  opacity: 0.3;
+}
+.crew-empty, .crew-loading {
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  padding: 0.25rem 0;
+}
+
 .sidebar-shortcuts { font-size: var(--font-size-xs); color: var(--text-dim); line-height: 1.8; }
 .sidebar-shortcuts kbd {
   display: inline-block;

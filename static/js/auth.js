@@ -472,3 +472,47 @@ function renderDashboard(data, users) {
     ${users.length === 0 ? `<div class="text-dim" style="padding:0.75rem">${t('dash.noUsers')}</div>` : ''}
   `;
 }
+
+// ── Crew panel (Show tab sidebar) ────────
+
+let crewPollInterval = null;
+
+function startCrewPolling() {
+  stopCrewPolling();
+  loadCrewStatus();
+  crewPollInterval = setInterval(loadCrewStatus, 15000);
+}
+
+function stopCrewPolling() {
+  if (crewPollInterval) {
+    clearInterval(crewPollInterval);
+    crewPollInterval = null;
+  }
+}
+
+async function loadCrewStatus() {
+  try {
+    const data = await api('/crew/status');
+    renderCrewPanel(data);
+  } catch (e) { /* ignore */ }
+}
+
+function renderCrewPanel(data) {
+  if (!DOM.crewList) return;
+  if (!data.departments || data.departments.length === 0) {
+    DOM.crewList.innerHTML = `<div class="crew-empty">${t('crew.empty')}</div>`;
+    return;
+  }
+
+  let html = '';
+  for (const dept of data.departments) {
+    html += `<div class="crew-dept-group">`;
+    html += `<div class="crew-dept-name"><span class="chip-dot" style="background:${esc(dept.color)}"></span>${esc(dept.name)}</div>`;
+    for (const m of dept.members) {
+      const dotClass = m.online ? 'crew-dot--on' : 'crew-dot--off';
+      html += `<div class="crew-member"><span class="crew-dot ${dotClass}"></span>${esc(m.name)}</div>`;
+    }
+    html += `</div>`;
+  }
+  DOM.crewList.innerHTML = html;
+}

@@ -91,6 +91,8 @@ pub fn api_router() -> Router<AppState> {
         // Show name
         .route("/api/show/name", get(api::show::get_name))
         .route("/api/show/name", put(api::show::set_name))
+        // Crew status (all roles)
+        .route("/api/crew/status", get(api::crew::status))
         // Admin dashboard
         .route("/api/admin/dashboard", get(api::admin::dashboard))
         // Auth

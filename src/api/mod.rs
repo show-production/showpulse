@@ -1,5 +1,6 @@
 pub mod acts;
 pub mod admin;
+pub mod crew;
 pub mod cues;
 pub mod departments;
 pub mod generator;

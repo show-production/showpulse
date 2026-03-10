@@ -158,6 +158,8 @@ function initDOM() {
   DOM.tcGotoGroup = document.querySelector('.tc-goto-group');
   // Act list (manage view)
   DOM.actList = document.getElementById('act-list');
+  // Crew panel (show sidebar)
+  DOM.crewList = document.getElementById('crew-list');
 }
 
 // ── Shared helpers ─────────────────────────
