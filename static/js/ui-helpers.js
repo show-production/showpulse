@@ -171,6 +171,8 @@ function refreshAllViews() {
 
 (async function init() {
   initDOM();
+  // Clear browser autofill from goto input
+  DOM.gotoTc.value = '';
   initCueDrag();
   initCueInlineEdit();
   initCueBulkOps();
