@@ -52,6 +52,13 @@ function connectWS() {
     DOM.wsDot.classList.add('connected');
     DOM.disconnectBanner.classList.remove('visible');
     DOM.flowTimecode.classList.remove('disconnected');
+    // Validate auth token on reconnect (handles server restart wiping sessions)
+    if (authEnabled && authToken) {
+      api('/timecode').catch(() => {
+        clearAuth();
+        showLoginOverlay();
+      });
+    }
   };
 
   ws.onclose = () => {
