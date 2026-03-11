@@ -36,7 +36,8 @@ bash scripts/test-network.sh --no-sleep   # disable sleep/lock only (no browser)
 - Server port: `4000` (via `SHOWPULSE_PORT`)
 - Agents reachable via Tailscale SSH (hostnames pc1-pc6)
 - Auto-login URL format: `http://192.168.10.82:4000/?user=NAME&pin=1234`
-- Sleep prevention: disables DPMS, X11 screensaver, GNOME lock, and systemd suspend
+- Sleep prevention: disables DPMS, X11 screensaver, Cinnamon lock (Linux Mint), and systemd suspend
+- Agents run Linux Mint with Cinnamon DE
 
 ## Build
 ```bash
