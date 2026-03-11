@@ -86,11 +86,17 @@ REMOTE
 open_all() {
   disable_sleep
   echo ""
+  echo "Closing existing browsers on all agents..."
+  for entry in "${AGENTS[@]}"; do
+    IFS='|' read -r host user spuser <<< "$entry"
+    ssh $SSH_OPTS "${user}@${host}" "pkill -f firefox" 2>/dev/null || true
+  done
+  sleep 2
   echo "Opening ShowPulse on all agents (http://${SERVER}:${PORT})"
   for entry in "${AGENTS[@]}"; do
     IFS='|' read -r host user spuser <<< "$entry"
     url="http://${SERVER}:${PORT}/?user=${spuser}&pin=${PIN}"
-    if ssh $SSH_OPTS "${user}@${host}" "DISPLAY=:0 xdg-open '${url}'" 2>/dev/null; then
+    if ssh $SSH_OPTS "${user}@${host}" "DISPLAY=:0 nohup firefox '${url}' >/dev/null 2>&1 &" 2>/dev/null; then
       echo "  $host -> $spuser : OK"
     else
       echo "  $host -> $spuser : FAILED"
