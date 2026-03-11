@@ -113,11 +113,22 @@ async fn main() {
     let tc_manager = Arc::new(TimecodeManager::new());
     let timer_lock = showpulse::auth::new_timer_lock();
     let ws_hub = Arc::new(WsHub::new(timer_lock.clone()));
-    let sessions = SessionStore::new(!has_users);
     let login_limiter = LoginLimiter::new();
+
+    // Restore persisted sessions (filtering expired ones)
+    let restored = store.load_sessions().await;
+    let restored_count = restored.len();
+    let sessions = if has_users {
+        SessionStore::with_persistence(!has_users, store.clone(), restored)
+    } else {
+        SessionStore::new(true)
+    };
 
     if has_users {
         info!("Authentication enabled — {} user(s) configured", store.user_count().await);
+        if restored_count > 0 {
+            info!("Restored {} persisted session(s)", restored_count);
+        }
     } else {
         warn!("No users configured — all endpoints are open (no authentication)");
     }

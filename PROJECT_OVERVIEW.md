@@ -123,7 +123,7 @@ Single-page app served from `static/index.html` with three tabs (Show, Editor, S
 | Multi-show support | Show switching/archiving |
 | Generator presets | Save/load named configs |
 | Print view | CSS `@media print` stylesheet for in-browser show view (analytical report already implemented via `printCueSheet()`) |
-| Session persistence | Sessions are in-memory only — server restart forces all clients to re-login |
+| Audio/vibration alerts | Warning threshold alerts on crew devices |
 
 ## Codebase Stats
 

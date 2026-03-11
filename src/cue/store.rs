@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::auth::{Role, User};
+use crate::auth::{Role, Session, User};
 use super::types::{Act, ContinueMode, Cue, CueImportError, CueImportResult, Department, ShowData};
 
 /// Maximum allowed length for string fields (names, labels, notes).
@@ -638,6 +638,24 @@ impl CueStore {
             self.persist().await;
             tracing::info!("Migrated {} plaintext PIN(s) to argon2 hashes", migrated);
         }
+    }
+
+    // --- Sessions (persistence) ---
+
+    /// Load persisted sessions from the data file, filtering out expired ones.
+    pub async fn load_sessions(&self) -> std::collections::HashMap<String, Session> {
+        let data = self.data.read().await;
+        data.sessions
+            .iter()
+            .filter(|(_, s)| !s.is_expired())
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
+    }
+
+    /// Save sessions to the data file.
+    pub async fn save_sessions(&self, sessions: std::collections::HashMap<String, Session>) {
+        self.data.write().await.sessions = sessions;
+        self.persist().await;
     }
 }
 

@@ -157,27 +157,42 @@ impl LoginLimiter {
 // ── Session store ───────────────────────────
 
 /// Session info stored per token — carries identity, role, and expiry.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Session {
     pub user_id: Uuid,
     pub user_name: String,
     pub role: Role,
     pub departments: Vec<Uuid>,
-    pub created_at: Instant,
+    /// Unix epoch seconds when the session was created.
+    pub created_at: u64,
 }
 
 impl Session {
     /// Check if this session has expired.
     pub fn is_expired(&self) -> bool {
-        self.created_at.elapsed().as_secs() > SESSION_TTL_SECS
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        now.saturating_sub(self.created_at) > SESSION_TTL_SECS
     }
 }
 
-/// In-memory session store — maps tokens to sessions.
+/// Get current Unix epoch seconds.
+fn unix_now() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
+
+/// Persistent session store — maps tokens to sessions, backed by CueStore JSON file.
 #[derive(Clone)]
 pub struct SessionStore {
     sessions: Arc<RwLock<HashMap<String, Session>>>,
     open_access: bool,
+    /// When set, session mutations are persisted to the data file.
+    store: Option<Arc<crate::cue::store::CueStore>>,
 }
 
 impl SessionStore {
@@ -188,6 +203,20 @@ impl SessionStore {
         Self {
             sessions: Arc::new(RwLock::new(HashMap::new())),
             open_access,
+            store: None,
+        }
+    }
+
+    /// Create a session store with persistence and pre-loaded sessions.
+    pub fn with_persistence(
+        open_access: bool,
+        store: Arc<crate::cue::store::CueStore>,
+        restored: HashMap<String, Session>,
+    ) -> Self {
+        Self {
+            sessions: Arc::new(RwLock::new(restored)),
+            open_access,
+            store: Some(store),
         }
     }
 
@@ -199,6 +228,14 @@ impl SessionStore {
         self.open_access = open;
     }
 
+    /// Persist current sessions to the data file (if store is set).
+    async fn persist(&self) {
+        if let Some(ref store) = self.store {
+            let sessions = self.sessions.read().await;
+            store.save_sessions(sessions.clone()).await;
+        }
+    }
+
     /// Create a session for a user. Returns the token.
     /// Enforces single-session-per-user: any existing sessions for this user are removed.
     pub async fn create_session(&self, user: &User) -> String {
@@ -208,12 +245,14 @@ impl SessionStore {
             user_name: user.name.clone(),
             role: user.role,
             departments: user.departments.clone(),
-            created_at: Instant::now(),
+            created_at: unix_now(),
         };
         let mut sessions = self.sessions.write().await;
         // Single-session enforcement: remove any existing sessions for this user
         sessions.retain(|_, s| s.user_id != user.id);
         sessions.insert(token.clone(), session);
+        drop(sessions);
+        self.persist().await;
         token
     }
 
@@ -226,6 +265,7 @@ impl SessionStore {
                 // Expired — will be cleaned up by purge task
                 drop(sessions);
                 self.sessions.write().await.remove(token);
+                self.persist().await;
                 None
             }
             None => None,
@@ -234,16 +274,25 @@ impl SessionStore {
 
     pub async fn logout(&self, token: &str) {
         self.sessions.write().await.remove(token);
+        self.persist().await;
     }
 
     /// Remove all sessions for a specific user (e.g. when user is deleted).
     pub async fn remove_user_sessions(&self, user_id: Uuid) {
         self.sessions.write().await.retain(|_, s| s.user_id != user_id);
+        self.persist().await;
     }
 
     /// Purge all expired sessions. Called periodically from a background task.
     pub async fn purge_expired(&self) {
-        self.sessions.write().await.retain(|_, s| !s.is_expired());
+        let mut sessions = self.sessions.write().await;
+        let before = sessions.len();
+        sessions.retain(|_, s| !s.is_expired());
+        let purged = before != sessions.len();
+        drop(sessions);
+        if purged {
+            self.persist().await;
+        }
     }
 }
 

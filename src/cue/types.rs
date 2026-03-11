@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::auth::User;
+use crate::auth::{Session, User};
 use crate::timecode::types::Timecode;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -91,6 +93,9 @@ pub struct ShowData {
     pub acts: Vec<Act>,
     #[serde(default)]
     pub users: Vec<User>,
+    /// Persisted auth sessions (token -> session). Survives server restarts.
+    #[serde(default)]
+    pub sessions: HashMap<String, Session>,
 }
 
 impl Default for ShowData {
@@ -101,6 +106,7 @@ impl Default for ShowData {
             cues: Vec::new(),
             acts: Vec::new(),
             users: Vec::new(),
+            sessions: HashMap::new(),
         }
     }
 }

@@ -190,8 +190,8 @@ Implemented in `src/main.rs`:
 - `Role` enum: Viewer(1), CrewLead(2), Operator(3), Manager(4), Admin(5) with `level()` helper
 - `User` struct: id, name, pin, role, departments (persisted in `ShowData.users`)
 - `TimerLock` struct + `TimerLockState` (Arc<RwLock<Option<TimerLock>>>)
-- `Session` struct: carries user_id, name, role, departments per token
-- `SessionStore`: maps tokens -> sessions, `open_access` mode for no-user setups
+- `Session` struct: carries user_id, name, role, departments, created_at (u64 Unix epoch) per token. Serializable — persisted to `ShowData.sessions`
+- `SessionStore`: maps tokens -> sessions, `open_access` mode for no-user setups, optional `CueStore` ref for auto-persistence
 - `require_role()`: extracts session from request extensions, checks minimum role
 - `require_timer_access()`: checks Admin or matching timer lock
 - Login: `{ name, pin }` -> `{ token, role, name, departments }`
@@ -375,6 +375,7 @@ All vanilla JS, zero external dependencies.
 | **URL auto-login** | `?user=Name&pin=1234` query param login for kiosk/headless clients | Done |
 | **Admin dashboard** | Live connected users panel with auth status, timer lock, online duration | Done |
 | **WS client cleanup** | Immediate stale connection removal on disconnect (tokio::select!) | Done |
+| **Session persistence** | Sessions survive server restart — stored in `ShowData.sessions` (JSON file) | Done |
 
 ---
 
