@@ -133,9 +133,7 @@ async function initAuth() {
       history.replaceState(null, '', location.pathname);
       hideLoginOverlay();
       applyRole();
-      // Reconnect WS with token
-      if (ws) { ws.onclose = null; ws.close(); }
-      connectWS();
+      // Don't connectWS() here — init() calls it after initAuth() returns
       return;
     } catch (e) {
       // Auto-login failed, fall through to normal flow
