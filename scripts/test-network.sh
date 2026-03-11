@@ -43,16 +43,33 @@ disable_sleep() {
   for entry in "${AGENTS[@]}"; do
     IFS='|' read -r host user spuser <<< "$entry"
     if ssh $SSH_OPTS "${user}@${host}" bash -s <<'REMOTE' 2>/dev/null; then
-      # Disable DPMS (monitor power saving)
-      DISPLAY=:0 xset -dpms 2>/dev/null || true
-      # Disable X11 screen saver / blanking
-      DISPLAY=:0 xset s off 2>/dev/null || true
-      DISPLAY=:0 xset s noblank 2>/dev/null || true
-      # Disable GNOME screensaver and auto-lock
       export DISPLAY=:0
-      dbus-launch gsettings set org.gnome.desktop.screensaver lock-enabled false 2>/dev/null || true
-      dbus-launch gsettings set org.gnome.desktop.screensaver idle-activation-enabled false 2>/dev/null || true
-      dbus-launch gsettings set org.gnome.desktop.session idle-delay 0 2>/dev/null || true
+
+      # Disable DPMS (monitor power saving)
+      xset -dpms 2>/dev/null || true
+      # Disable X11 screen saver / blanking
+      xset s off 2>/dev/null || true
+      xset s noblank 2>/dev/null || true
+
+      # Connect to the real user D-Bus session (Linux Mint / Cinnamon)
+      export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
+      # Disable Cinnamon screensaver activation and lock
+      gsettings set org.cinnamon.desktop.screensaver idle-activation-enabled false 2>/dev/null || true
+      gsettings set org.cinnamon.desktop.screensaver lock-enabled false 2>/dev/null || true
+      gsettings set org.cinnamon.desktop.session idle-delay 0 2>/dev/null || true
+
+      # Disable power management screen blanking
+      gsettings set org.cinnamon.settings-daemon.plugins.power sleep-display-ac 0 2>/dev/null || true
+      gsettings set org.cinnamon.settings-daemon.plugins.power sleep-display-battery 0 2>/dev/null || true
+      gsettings set org.cinnamon.settings-daemon.plugins.power idle-dim-ac false 2>/dev/null || true
+      gsettings set org.cinnamon.settings-daemon.plugins.power idle-dim-battery false 2>/dev/null || true
+      gsettings set org.cinnamon.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing' 2>/dev/null || true
+      gsettings set org.cinnamon.settings-daemon.plugins.power sleep-inactive-battery-type 'nothing' 2>/dev/null || true
+
+      # Kill cinnamon-screensaver if running (it respawns but picks up new settings)
+      killall cinnamon-screensaver 2>/dev/null || true
+
       # Prevent systemd suspend/hibernate
       sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target 2>/dev/null || true
 REMOTE
