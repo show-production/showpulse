@@ -86,17 +86,23 @@ REMOTE
 open_all() {
   disable_sleep
   echo ""
-  echo "Closing existing browsers on all agents..."
+  echo "Closing browsers and cleaning session restore..."
   for entry in "${AGENTS[@]}"; do
     IFS='|' read -r host user spuser <<< "$entry"
-    ssh $SSH_OPTS "${user}@${host}" "pkill -f firefox" 2>/dev/null || true
+    ssh $SSH_OPTS "${user}@${host}" bash -s <<'CLEANUP' 2>/dev/null || true
+      pkill -f firefox 2>/dev/null || true
+      sleep 1
+      find ~/.mozilla/firefox/ -name "sessionstore*" -delete 2>/dev/null
+      find ~/.mozilla/firefox/ -name "recovery.jsonlz4" -delete 2>/dev/null
+      find ~/.mozilla/firefox/ -name "recovery.baklz4" -delete 2>/dev/null
+CLEANUP
   done
   sleep 2
   echo "Opening ShowPulse on all agents (http://${SERVER}:${PORT})"
   for entry in "${AGENTS[@]}"; do
     IFS='|' read -r host user spuser <<< "$entry"
     url="http://${SERVER}:${PORT}/?user=${spuser}&pin=${PIN}"
-    if ssh $SSH_OPTS "${user}@${host}" "DISPLAY=:0 nohup firefox '${url}' >/dev/null 2>&1 &" 2>/dev/null; then
+    if ssh $SSH_OPTS "${user}@${host}" "DISPLAY=:0 nohup firefox --new-window '${url}' >/dev/null 2>&1 &" 2>/dev/null; then
       echo "  $host -> $spuser : OK"
     else
       echo "  $host -> $spuser : FAILED"
