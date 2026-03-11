@@ -151,18 +151,17 @@ Originally PIN-based, now replaced by user-based auth with 5 roles (see Phase 14
 
 ---
 
-## Phase 12: Security Hardening -- Mostly Done
+## Phase 12: Security Hardening -- Done
 **Goal:** Production-ready security posture for LAN deployment.
 
 Implemented in `src/main.rs`:
-- Security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`
+- Security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Content-Security-Policy`
 - CORS: restricted to `http://localhost:{port}` (same-origin)
 - Body limit: `DefaultBodyLimit::max(1MB)`
 - Concurrency limit: `ConcurrencyLimitLayer::new(50)`
 - WebSocket client limit: `MAX_WS_CLIENTS = 100`
+- Rate limiting: 5 login attempts per 60s per IP
 - Input validation in `src/cue/store.rs`: string clamping, color hex validation, timecode range validation, post_wait clamping
-
-Remaining: rate limiting on login endpoint, CSP headers
 
 ---
 

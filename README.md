@@ -39,7 +39,7 @@ cd showpulse
 cargo run
 ```
 
-Open http://localhost:8080 — demo data with 12 departments, 12 acts, and 348 cues loads automatically on first run.
+Open http://localhost:8080 — demo data with 6 departments, 3 acts, and 22 cues loads automatically on first run.
 
 For other devices on the same WiFi: `http://<your-ip>:8080`
 

@@ -123,18 +123,16 @@ Single-page app served from `static/index.html` with three tabs (Show, Editor, S
 | Multi-show support | Show switching/archiving |
 | Generator presets | Save/load named configs |
 | Print view | CSS `@media print` stylesheet for in-browser show view (analytical report already implemented via `printCueSheet()`) |
-| Portable distribution | Single-folder plug-and-play with embedded static files |
-| Rate limiting | Rate-limit login endpoint (tower middleware) |
-| CSP headers | Content-Security-Policy header |
+| Session persistence | Sessions are in-memory only — server restart forces all clients to re-login |
 
 ## Codebase Stats
 
 | Category | Lines |
 |----------|-------|
-| Rust (`src/`) | ~4,460 |
+| Rust (`src/`) | ~4,640 |
 | Rust tests (`tests/`) | ~580 |
-| JavaScript (`static/js/`) | ~4,060 |
-| CSS (`static/css/`) | ~1,940 |
+| JavaScript (`static/js/`) | ~5,010 |
+| CSS (`static/css/`) | ~2,050 |
 
 Frontend JS modules (loaded in order): `state.js` -> `api.js` -> `auth.js` -> `show.js` -> `manage.js` -> `timeline.js` -> `settings.js` -> `import-export.js` -> `ui-helpers.js`
 

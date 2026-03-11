@@ -348,7 +348,7 @@ ShowPulse runs on a **local, trusted WiFi network** (production VLAN or dedicate
 | **Session management** | Opaque tokens stored in `SessionStore`. Tokens via Bearer header or `?token=` query param. |
 | **Role gating** | `require_role()` guard checks minimum role level. Viewer/CrewLead: Show only (dept-filtered). Operator: +Manage. Manager: +Settings + timer lock. Admin: +User CRUD. |
 | **Timer lock** | Exclusive timer control for Managers. Admin bypasses lock. `POST/DELETE /api/timer-lock`. |
-| **Rate limiting** | Planned: rate-limit login endpoint (5 attempts per minute per IP) via tower middleware. |
+| **Rate limiting** | Done: 5 login attempts per 60s per IP via tower middleware. |
 
 ### Input Validation
 - All REST inputs validated with `serde` deserialization + explicit validation (timecode format, string lengths, UUID format).
@@ -368,14 +368,14 @@ ShowPulse runs on a **local, trusted WiFi network** (production VLAN or dedicate
 ### CORS & Headers
 - CORS restricted to same-origin (frontend is served by the same backend).
 - Standard security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`.
-- Planned: `Content-Security-Policy` header.
+- `Content-Security-Policy` header implemented.
 
 ### Threat Model Summary
 | Threat | Mitigation |
 |--------|-----------|
 | Unauthorized cue editing | Role-based auth (Operator+ required) |
 | Unauthorized timer control | Timer lock + Manager+ role |
-| Brute-force PIN | Planned: rate limiting on login |
+| Brute-force PIN | Rate limiting on login (5/60s per IP) |
 | XSS via cue data | Input sanitization, HTML escaping |
 | WebSocket flooding | Client limit (100), heartbeat cleanup |
 | Data loss | JSON file persistence, manual backup/export |
