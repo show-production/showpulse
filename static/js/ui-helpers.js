@@ -14,17 +14,26 @@
 
 // ── View switching ─────────────────────────
 
+function switchTab(view) {
+  document.querySelectorAll('.tab[data-view]').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const tab = document.querySelector(`.tab[data-view="${view}"]`);
+  if (tab) tab.classList.add('active');
+  const el = document.getElementById(`view-${view}`);
+  if (el) el.classList.add('active');
+  localStorage.setItem('showpulse-tab', view);
+  if (view === 'manage') refreshManageView();
+  if (view === 'settings') { refreshTimerLock(); startDashboardPolling(); }
+  else { stopDashboardPolling(); }
+}
+
 document.querySelectorAll('.tab[data-view]').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab[data-view]').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById(`view-${tab.dataset.view}`).classList.add('active');
-    if (tab.dataset.view === 'manage') refreshManageView();
-    if (tab.dataset.view === 'settings') { refreshTimerLock(); startDashboardPolling(); }
-    else { stopDashboardPolling(); }
-  });
+  tab.addEventListener('click', () => switchTab(tab.dataset.view));
 });
+
+// Restore last active tab on load
+{ const saved = localStorage.getItem('showpulse-tab');
+  if (saved && document.querySelector(`.tab[data-view="${saved}"]`)) switchTab(saved); }
 
 // ── Toast notifications ────────────────────
 
