@@ -10,14 +10,15 @@ SHOWPULSE_PORT=4000 ./showpulse.exe
 ```
 
 ### Step 2: Open ShowPulse on all 6 agents
-SSH into each agent and open a browser with auto-login. Run all 6 in parallel:
+```bash
+bash scripts/test-network.sh
 ```
-ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no t@pc1 "DISPLAY=:0 xdg-open 'http://192.168.10.82:4000/?user=FS&pin=1234'"
-ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no t@pc2 "DISPLAY=:0 xdg-open 'http://192.168.10.82:4000/?user=SoundDesk&pin=1234'"
-ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no t@pc3 "DISPLAY=:0 xdg-open 'http://192.168.10.82:4000/?user=LaserDesk&pin=1234'"
-ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no t@pc4 "DISPLAY=:0 xdg-open 'http://192.168.10.82:4000/?user=automationDesk&pin=1234'"
-ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no ralphlopp5@pc5 "DISPLAY=:0 xdg-open 'http://192.168.10.82:4000/?user=backStage&pin=1234'"
-ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no ralph6@pc6 "DISPLAY=:0 xdg-open 'http://192.168.10.82:4000/?user=pyroDesk&pin=1234'"
+This automatically disables screen sleep/lock on all agents, then opens browsers with auto-login.
+
+### Other script modes
+```bash
+bash scripts/test-network.sh --check      # connectivity check only
+bash scripts/test-network.sh --no-sleep   # disable sleep/lock only (no browser)
 ```
 
 ### Agent Inventory
@@ -35,6 +36,7 @@ ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no ralph6@pc6 "DISPLAY=:0 xdg-o
 - Server port: `4000` (via `SHOWPULSE_PORT`)
 - Agents reachable via Tailscale SSH (hostnames pc1-pc6)
 - Auto-login URL format: `http://192.168.10.82:4000/?user=NAME&pin=1234`
+- Sleep prevention: disables DPMS, X11 screensaver, GNOME lock, and systemd suspend
 
 ## Build
 ```bash

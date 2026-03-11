@@ -3,8 +3,9 @@
 # ShowPulse Test Network — open clients on all 6 Ralph Loop agents
 #
 # Usage:
-#   bash scripts/test-network.sh          # open browsers on all agents
-#   bash scripts/test-network.sh --check  # connectivity check only
+#   bash scripts/test-network.sh              # disable sleep + open browsers
+#   bash scripts/test-network.sh --check      # connectivity check only
+#   bash scripts/test-network.sh --no-sleep   # disable sleep/lock only
 #
 
 set -euo pipefail
@@ -37,7 +38,34 @@ check() {
   done
 }
 
+disable_sleep() {
+  echo "Disabling screen sleep/lock on all agents..."
+  for entry in "${AGENTS[@]}"; do
+    IFS='|' read -r host user spuser <<< "$entry"
+    if ssh $SSH_OPTS "${user}@${host}" bash -s <<'REMOTE' 2>/dev/null; then
+      # Disable DPMS (monitor power saving)
+      DISPLAY=:0 xset -dpms 2>/dev/null || true
+      # Disable X11 screen saver / blanking
+      DISPLAY=:0 xset s off 2>/dev/null || true
+      DISPLAY=:0 xset s noblank 2>/dev/null || true
+      # Disable GNOME screensaver and auto-lock
+      export DISPLAY=:0
+      dbus-launch gsettings set org.gnome.desktop.screensaver lock-enabled false 2>/dev/null || true
+      dbus-launch gsettings set org.gnome.desktop.screensaver idle-activation-enabled false 2>/dev/null || true
+      dbus-launch gsettings set org.gnome.desktop.session idle-delay 0 2>/dev/null || true
+      # Prevent systemd suspend/hibernate
+      sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target 2>/dev/null || true
+REMOTE
+      echo "  $host ($spuser) : OK"
+    else
+      echo "  $host ($spuser) : FAILED"
+    fi
+  done
+}
+
 open_all() {
+  disable_sleep
+  echo ""
   echo "Opening ShowPulse on all agents (http://${SERVER}:${PORT})"
   for entry in "${AGENTS[@]}"; do
     IFS='|' read -r host user spuser <<< "$entry"
@@ -51,6 +79,7 @@ open_all() {
 }
 
 case "${1:-}" in
-  --check) check ;;
-  *)       open_all ;;
+  --check)    check ;;
+  --no-sleep) disable_sleep ;;
+  *)          open_all ;;
 esac
