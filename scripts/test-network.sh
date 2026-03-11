@@ -54,6 +54,9 @@ disable_sleep() {
       # Connect to the real user D-Bus session (Linux Mint / Cinnamon)
       export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 
+      # Kill stale dconf-service instances (they can silently eat writes)
+      killall dconf-service 2>/dev/null || true
+
       # Disable Cinnamon screensaver activation and lock
       gsettings set org.cinnamon.desktop.screensaver idle-activation-enabled false 2>/dev/null || true
       gsettings set org.cinnamon.desktop.screensaver lock-enabled false 2>/dev/null || true
@@ -67,8 +70,8 @@ disable_sleep() {
       gsettings set org.cinnamon.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing' 2>/dev/null || true
       gsettings set org.cinnamon.settings-daemon.plugins.power sleep-inactive-battery-type 'nothing' 2>/dev/null || true
 
-      # Kill cinnamon-screensaver if running (it respawns but picks up new settings)
-      killall cinnamon-screensaver 2>/dev/null || true
+      # Kill cinnamon-screensaver so it respawns with new settings
+      kill -9 $(pgrep -f cinnamon-screensaver) 2>/dev/null || true
 
       # Prevent systemd suspend/hibernate
       sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target 2>/dev/null || true
