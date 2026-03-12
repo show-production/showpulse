@@ -359,6 +359,18 @@ All vanilla JS, zero external dependencies.
 
 ---
 
+## Phase 23: Session Persistence, Tab Persistence & Crew Panel -- Done
+**Goal:** Production reliability improvements and Manager+ crew visibility.
+
+1. **Session persistence**: `Session.created_at` changed from `tokio::time::Instant` to `u64` Unix epoch for JSON serialization. `SessionStore` gains optional `Arc<CueStore>` reference for auto-persisting to `ShowData.sessions` on every mutation. Sessions survive server restarts — no more forced re-login.
+2. **Tab persistence**: Active tab saved to `localStorage('showpulse-tab')` on switch, restored on page load via `switchTab()`.
+3. **Merged crew + department panel**: Department filters removed from sidebar as a separate section. Crew status panel (`GET /api/crew/status`) now shows department names as clickable cue filters (reusing `toggleDeptFilter()`/`clearDeptFilters()`). Filtered-out departments dim to 0.35 opacity. "All" button resets filters.
+4. **Pinned sidebar**: For Manager+ on screens ≥1200px, sidebar switches from `position: fixed` overlay to `position: relative` flex member via `.pinned` CSS class. `#view-show.has-pinned-sidebar` enables flex layout. Sidebar backdrop and toggle button hidden when pinned.
+
+**Key files:** `src/auth.rs` (Session serialization, SessionStore persistence), `src/cue/store.rs` (load_sessions/save_sessions), `static/js/auth.js` (applyRole pinning, renderCrewPanel with dept filters), `static/js/ui-helpers.js` (switchTab), `static/js/show.js` (renderDeptFilters delegates to loadCrewStatus), `static/css/show.css` (pinned sidebar media query, crew-dept-dimmed/all styles)
+
+---
+
 ## Phase 13: Nice-to-haves (LOW PRIORITY)
 
 | Feature | Description | Status |
@@ -376,6 +388,8 @@ All vanilla JS, zero external dependencies.
 | **Admin dashboard** | Live connected users panel with auth status, timer lock, online duration | Done |
 | **WS client cleanup** | Immediate stale connection removal on disconnect (tokio::select!) | Done |
 | **Session persistence** | Sessions survive server restart — stored in `ShowData.sessions` (JSON file) | Done |
+| **Tab persistence** | Active tab saved to localStorage, restored on refresh | Done |
+| **Pinned sidebar** | Sidebar auto-pins open for Manager+ on wide screens (≥1200px), merged crew status + department filtering | Done |
 
 ---
 
