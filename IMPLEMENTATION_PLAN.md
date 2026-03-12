@@ -1,6 +1,26 @@
-# ShowPulse — Implementation Plan
+# ShowPulse — Implementation Plan & History
 
-## Architecture Overview
+**Purpose:** Original design spec and execution history. All 23 phases are complete.
+For the forward-looking roadmap, see [COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md) Section 9.
+For current architecture and API reference, see [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
+
+**Repository:** https://github.com/show-production/showpulse
+
+---
+
+## Table of Contents
+
+1. [Original Design Spec](#original-design-spec) — what we planned to build
+2. [Execution Summary](#execution-summary) — milestone table
+3. [Phase History](#phase-history) — detailed narrative of each phase as built
+
+---
+
+## Original Design Spec
+
+The following sections preserve the original design intent from before implementation. The actual implementation follows this closely, with deviations noted in the milestone table.
+
+### Architecture
 
 ```
 +-----------------------------------------------------+
@@ -31,399 +51,277 @@
               +-------------------------------+
 ```
 
----
+### Phase 1: Timecode Core (designed)
 
-## Phase 1: Project Scaffolding & Timecode Core
+- **SMPTE LTC:** `cpal` crate for audio capture. LTC bit decoding from audio stream (80-bit LTC frame). Parse hours, minutes, seconds, frames.
+- **MIDI MTC:** `midir` crate for MIDI input. Parse MTC Quarter Frame messages (F1 xx) and Full Frame messages (F0 7F ... F7). Reconstruct full timecode from quarter-frame nibbles.
+- **Shared timecode state:** `tokio::watch::channel` — single source of truth for "current show time."
 
-### 1.1 Backend — Rust project setup
-- **Framework:** Axum (async HTTP + WebSocket support, Tokio-based)
-- **Project structure:**
-  ```
-  showpulse/
-  ├── Cargo.toml
-  ├── src/
-  │   ├── main.rs              # Entry point, server startup
-  │   ├── config.rs            # Runtime configuration (port, audio device, MIDI device)
-  │   ├── lib.rs               # AppState, api_router(), module exports
-  │   ├── auth.rs              # User, Role, SessionStore, timer lock, middleware
-  │   ├── timecode/
-  │   │   ├── mod.rs           # TimecodeManager (source switching)
-  │   │   ├── types.rs         # Timecode struct (HH:MM:SS:FF), frame rates
-  │   │   ├── ltc.rs           # SMPTE LTC decoder (audio input)
-  │   │   ├── mtc.rs           # MIDI MTC decoder (MIDI input)
-  │   │   └── generator.rs     # Internal timecode generator/emulator
-  │   ├── cue/
-  │   │   ├── mod.rs
-  │   │   ├── types.rs         # Cue, Department, Act, ShowData, CueState models
-  │   │   └── store.rs         # In-memory cue store + JSON file persistence
-  │   ├── engine/
-  │   │   ├── mod.rs
-  │   │   └── countdown.rs     # Compares current timecode to cue list, computes countdowns
-  │   ├── ws/
-  │   │   ├── mod.rs
-  │   │   └── hub.rs           # WebSocket connection manager, broadcast
-  │   └── api/
-  │       ├── mod.rs
-  │       ├── acts.rs           # Act CRUD + shift
-  │       ├── cues.rs           # Cue CRUD + bulk import
-  │       ├── departments.rs    # Department CRUD
-  │       ├── generator.rs      # Generator transport controls
-  │       ├── ltc.rs            # LTC device management
-  │       ├── mtc.rs            # MTC port management
-  │       ├── qr.rs             # QR code generation
-  │       ├── show.rs           # Show name get/set
-  │       ├── timecode.rs       # Timecode status + source switching
-  │       ├── timer_lock.rs     # Timer lock acquire/release/status
-  │       └── users.rs          # User CRUD (Admin only)
-  ├── static/                   # Frontend (vanilla HTML/CSS/JS, served by backend)
-  │   ├── index.html
-  │   ├── css/
-  │   │   ├── variables.css     # CSS custom properties (colors, sizes, radii)
-  │   │   ├── base.css          # Reset, body, scrollbar, utility classes
-  │   │   ├── shell.css         # Navbar, sidebar, tabs, toast, loading
-  │   │   ├── show.css          # Flow cards, timer, Ready/Go, floating controls
-  │   │   ├── manage.css        # Editor tab styles (cue list, timeline, drag, bulk ops)
-  │   │   ├── settings.css      # Settings form, user panel
-  │   │   └── modals.css        # Modal overlays
-  │   └── js/
-  │       ├── state.js          # Constants, global state, DOM cache, shared helpers
-  │       ├── api.js            # fetch wrapper, WebSocket, polling fallback
-  │       ├── auth.js           # Login, role gating, user management, timer lock
-  │       ├── show.js           # Flow view rendering, DOM diffing, act grouping
-  │       ├── manage.js         # Editor tab: cue list, timeline, drag, inline edit, bulk ops, duplicate
-  │       ├── settings.js       # Settings form, theme, device selectors
-  │       ├── import-export.js  # CSV/JSON import, show export/import
-  │       └── ui-helpers.js     # Tabs, sidebar, modals, toasts, init()
-  └── tests/
-      └── api.rs                # Integration tests for REST endpoints
-  ```
+### Phase 1 (cont.): Timecode Generator (designed)
 
-### 1.2 Timecode input
-- **SMPTE LTC:** Use `cpal` crate for audio capture. Implement LTC bit decoding from the audio stream (80-bit LTC frame). Parse hours, minutes, seconds, frames.
-- **MIDI MTC:** Use `midir` crate for MIDI input. Parse MTC Quarter Frame messages (F1 xx) and Full Frame messages (F0 7F ... F7). Reconstruct full timecode from quarter-frame nibbles.
-- **Shared timecode state:** An `Arc<AtomicTimecode>` or `tokio::watch::channel` that all timecode sources write to and the engine reads from. Single source of truth for "current show time."
-
-### 1.3 Timecode Generator / Emulator
-A built-in software timecode source that eliminates the need for external LTC/MTC hardware. Essential for rehearsals, programming, testing, and venues without timecode infrastructure.
-
-#### Modes
 | Mode | Description |
 |------|-------------|
-| **Freerun** | Starts from a configurable start time (default `00:00:00:00`), counts up in real-time at the selected frame rate. Behaves like a stopwatch synced to wall clock. |
-| **Countdown** | Counts down from a specified duration to `00:00:00:00`, then optionally stops or loops. Useful for intermission timers. |
-| **Cue-to-cue jump** | Operator jumps directly to a timecode position (e.g., 5 seconds before a specific cue) for rehearsing individual cues without playing through the entire show. |
-| **Clock (time-of-day)** | Uses the system clock as timecode — maps wall-clock HH:MM:SS to timecode HH:MM:SS:00. For shows triggered by real time rather than a timeline. |
-| **Loop** | Plays a configurable timecode range on repeat (e.g., `01:00:00:00` to `01:05:00:00`). For rehearsing a specific section. |
+| **Freerun** | Starts from configurable start time, counts up at selected frame rate |
+| **Countdown** | Counts down from specified duration to 00:00:00:00 |
+| **Clock** | Uses system clock as timecode — maps wall-clock HH:MM:SS to timecode |
+| **Loop** | Plays a configurable timecode range on repeat |
 
-#### Generator internals
-```rust
-struct TimecodeGenerator {
-    mode: GeneratorMode,
-    frame_rate: FrameRate,       // 24, 25, 29.97df, 30
-    state: GeneratorState,       // stopped, running, paused
-    start_tc: Timecode,          // starting position
-    current_tc: Timecode,        // current position
-    loop_in: Option<Timecode>,   // loop start point
-    loop_out: Option<Timecode>,  // loop end point
-    speed: f64,                  // playback rate (1.0 = realtime, 0.5 = half, 2.0 = double)
-}
+Generator internals: Tokio task advancing current_tc based on elapsed wall-clock time. Variable speed (0.25x-4x). REST API for play/pause/stop/goto. Source switching (LTC/MTC/Generator) via API.
 
-enum GeneratorMode {
-    Freerun,
-    Countdown { duration: Timecode },
-    ClockSync,
-    Loop { start: Timecode, end: Timecode },
-}
+### Phase 2: Cue Management (designed)
 
-enum GeneratorState {
-    Stopped,
-    Running,
-    Paused,
-}
-```
+Data model: Department (id, name, color), Cue (id, department_id, label, trigger_tc, warn_seconds, notes), Act (id, name, sort_order). JSON file persistence (`showpulse-data.json`). Full CRUD API for departments, cues, acts.
 
-- Runs as a Tokio task, advancing `current_tc` based on elapsed wall-clock time (using `tokio::time::Instant` for drift-free timing).
-- Writes to the same shared timecode state as LTC/MTC decoders.
-- Frame-accurate: advances exactly one frame per frame period (e.g., 33.33ms at 30fps).
-- Variable speed playback for fast-forwarding through a show timeline.
+### Phase 3: Countdown Engine & WebSocket (designed)
 
-#### Timecode source selection
-Only one timecode source is active at a time. Selectable via API and admin UI:
-```
-Active source: [ LTC ] [ MTC ] [ Generator ]  (radio-button style)
-```
-When switching sources, the engine seamlessly reads from the new source on the next tick. No restart required.
+10Hz engine loop: read current timecode → compute time_remaining per cue → determine state (upcoming/warning/go/active/passed) → build per-department messages → broadcast via WebSocket. Clients subscribe to departments on connect.
 
-#### REST API additions
-| Method | Endpoint                          | Purpose                              |
-|--------|-----------------------------------|--------------------------------------|
-| GET    | `/api/generator`                  | Get generator state and config       |
-| PUT    | `/api/generator`                  | Update generator config (mode, frame rate, speed, loop points) |
-| POST   | `/api/generator/play`             | Start / resume playback              |
-| POST   | `/api/generator/pause`            | Pause (hold current TC position)     |
-| POST   | `/api/generator/stop`             | Stop and reset to start position     |
-| POST   | `/api/generator/goto`             | Jump to a specific timecode position |
-| PUT    | `/api/timecode/source`            | Switch active source (ltc / mtc / generator) |
+### Phase 4: Frontend — Crew View (designed)
 
-#### Admin UI — Generator Controls
-Transport-style controls on the admin page:
-- **Play / Pause / Stop** buttons.
-- **Timecode position display** — click to edit and jump to a position.
-- **Frame rate selector** — dropdown for 24/25/29.97df/30.
-- **Speed slider** — 0.25x to 4x, with a "1x" snap detent.
-- **Mode selector** — freerun / countdown / clock / loop.
-- **Loop in/out** — set range visually or by entering timecode values.
-- **Jump-to-cue** — dropdown of all cues; selecting one seeks to `cue.trigger_tc - warn_seconds`.
-- **Source selector** — switch between LTC, MTC, and Generator.
+Vanilla HTML/CSS/JS (no framework, no build step). Dark theme. Three tabs: Show (crew countdown view), Editor (cue management), Settings (timecode config). Auto-reconnect WebSocket with visual indicator.
 
-### 1.4 Deliverable
-- Server starts, opens audio/MIDI device, decodes timecode, logs it to console.
-- Internal timecode generator runs independently of hardware.
-- `GET /api/timecode` returns current timecode as JSON regardless of source.
-- `GET /api/generator` returns generator state.
+### Phase 5: Admin & Polish (designed)
+
+Multi-show support, print view, QR onboarding, generator presets.
 
 ---
 
-## Phase 2: Cue Management (Backend)
+## Execution Summary
 
-### 2.1 Data model
-```rust
-struct Department {
-    id: Uuid,
-    name: String,         // e.g. "Lighting", "Sound", "Pyro"
-    color: String,        // hex color for UI
-}
-
-struct Cue {
-    id: Uuid,
-    department_id: Uuid,
-    label: String,        // e.g. "LX Cue 42"
-    trigger_tc: Timecode, // timecode when this cue fires
-    warn_seconds: u32,    // how many seconds before to start countdown (default 30)
-    notes: String,
-}
-
-struct Act {
-    id: Uuid,
-    name: String,         // e.g. "Act 1", "Intermission"
-    sort_order: u32,
-}
-
-struct CueList {
-    departments: Vec<Department>,
-    cues: Vec<Cue>,       // sorted by trigger_tc
-    acts: Vec<Act>,       // sorted by sort_order
-}
-```
-
-### 2.2 REST API
-| Method | Endpoint                        | Purpose                        |
-|--------|---------------------------------|--------------------------------|
-| GET    | `/api/departments`              | List all departments           |
-| POST   | `/api/departments`              | Create department              |
-| PUT    | `/api/departments/:id`          | Update department              |
-| DELETE | `/api/departments/:id`          | Delete department + its cues   |
-| GET    | `/api/cues`                     | List all cues (filter by dept) |
-| GET    | `/api/cues/:id`                 | Get single cue                 |
-| POST   | `/api/cues`                     | Create cue                     |
-| PUT    | `/api/cues/:id`                 | Update cue                     |
-| DELETE | `/api/cues/:id`                 | Delete cue                     |
-| POST   | `/api/cues/import`              | Import cues from CSV/JSON file |
-| GET    | `/api/timecode`                 | Current timecode + status      |
-| GET    | `/api/acts`                     | List acts                      |
-| POST   | `/api/acts`                     | Create act                     |
-| PUT    | `/api/acts/:id`                 | Update act                     |
-| DELETE | `/api/acts/:id`                 | Delete act                     |
-| POST   | `/api/acts/:id/shift`           | Shift all cues in act          |
-
-### 2.3 Persistence
-- **JSON file** on disk (`showpulse-data.json`). Loaded at startup, saved on mutation.
-- No database dependency — keeps deployment simple for live production environments.
-- Optional: support loading/saving named show files.
-
-### 2.4 Deliverable
-- Full CRUD for departments, cues, and acts via REST API.
-- Data persists across restarts.
-
----
-
-## Phase 3: Countdown Engine & WebSocket Broadcast
-
-### 3.1 Engine loop
-- Runs on a dedicated Tokio task at ~10Hz (every ~100ms).
-- Each tick:
-  1. Read current timecode from the shared state.
-  2. For each cue, compute `time_remaining = cue.trigger_tc - current_tc`.
-  3. Determine cue state: `upcoming | warning | go | active | passed`.
-  4. Build a per-department message with the relevant cues and countdowns.
-  5. Broadcast to connected WebSocket clients (filtered by department subscription).
-  6. Cache cue states and only recompute on second boundaries (optimization).
-
-### 3.2 WebSocket protocol
-- **Endpoint:** `ws://host:port/ws`
-- **Client subscribes** on connect by sending: `{ "subscribe": ["dept-id-1", "dept-id-2"] }` or `{ "subscribe": "all" }`
-- **Server pushes** (every tick or on change):
-  ```json
-  {
-    "timecode": "01:23:45:12",
-    "frame_rate": 30,
-    "status": "running",
-    "cues": [
-      {
-        "id": "...",
-        "department": "Lighting",
-        "label": "LX Cue 42",
-        "state": "warning",
-        "countdown_sec": 12.4,
-        "elapsed_sec": null,
-        "trigger_tc": "01:23:57:00"
-      }
-    ]
-  }
-  ```
-- **Optimization:** Only send updates when state changes (countdown crosses a second boundary, cue state changes), not every tick.
-
-### 3.3 Deliverable
-- WebSocket clients receive live countdown data.
-- Countdown accuracy within 1 frame of timecode.
-
----
-
-## Phase 4: Frontend — Crew View
-
-### 4.1 Tech stack
-- **Framework:** Vanilla HTML/CSS/JS — no build step, no framework. Modular JS files loaded in sequence.
-- **Styling:** CSS with custom properties for department colors. Dark theme default (typical backstage environment).
-- **Serving:** Static files served by the Axum backend via `tower-http::services::ServeDir`.
-
-### 4.2 Pages / Views
-
-#### Show View (default tab)
-- **Primary display:** Large centered timecode with transport controls below.
-- **Passed cues:** Count badge with expandable dropdown.
-- **Active cue strips:** Compact rows with department color + checkmark.
-- **Ready/Go zone:** Dedicated countdown with traffic-light colors (READY -> 3 -> 2 -> 1 -> GO!).
-- **Coming cues:** Scrollable list with act grouping, collapsible groups, floating controls.
-- Department filter sidebar, DOM-diffed cards, keyboard shortcuts.
-- Auto-reconnect on WebSocket disconnect (with visual indicator).
-
-#### Editor View
-- Act-grouped cue list with collapsible headers, drag-and-drop, inline quick edit, multi-select with bulk ops.
-- Visual timeline strip with playhead and department-colored markers.
-- Cue and act duplication. Department CRUD, Act CRUD, CSV/JSON bulk import.
-
-#### Settings View
-- Timecode source/FPS/mode config, device selectors, theme customization, show name, export/import.
-
-### 4.3 Deliverable
-- Crew can open `http://<host>:8080` on their phone and see live countdowns.
-- Admin can manage show data from a browser.
-
----
-
-## Phase 5: Frontend — Admin & Polish
-
-### 5.1 Additional features
-- **Multi-show support:** Save/load different show files.
-- **Cue list print view:** Printable cue sheet for paper backup.
-- **QR code on admin page:** For easy crew onboarding — scan QR to open crew view URL.
-- **Generator presets:** Save/load named generator configurations for quick recall during tech rehearsals.
-
-### 5.2 Deliverable
-- Production-ready admin interface.
-- Smooth crew onboarding workflow.
-
----
-
-## Security Plan
-
-### Network-level assumptions
-ShowPulse runs on a **local, trusted WiFi network** (production VLAN or dedicated show network). It does NOT face the public internet. Security is designed accordingly — defense-in-depth without the overhead of a full internet-facing app.
-
-### Authentication & Authorization
-
-| Concern | Approach |
-|---------|----------|
-| **User-based access** | 5-level role system: Viewer, CrewLead, Operator, Manager, Admin. Users authenticate with name+PIN. Admin user auto-seeded from `SHOWPULSE_PIN` env var. No users configured = open access. |
-| **Session management** | Opaque tokens stored in `SessionStore`. Tokens via Bearer header or `?token=` query param. |
-| **Role gating** | `require_role()` guard checks minimum role level. Viewer/CrewLead: Show only (dept-filtered). Operator: +Manage. Manager: +Settings + timer lock. Admin: +User CRUD. |
-| **Timer lock** | Exclusive timer control for Managers. Admin bypasses lock. `POST/DELETE /api/timer-lock`. |
-| **Rate limiting** | Done: 5 login attempts per 60s per IP via tower middleware. |
-
-### Input Validation
-- All REST inputs validated with `serde` deserialization + explicit validation (timecode format, string lengths, UUID format).
-- Reject oversized request bodies (max 1MB).
-- String clamping, color hex validation, post_wait clamping in CueStore.
-
-### WebSocket Security
-- WebSocket connections are read-only for crew — server pushes data, ignores any unexpected client messages beyond the initial subscribe.
-- Connection limit: `MAX_WS_CLIENTS = 100`.
-- Heartbeat/ping-pong with 30s timeout to clean up stale connections.
-
-### Data Security
-- Show data files stored on local disk with standard filesystem permissions.
-- No secrets in the show data file — PINs stored alongside users in the data file.
-- No telemetry, no external network calls, no phoning home.
-
-### CORS & Headers
-- CORS restricted to same-origin (frontend is served by the same backend).
-- Standard security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`.
-- `Content-Security-Policy` header implemented.
-
-### Threat Model Summary
-| Threat | Mitigation |
-|--------|-----------|
-| Unauthorized cue editing | Role-based auth (Operator+ required) |
-| Unauthorized timer control | Timer lock + Manager+ role |
-| Brute-force PIN | Rate limiting on login (5/60s per IP) |
-| XSS via cue data | Input sanitization, HTML escaping |
-| WebSocket flooding | Client limit (100), heartbeat cleanup |
-| Data loss | JSON file persistence, manual backup/export |
-| Network sniffing | Acceptable risk on local production network |
-
----
-
-## Tech Stack Summary
-
-| Layer | Technology | Rationale |
-|-------|-----------|-----------|
-| Backend runtime | **Rust + Tokio** | Low latency, single binary deployment, no runtime deps |
-| HTTP framework | **Axum 0.7** | First-class WebSocket support, tower middleware ecosystem |
-| Audio input | **cpal** | Cross-platform audio capture |
-| MIDI input | **midir** | Cross-platform MIDI |
-| Serialization | **serde + serde_json** | Standard Rust JSON handling |
-| Frontend | **Vanilla HTML/CSS/JS** | No build step, modular files, simple deployment |
-| QR codes | **qrcode** | SVG QR generation for crew onboarding |
-
----
-
-## Milestone Sequence
+All milestones complete. Original design was followed closely. Key deviation: vanilla JS instead of originally-considered Vite/Preact/Solid — simplified deployment to true single-binary with no build step.
 
 | # | Milestone | Key Result | Status |
 |---|-----------|-----------|--------|
-| 1 | Timecode core | Server reads LTC/MTC, runs internal TC generator, exposes `/api/timecode` | **Done** |
-| 2 | Cue management | CRUD API + JSON persistence working | **Done** |
-| 3 | Countdown engine | WebSocket broadcasts live countdowns | **Done** |
-| 4 | Crew frontend | Phones display countdowns from WebSocket | **Done** |
-| 5 | Admin frontend | Browser-based cue/department management | **Done** |
-| 6 | UI/UX polish | 15 UX fixes + 5 user feedback items (sticky TC, Ready/Go, cue numbers, per-dept state) | **Done** |
-| 7 | Cue import | Bulk JSON/CSV import with validation, column aliases, dept name resolution | **Done** |
-| 8 | Display overhaul | Dominant TC, collapsible transport, DOM diffing, countdown-focused cards | **Done** |
-| 9 | Dashboard v2 | 5-section layout, stacked decks, animated Ready/Go zone, cue navigation, Prev/Next, scroll-fold | **Done** |
-| 10 | Testing | 73 unit & integration tests for timecode, store, API endpoints | **Done** |
-| 10.5 | Cue field expansion | Duration, armed, color, continue_mode, post_wait on Cue | **Done** |
-| 10.6 | Go state + ReadyGo polish | Backend CueState::Go, traffic-light text, progress bar 0-100%, smooth DOM transitions | **Done** |
-| 11 | Authentication | PIN-based auth, SessionStore, require_auth middleware | **Done** |
-| 12 | Security hardening | CORS, body limit, concurrency limit, security headers, input validation | **Done** |
-| 14 | User management | 5 roles (Viewer-Admin), user CRUD, timer lock, role-based UI gating | **Done** |
-| 15 | Acts & show name | Act CRUD, act grouping in flow view, collapsible groups, show name, navbar rebuild | **Done** |
-| 16 | Floating controls | Flow controls pill (Now/Auto/Collapse/Expand), act header polish | **Done** |
-| 17 | Script maintenance | -501 lines (-18%), CRUD helpers, module cleanup, JSDoc, dead code removal | **Done** |
-| 18 | Visual polish | T-/T+ countdown, warning easing, vivid dept colors | **Done** |
-| 19 | Editor tab overhaul | Act-grouped cue list, drag-and-drop, inline edit, multi-select bulk ops, timeline strip, cue/act duplication | **Done** |
-| 13 | Nice-to-haves | Multi-show, generator presets, print view, portable dist | Planned |
+| 1 | Timecode core | Server reads LTC/MTC, runs internal TC generator, exposes `/api/timecode` | Done |
+| 2 | Cue management | CRUD API + JSON persistence | Done |
+| 3 | Countdown engine | WebSocket broadcasts live countdowns at 10Hz | Done |
+| 4 | Crew frontend | Phones display countdowns from WebSocket | Done |
+| 5 | Admin frontend | Browser-based cue/department management | Done |
+| 6 | UI/UX polish | 15 UX fixes + 5 user feedback items | Done |
+| 7 | Cue import | Bulk JSON/CSV import with validation | Done |
+| 8 | Display overhaul | Dominant TC, DOM diffing, countdown-focused cards | Done |
+| 9 | Dashboard v2 | 5-section layout, Ready/Go zone, cue navigation, scroll-fold | Done |
+| 10 | Testing | 73 unit & integration tests | Done |
+| 10.5 | Cue field expansion | Duration, armed, color, continue_mode, post_wait | Done |
+| 10.6 | Go state polish | Backend CueState::Go, traffic-light colors, progress bar | Done |
+| 11 | Authentication | PIN-based auth, SessionStore, middleware | Done |
+| 12 | Security hardening | CORS, body/concurrency limits, CSP, rate limiting | Done |
+| 13 | Nice-to-haves | QR, wake lock, portable dist, rate limiting, CSP, URL auto-login, admin dashboard, WS cleanup, session persistence, tab persistence, pinned sidebar | Done (11/15) |
+| 14 | User management | 5 roles (Viewer→Admin), timer lock, role-based UI | Done |
+| 15 | Acts & show name | Act CRUD, act grouping, show name, navbar rebuild | Done |
+| 16 | Flow controls | Now/Auto/Collapse/Expand, act header polish | Done |
+| 17 | Script maintenance | -501 lines (-18%), CRUD helpers, JSDoc | Done |
+| 18 | Visual polish | T-/T+ countdown, warning easing, vivid dept colors | Done |
+| 19 | Editor overhaul | Drag-and-drop, inline edit, multi-select, timeline strip, duplication | Done |
+| 20 | Timeline + branding | Zoom/pan, minimap, tooltips, selection sync, SVG branding | Done |
+| 21 | i18n | Hebrew/RTL, i18n engine, ~120 keys, data-i18n attributes | Done |
+| 22 | Mobile responsive | PWA meta, touch targets, full-screen modals, hover:none | Done |
+| 23 | Session/tab/crew panel | Persistent sessions, tab persistence, merged crew+dept panel, pinned sidebar | Done |
 
-> **Note:** Milestones 1-19 (except 13) are fully implemented. The actual implementation uses vanilla HTML/CSS/JS
-> (modular files in `static/`) instead of Vite/Preact/Solid as originally planned — this simplifies
-> deployment to a true single-binary with no build step. LTC uses `cpal` and MTC uses `midir` as
-> specified. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the current roadmap.
+**Remaining nice-to-haves** (4 items not yet implemented): multi-show support, generator presets, print view, audio/vibration alerts. These are now part of the strategic roadmap in [COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md) Section 9.
+
+---
+
+## Phase History
+
+Detailed narrative of each phase as actually implemented.
+
+### Phases 1-2: LTC & MTC Decoding
+
+**Phase 1 — LTC Audio Decoding:** cpal-based decoder with bi-phase zero-crossing detection, 80-bit frame extraction, BCD parsing, sync word (0x3FFD). Dedicated OS thread. API: `GET /api/ltc/devices`, `PUT /api/ltc/device`, `POST /api/ltc/stop`.
+
+**Phase 2 — MTC MIDI Decoding:** midir-based decoder with quarter-frame accumulation (8 messages → full TC), full-frame SysEx parsing. Dedicated OS thread. API: `GET /api/mtc/devices`, `PUT /api/mtc/device`, `POST /api/mtc/stop`.
+
+### Phase 3: UI/UX Improvements (15 items)
+
+Disconnection banner, keyboard hints, confirm modals replacing native `confirm()`, "Lead Time" column rename, speed suffix, data panel separation, `setSource()` fix, table scroll, touch targets, loading spinner, toast notifications, passed cues toggle, TC size label, live color preview, favicon.
+
+### Phase 4: CSV/JSON Cue Import
+
+`POST /api/cues/import` bulk endpoint that replaces all existing cues, department validation, single persist. Frontend CSV parser with column aliases, JSON array/wrapper support, import button in Editor view. `importShow()` deletes all existing departments+cues before importing new ones.
+
+### Phase 5: User Feedback Items
+
+1. Sticky timecode display + transport at top of Show view
+2. Per-department cue state: active until replaced by next same-department cue (rewrote countdown engine)
+3. Ready/Go countdown visualization with consistent layout (no size jumps between states)
+4. Cue numbering: auto-generated (Q1, Q2...), displayed in cue cards, manage table, Ready/Go, editable in modal
+5. Stable cue ordering: cues stay in timecode order, state changes expressed through color/border only (no position shifts)
+
+### Phase 6: Display Overhaul (Operator Focus)
+
+1. Dominant timecode: 8rem default, reduced padding, readable across the room
+2. Transport hidden behind toggle: Show view is a read-only cue monitor by default
+3. Countdown dominant on cue cards: 1.4rem bold countdown, dimmed 0.7rem trigger TC
+4. DOM diffing: cue cards updated in place by ID, no innerHTML replacement, smooth CSS transitions
+5. Keyboard hints removed from sticky header to reclaim vertical space
+
+### Phase 7: Dashboard Layout Overhaul v2
+
+1. 5-section vertical layout: stacked passed deck → stacked triggered deck → timer+controls → Ready/Go zone → coming cues
+2. Stacked deck containers: cards overlap with negative margins (~8px edge visible), hover to expand, fold on scroll
+3. Transport controls split into 2 rows: Prev/Play/Pause/Stop/Next + Goto input below
+4. Dedicated animated Ready/Go zone: READY → 3 → 2 → 1 → GO! with CSS pop/shake/flash animations
+5. Click-to-goto: clicking any cue card loads its timecode into the Goto input
+6. Prev/Next cue navigation buttons step through cues by timecode order
+7. Scroll-fold: above-timer sections collapse to thin bars when scrolling down in upcoming cues
+8. New keyboard shortcuts: N (next cue), B (previous cue)
+
+### Phase 8: Show View Clarity Redesign
+
+1. Replaced stacked passed cue deck with count badge ("N passed") + expandable dropdown
+2. Replaced stacked triggered cue deck with compact active strips (28px rows with dept-color border + checkmark)
+3. Unified all cue card sizing: same padding and font sizes for all tiers
+4. Tier differentiation is color-only: border color, text color, box-shadow glow, opacity — no size changes
+5. Eliminates all layout shifts when cues change state during live show
+6. Traffic-light Ready/Go countdown colors: red (READY) → red-orange (3) → orange (2) → yellow-green (1) → green (GO!)
+7. Timer controls moved below timer in centered row
+8. Scroll-fold collapses above-timer sections (max-height:0 + opacity transition)
+
+### Phase 9: Ready/Go & Broadcast Polish
+
+1. Ready/Go two-element countdown: READY label stays visible while 3→2→1 digits appear alongside
+2. GO! shows department name: "GO! — Sound" in green
+3. Traffic-light colors on READY text, digits, and progress bar
+4. Fixed-height countdown row prevents layout shifts
+5. Frame-accurate timecode: countdown engine broadcasts every 100ms tick, cue states cached and recomputed on second change
+6. Scroll-fold space collapse: max-height:0 + overflow:hidden transition
+7. Backend-driven `CueState::Go`: engine emits Go state for 2s after trigger
+8. Progress bar fills 0%→100% as cue approaches trigger
+9. In-place DOM updates during 3-2-1 countdown preserve CSS transitions
+
+### Phase 10: Unit & Integration Tests
+
+73 tests implemented:
+- Unit tests in `src/timecode/types.rs` (34): round-trip frame math, drop-frame edge cases, parse/display, add_frames, to_seconds_f64
+- Unit tests in `src/cue/store.rs` (24): CRUD, cascading delete, sorting, filtering, bulk import, cue numbers, persistence round-trip
+- Integration tests in `tests/api.rs` (15): HTTP endpoint tests for departments and cues CRUD, bulk import, status codes
+
+### Phase 10.5: Cue Field Expansion
+
+New fields on `Cue`: `duration` (Option\<u32\>), `armed` (bool), `color` (Option\<String\>), `continue_mode` (ContinueMode enum), `post_wait` (Option\<f64\>). Countdown engine: filters disarmed cues, duration-based Passed transition, elapsed_sec computation.
+
+### Phase 10.6: Backend-Driven Go State + ReadyGo Polish
+
+1. Backend Go state: `CueState::Go` emitted for 2s after trigger (`GO_HOLD_SECONDS`)
+2. Progress bar: fixed to fill 0%→100%
+3. Traffic-light READY text color follows same sequence as digits and progress bar
+4. Smooth DOM transitions: in-place updates preserve CSS transitions
+5. Frontend cleanup: removed `renderGoFlash()`, `readygoCueId`, `readygoGoTimer` globals
+
+### Phase 11: Authentication (superseded by Phase 14)
+
+Originally PIN-based, now replaced by user-based auth with 5 roles.
+- `require_auth` middleware: skips auth if no users configured, allows GET freely, protects POST/PUT/DELETE
+- Token via `Authorization: Bearer <token>` header or `?token=` query param
+- Config: `SHOWPULSE_PIN` env var seeds admin user on first run
+
+### Phase 12: Security Hardening
+
+- Security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Content-Security-Policy`
+- CORS: restricted to same-origin
+- Body limit: 1MB. Concurrency limit: 50. WebSocket client limit: 100
+- Rate limiting: 5 login attempts per 60s per IP
+- Input validation: string clamping, color hex validation, timecode range validation, post_wait clamping
+
+### Phase 14: User Management & Role-Based Access
+
+**Role Hierarchy:**
+
+| Role | Level | Show | Manage | Settings | Timer | Users |
+|------|-------|------|--------|----------|-------|-------|
+| Viewer | 1 | View (dept-filtered) | -- | -- | -- | -- |
+| Crew Lead | 2 | View (dept-filtered) | -- | -- | -- | -- |
+| Operator | 3 | View | Full | -- | -- | -- |
+| Manager | 4 | View | Full | Full | Lock required | -- |
+| Admin | 5 | View | Full | Full | Bypasses lock | Full |
+
+**Backend:** `Role` enum with `level()` helper. `User` struct with id, name, pin, role, departments. `TimerLock` for exclusive Manager control. `Session` struct with u64 Unix epoch `created_at`, serializable, persisted to `ShowData.sessions`.
+
+**Frontend:** Login overlay, role-based tab gating, transport hidden below Manager, timer lock UI, user management panel in Settings (Admin).
+
+**Migration:** `SHOWPULSE_PIN=xxxx` seeds admin user. No users = open access. `#[serde(default)]` for backwards compatibility.
+
+### Phase 15: Acts, Show Name & Navbar Rebuild
+
+**Acts:** `Act` struct with CRUD. Cues reference acts via optional `act_id`. Flow view groups by act with collapsible divider headers. Demo seed: 3 acts.
+
+**Show Name:** `GET/PUT /api/show/name`. Centered in navbar. Included in export/import.
+
+**Navbar:** Three-section flex layout: tabs | show name | nav-right (connection dot + user).
+
+### Phase 16: Flow Controls & Act Header Polish
+
+Auto-scroll (Auto) and jump-to-current (Now) buttons. Collapse All / Expand All. Controls in timer panel bottom row. Act header styling with colored separator lines. Keyboard shortcuts: A (auto-scroll), C (jump to current).
+
+### Phase 17: Script Maintenance
+
+Results: -501 lines (-18% total JS), zero new features.
+1. CRUD helpers (`apiSave`, `apiDelete`): eliminated 8 copy-paste patterns
+2. Module cleanup: merged `diffCueList()` into `diffCueListWithActs()`, split `updateFlowCard()` into 3 functions
+3. Dead code removal, error hardening, JSDoc on all functions
+
+### Phase 18: Visual Polish
+
+1. T- countdown always visible during warning/go states
+2. T+ elapsed time after trigger using `elapsed_sec` from WS broadcast
+3. Warning entry easing: CSS animation chain (`warn-enter` 0.6s + `warn-pulse` 1.5s infinite)
+4. Vivid department colors: per-element dimming, dept-bar and dept-dot stay full brightness
+
+### Phase 19: Editor Tab Overhaul (7 milestones)
+
+1. **Act-Grouped Cue List:** Collapsible headers with cue count and time span
+2. **Drag & Drop:** HTML5 DnD with grip handle, within/between acts, auto-timecode recalculation
+3. **Inline Quick Edit:** Double-click label/timecode/department/warning. Enter saves, Escape cancels
+4. **Multi-Select & Bulk Ops:** Checkbox + shift-click range. Floating action bar: move/duplicate/delete/arm/disarm
+5. **Visual Timeline Strip:** Act regions, department-colored markers, 5Hz playhead, click-to-scroll
+6. **Duplicate Cue:** One-click with TC+5s offset. Add-cue button on act headers
+7. **Duplicate Act:** Clone with all cues, time offset prompt
+
+### Phase 20: Timeline Editor + Branding + Polish
+
+**Timeline Editor:** Cursor-anchored zoom (0.8/1.25 factor), drag-to-pan, click-to-scrub, 10px minimap with viewport indicator, rich tooltips, two-way selection sync with cue list.
+
+**Branding:** Inline SVG favicon, login/loading logomarks with breathing animation, nav bar horizontal logo (39px), print report logos. All inlined for offline/single-binary compatibility.
+
+**UI Polish:** Reduced checkboxes, timeline scoping to Editor tab, show name centering, sidebar overlap fix, flow controls relocation, auth fix for open-access mode.
+
+**Data Generator:** `gen-rihanna.py` — 106-cue Rihanna concert (5 acts, 8 departments).
+
+### Phase 21: Hebrew / RTL Internationalization
+
+- i18n engine: `i18n.js` with `t(key, params)` lookup, `{param}` interpolation, `setLanguage()`, `applyLanguage()`
+- English and Hebrew dictionaries (~120 keys each). Language toggle in Settings
+- HTML `data-i18n` attributes on all 5 modals. `applyI18nToDOM()` scanner
+- ~100 hardcoded strings across 9 JS files replaced with `t()` calls
+- Native Hebrew speaker review. Ready/Go kept in English for all languages
+
+### Phase 22: Mobile-First Responsive Overhaul
+
+- PWA meta tags (theme-color, apple-mobile-web-app)
+- CSS variables: `--touch-min: 44px`, `--nav-height: 48px`
+- Nav: hide logo/auth at 640px, show name at 480px
+- Show view: 38px transport, stacked tc-left, full-width sidebar
+- Editor: 44px cue items, reduced timeline, bulk bar wrap
+- Modals: full-screen on phones, 44px footer buttons
+- Touch: `@media (hover: none)` reveals hover-only actions
+
+### Phase 23: Session Persistence, Tab Persistence & Crew Panel
+
+1. **Session persistence:** `Session.created_at` changed from `Instant` to `u64` Unix epoch. `SessionStore` with optional `CueStore` ref for auto-persisting to `ShowData.sessions`. Sessions survive server restarts.
+2. **Tab persistence:** Active tab saved to `localStorage('showpulse-tab')`, restored on page load via `switchTab()`.
+3. **Merged crew + department panel:** Crew status panel shows department names as clickable cue filters. Filtered-out departments dim to 0.35 opacity. "All" button resets.
+4. **Pinned sidebar:** Manager+ on ≥1200px screens gets sidebar pinned open (`position: relative` flex member). Backdrop and toggle hidden when pinned.
+
+---
+
+## Verification Checklist
+
+- [x] `cargo build` — compiles without errors
+- [x] `cargo test` — 73 tests pass
+- [x] Manual test: `cargo run` → browser at `http://localhost:8080`
+- [x] LTC: test with LTC audio from a generator app or DAW
+- [x] MTC: test with MIDI loopback or DAW sending MTC
+- [x] CSV import: test with 30-cue show file (`test-import-cues.csv`)
+- [x] JSON import: test with 30-cue show file (`test-import-show.json`)
+- [x] Each phase committed and pushed to GitHub

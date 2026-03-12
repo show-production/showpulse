@@ -49,9 +49,8 @@ Set `SHOWPULSE_PORT=4000` to change the port. See [Contributing](CONTRIBUTING.md
 
 - [Getting Started](GETTING_STARTED.md) — prerequisites, setup, usage guide
 - [Project Overview](PROJECT_OVERVIEW.md) — architecture, implementation status, API reference
-- [Implementation Plan](IMPLEMENTATION_PLAN.md) — original design spec and phases
-- [Next Steps](NEXT_IMPLEMENTATION_PLAN.md) — remaining work roadmap
-- [Competitive Analysis](COMPETITIVE_ANALYSIS.md) — market landscape, competitor profiles, strategic positioning
+- [Implementation Plan](IMPLEMENTATION_PLAN.md) — design spec, execution history, all 23 phases
+- [Competitive Analysis](COMPETITIVE_ANALYSIS.md) — market landscape, competitor profiles, strategic roadmap
 - [Contributing](CONTRIBUTING.md) — git workflow, coding standards, environment variables
 
 ## Tech Stack
@@ -67,4 +66,4 @@ Set `SHOWPULSE_PORT=4000` to change the port. See [Contributing](CONTRIBUTING.md
 
 ## Current Status
 
-All core features are complete and production-tested. Single 4.1 MB binary with all static files embedded via `rust-embed` — no external dependencies at runtime. LTC/MTC decoding, timecode generator, cue management with bulk import, per-department countdown engine with backend-driven Go state, act grouping, flow controls, Ready/Go countdown with traffic-light colors, clean dashboard with live admin panel (connected users, timer lock status), user-based authentication with 5 roles and persistent sessions (survive restarts), URL-param auto-login for kiosk/headless clients (`?user=Name&pin=1234`), QR onboarding, security hardening, rate-limited login, CSP headers, and 73 unit/integration tests. Editor tab with drag-and-drop, inline editing, multi-select bulk ops, interactive timeline editor, and cue/act duplication. Sidebar with merged crew status + department filtering panel — auto-pins for Manager+ on wide screens. Tab persistence across refreshes. Hebrew/RTL i18n, mobile-responsive, wake lock for crew devices. 44 REST API endpoints + WebSocket. Remaining nice-to-haves: multi-show support, generator presets, audio/vibration alerts. See [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for the roadmap.
+All core features are complete and production-tested. Single 4.1 MB binary with all static files embedded via `rust-embed` — no external dependencies at runtime. LTC/MTC decoding, timecode generator, cue management with bulk import, per-department countdown engine with backend-driven Go state, act grouping, flow controls, Ready/Go countdown with traffic-light colors, clean dashboard with live admin panel (connected users, timer lock status), user-based authentication with 5 roles and persistent sessions (survive restarts), URL-param auto-login for kiosk/headless clients (`?user=Name&pin=1234`), QR onboarding, security hardening, rate-limited login, CSP headers, and 73 unit/integration tests. Editor tab with drag-and-drop, inline editing, multi-select bulk ops, interactive timeline editor, and cue/act duplication. Sidebar with merged crew status + department filtering panel — auto-pins for Manager+ on wide screens. Tab persistence across refreshes. Hebrew/RTL i18n, mobile-responsive, wake lock for crew devices. 44 REST API endpoints + WebSocket. Remaining nice-to-haves: multi-show support, generator presets, audio/vibration alerts. See [COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md) for the strategic roadmap.
