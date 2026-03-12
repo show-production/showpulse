@@ -51,6 +51,7 @@ Set `SHOWPULSE_PORT=4000` to change the port. See [Contributing](CONTRIBUTING.md
 - [Project Overview](PROJECT_OVERVIEW.md) — architecture, implementation status, API reference
 - [Implementation Plan](IMPLEMENTATION_PLAN.md) — original design spec and phases
 - [Next Steps](NEXT_IMPLEMENTATION_PLAN.md) — remaining work roadmap
+- [Competitive Analysis](COMPETITIVE_ANALYSIS.md) — market landscape, competitor profiles, strategic positioning
 - [Contributing](CONTRIBUTING.md) — git workflow, coding standards, environment variables
 
 ## Tech Stack
