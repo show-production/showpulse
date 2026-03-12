@@ -131,12 +131,12 @@ Single-page app served from `static/index.html` with three tabs (Show, Editor, S
 |----------|-------|
 | Rust (`src/`) | ~4,640 |
 | Rust tests (`tests/`) | ~580 |
-| JavaScript (`static/js/`) | ~5,010 |
-| CSS (`static/css/`) | ~2,050 |
+| JavaScript (`static/js/`) | ~5,610 |
+| CSS (`static/css/`) | ~2,075 |
 
 Frontend JS modules (loaded in order): `state.js` -> `i18n.js` -> `api.js` -> `auth.js` -> `show.js` -> `manage.js` -> `timeline.js` -> `settings.js` -> `import-export.js` -> `ui-helpers.js`
 
-## API Endpoints (44 REST + WS)
+## API Endpoints (45 REST + WS)
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
