@@ -26,7 +26,8 @@
 7. [Market Gap Analysis](#7-market-gap-analysis)
 8. [How Productions Wire It Together](#8-how-productions-wire-it-together)
 9. [Strategic Implications for ShowPulse](#9-strategic-implications-for-showpulse)
-10. [Emerging Trends (2024-2026)](#10-emerging-trends-2024-2026)
+10. [Pricing Strategy & Sustainability](#10-pricing-strategy--sustainability)
+11. [Emerging Trends (2024-2026)](#11-emerging-trends-2024-2026)
 
 ---
 
@@ -110,7 +111,7 @@ These are primarily video content delivery systems that integrate with show cont
 
 Dominates touring concert video. Full SMPTE LTC and MTC chase, Art-Net timecode, OSC, MSC, MIDI transport control. Director/Actor/Understudy network architecture with automatic failover. Proprietary Windows hardware from EX (entry) to GX (flagship) servers.
 
-- **Deployments:** U2 Sphere Las Vegas, Beyonce, Billie Eilish tours
+- **Deployments:** U2 Sphere Las Vegas, Beyoncé, Billie Eilish tours
 - **Pricing:** Enterprise — hardware servers cost thousands to tens of thousands. Free Designer Starter software tier for learning.
 
 #### Green Hippo Hippotizer
@@ -120,9 +121,11 @@ SMPTE LTC and MTC playback synchronization with 16 synchronization channels (Syn
 - **Deployments:** Eurovision, Academy Awards, Super Bowl, Cirque du Soleil
 - **Platform:** Windows-only proprietary hardware
 
-#### Pandoras Box (transitioning from Christie to twoloox GmbH, October 2025)
+#### Pandoras Box (ownership transition in progress)
 
 LTC SMPTE I/O, MSC, Art-Net, sACN, NDI, Dante with sub-frame accuracy across servers. Windows-only, multi-display/projection focus.
+
+**Ownership note:** Pandoras Box is transitioning from Christie Digital to twoloox GmbH as of October 2025. Mid-transition ownership changes create buying risk for customers (uncertain roadmap, support continuity, licensing terms) and potential market opportunity for competitors in the media server space. Not directly relevant to ShowPulse's category but worth noting for productions evaluating their full toolchain.
 
 #### WATCHOUT (Dataton)
 
@@ -203,7 +206,9 @@ This is ShowPulse's primary competitive category. It is the most underserved seg
 
 Built for live broadcast and large-scale concerts. Combines timeline-based cue planning with full LTC timecode sync, distributing department-specific countdowns to crew via CueApp (iOS/Android). Camera operators see their shot countdowns. Pyro operators see their fire cues. Stage crew see their marks.
 
-**Protocols:** LTC, RS422 (vision switcher), OSC, GPI, MIDI
+**Timecode:** LTC input only — CuePilot's documentation and support articles consistently reference LTC as the sole timecode input method. MTC (MIDI Time Code) is not listed as a supported timecode source. A separate "MIDI Timecode Reader" hardware accessory is available, but this appears to be an LTC reader with MIDI connectivity, not native MTC decoding. MIDI is used for sending Note On/Off control messages on Vision Cues, not for timecode input. *(Source: [CuePilot Support — Working with Timecode](https://cuepilot.zendesk.com/hc/en-us/articles/360053009651), [CuePilot Hardware](https://www.cuepilot.com/en/hardware.html), [MIDI on Vision Cues](https://cuepilot.zendesk.com/hc/en-us/articles/360052624072), accessed March 2026.)*
+
+**Other protocols:** RS422 (vision switcher), OSC (send, custom schemas), GPI (send), MIDI (Note On/Off send on Vision Cues — control messages, not bidirectional transport or timecode)
 
 **CuePilot 7.0 (2024-2025) additions:**
 - **Notify Tracks** — specifically for non-camera departments (pyro, staging, automation)
@@ -217,13 +222,15 @@ Built for live broadcast and large-scale concerts. Combines timeline-based cue p
 - CuePilot MAX — 100 CueApp connections, CueScreen (SDI output with up to 48 customizable backstage monitor views)
 - Free for students
 
-**Deployments:** Eurovision, The Voice, MTV VMAs, Masked Singer, Beyonce tours
+**Deployments:** Eurovision, The Voice, MTV VMAs, Masked Singer, Beyoncé tours
 
 **Platform:** Mac and Windows with dedicated Studio Server hardware
 
 **Pricing:** Tier-based, quote required. Not publicly listed — enterprise sales model.
 
 **Cloud features:** Cloud-based multi-user collaboration for pre-production planning
+
+**Internet dependency:** CuePilot's cloud collaboration features (multi-user cue planning, shared timelines) require internet connectivity during pre-production. During a live show, the Studio Server runs locally on-site with LTC input and CueApp distribution over local WiFi — internet is not required for show execution. The "partial" internet dependency is therefore a setup/planning requirement, not a showtime requirement. This distinction matters: CuePilot's live-show operation is effectively LAN-based, similar to ShowPulse. ShowPulse's LAN-first advantage is strongest during pre-production workflow and for teams that lack reliable venue internet for planning sessions.
 
 #### ETC CueSystem
 
@@ -248,7 +255,9 @@ Free, open-source (3.3K GitHub stars) event timer and rundown manager. Browser-b
 
 **Platform:** Windows, macOS, Linux. Ontime Cloud available.
 
-**Relevance:** Ontime is what production teams settle for when CuePilot is too expensive and they don't know about ShowPulse. It is the tool most likely to appear in comparison searches. ShowPulse's LTC/MTC input and per-department filtering are the differentiators.
+**Relevance:** Ontime is the tool most likely to appear in comparison searches against ShowPulse. With 3,300+ GitHub stars, active development (v3.7 released 2025), and a growing community, it has real momentum and should not be dismissed.
+
+**Protocol bridge risk:** Ontime's OSC API means a technically capable user could bridge timecode into Ontime via ShowCockpit (LTC→OSC), Chataigne (SMPTE→OSC), or even a simple Node.js script. This would effectively give Ontime timecode-driven event triggering — partially closing ShowPulse's primary differentiator. However, this bridge approach has significant limitations: it requires additional software running alongside Ontime, adds latency and a point of failure, provides no frame-accurate countdown engine (Ontime would still run on its own clock, triggered at cue boundaries rather than continuously chasing timecode), and still lacks per-department filtering. The gap between "timecode triggers an event timer" and "timecode drives a frame-accurate countdown engine with department-specific state tracking" is substantial — but it is a gap that narrows over time if Ontime adds native timecode support. ShowPulse should monitor Ontime's development roadmap and ensure OSC integration ships before Ontime considers native LTC/MTC.
 
 #### Stagetimer.io
 
@@ -292,11 +301,11 @@ Marker-based timeline for building timecoded sequences. Color-coded markers for 
 | **Connection limits** | 3 / 15 / 100 (tiered pricing) | Unlimited |
 | **SDI/video output** | Yes (CueScreen, 48 views) | No |
 | **Vision switcher** | Yes (RS422) | No |
-| **OSC** | Yes | Not yet |
-| **GPI** | Yes | No |
-| **MIDI** | Yes | No (MTC only) |
-| **Cloud collaboration** | Yes | No (LAN-first) |
-| **Internet dependency** | Yes (cloud features) | None |
+| **OSC** | Yes (send, custom schemas) | Planned (Tier 1 roadmap) |
+| **GPI** | Yes (send) | No |
+| **MIDI** | Send only (Note On/Off on Vision Cues) | MTC input only |
+| **Cloud collaboration** | Yes (pre-production) | No (LAN-first) |
+| **Internet dependency** | Pre-production only; live show runs locally | None |
 | **Auth & roles** | Yes | Yes (5 roles) |
 | **Self-hosted** | Partial (local + cloud) | Fully self-hosted |
 | **Runtime dependencies** | Multiple services | Zero (single binary) |
@@ -328,8 +337,8 @@ Marker-based timeline for building timecoded sequences. Color-coded markers for 
 
 | Platform | Primary role | LTC | MTC | Art-Net TC | OSC | MSC | Multi-client | Crew alerts | Platform | Pricing |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **ShowPulse** | Crew alerting | ✅ In | ✅ In | -- | -- | -- | ✅ Unlimited | ✅ Per-dept | Win (any browser) | Free |
-| **CuePilot** | Show direction + alerting | ✅ In | -- | -- | ✅ | -- | ✅ CueApp (100+) | ✅ Per-dept | Mac/Win/iOS/Android | Enterprise |
+| **ShowPulse** | Crew alerting | ✅ In | ✅ In | -- | Planned | -- | ✅ Unlimited | ✅ Per-dept | Win (any browser) | Free |
+| **CuePilot** | Show direction + alerting | ✅ In | -- | -- | ✅ Send | -- | ✅ CueApp (100+) | ✅ Per-dept | Mac/Win/iOS/Android | Enterprise |
 | **Medialon Manager** | Enterprise show control | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ WebPanels (10+) | Custom GUI | Windows | Enterprise |
 | **Stage Precision** | Data/control hub | ✅ In | ✅ | -- | ✅ | -- | ✅ Web UIs | Slack/Telegram | Windows | Credit-based |
 | **QLab 5** | Cue playback | ✅ Trigger | ✅ Trigger | -- | ✅ | ✅ | ✅ Collab | -- | macOS | Free-$599 |
@@ -363,7 +372,7 @@ A free, self-hosted, single-binary application that reads SMPTE LTC and MIDI MTC
 
 | Advantage | Details |
 |---|---|
-| **LTC + MTC input** | Only crew alerting tool supporting both timecode standards. CuePilot supports LTC only. |
+| **LTC + MTC input** | Only crew alerting tool supporting both timecode standards. CuePilot supports LTC only (verified from CuePilot support documentation, March 2026). MTC support matters because many theater and broadcast workflows use MTC from DAWs rather than LTC from dedicated generators. |
 | **Built-in timecode generator** | 4 modes (Freerun/Countdown/Clock/Loop) for rehearsal and programming without external TC source. No competitor in the alerting category offers this. |
 | **Unlimited crew connections** | No per-device licensing. CuePilot caps at 3/15/100 by tier. |
 | **Zero cost** | Free and open-source. CuePilot requires enterprise sales engagement. |
@@ -383,7 +392,9 @@ A free, self-hosted, single-binary application that reads SMPTE LTC and MIDI MTC
 | No vision switcher (RS422) | Cannot integrate with broadcast switchers | Low priority — broadcast is CuePilot's core market |
 | No GPI | No hardware I/O for legacy systems | Low priority |
 | No cloud collaboration | Pre-production planning is local only | Intentional — LAN-first is a feature |
-| Windows-only server | Cannot run on macOS or Linux natively | Linux build on roadmap (Tier 2) |
+| Windows-only server | Cannot run on macOS or Linux natively (see note below) | Linux build on roadmap (Tier 2) |
+
+**Note on platform limitation:** The Windows-only server constraint is a genuine adoption barrier that deserves honest framing. Many touring LDs and show callers use MacBook Pros; running ShowPulse requires a separate Windows machine. The roadmap lists Linux as Tier 2 and cites "Raspberry Pi = zero-cost hardware" as an aspiration — but until a Linux build ships, that aspiration is marketing, not capability. The Rust codebase is cross-platform by design (`cpal` and `midir` both support Linux and macOS), so the technical barrier is low — primarily CI/CD pipeline and LTC/MTC device testing on each platform. A macOS build would address the touring market immediately; a Linux/ARM build would unlock the Raspberry Pi deployment story. Both should be treated as adoption unlockers rather than feature additions.
 
 ---
 
@@ -407,10 +418,10 @@ The professional live event industry needs a tool that:
 | Per-department cues | ✅ | ✅ | -- | -- | Manual config |
 | Crew device alerts | ✅ Native app | ✅ Browser | ✅ Browser | ✅ Browser | Stream Deck only |
 | No app install needed | -- (requires CueApp) | ✅ | ✅ | ✅ | -- |
-| Works without internet | Partial | ✅ | ✅ | -- | ✅ |
+| Works without internet | ✅ Live show; cloud planning needs internet | ✅ | ✅ | -- | ✅ |
 | Affordable | -- (enterprise pricing) | ✅ Free | ✅ Free | Freemium | ✅ Free |
 
-**Only ShowPulse checks all six boxes.**
+**ShowPulse is the only tool that checks all six boxes.** CuePilot comes closest — its live-show operation is effectively local, but it requires native app installation on crew devices and enterprise-level procurement. The gap between ShowPulse and CuePilot on requirements 4-6 is real but narrower than the table suggests: CuePilot's CueApp is free to download, and its live execution is LAN-based. The structural differentiators are unlimited connections (no tiered pricing), MTC support, and zero procurement friction (no sales engagement, no hardware purchase required).
 
 ### Market segments and opportunity
 
@@ -487,11 +498,11 @@ Timecode Source                    Department Systems
 
 **Tier 1 — Production-ready (makes ShowPulse deployable on real shows)**
 
-| Feature | Why | Competitive impact |
-|---|---|---|
-| OSC input/output | #1 integration protocol in the industry. Receive triggers from grandMA3/Companion/any console. Send events downstream. | Plugs ShowPulse into any existing production rig |
-| Audio/vibration alerts | Crew in noisy environments need haptic/audio warnings, not just visual | Matches CuePilot CueApp capability |
-| Fullscreen kiosk mode | Dedicated crew display for tablets at department stations. Large countdown, no UI chrome | Matches CuePilot CueScreen (browser-based) |
+| Priority | Feature | Why | Competitive impact |
+|---|---|---|---|
+| **1a** | OSC input/output | **Deployment blocker.** Without OSC, ShowPulse can only receive timecode — it cannot participate in the show control ecosystem. A touring LD who wants to trigger ShowPulse cue changes from their grandMA3 macro, or a show caller using Companion, has no path today. OSC is the #1 integration protocol across every competitor in the feature table. It is also the fastest path to closing the Ontime protocol-bridge risk: if ShowPulse has native OSC, the "bridge LTC→OSC→Ontime" workaround loses its appeal. | Plugs ShowPulse into any existing production rig |
+| **1b** | Audio/vibration alerts | **Usability blocker for noisy environments.** A pyro operator wearing ear protection at a festival stage cannot see a visual countdown on a tablet 2m away. Without haptic/audio alerts, ShowPulse is limited to quiet backstage environments — which excludes most of the high-value touring and festival segments. | Matches CuePilot CueApp capability |
+| **1c** | Fullscreen kiosk mode | **Nice-to-have for first deployments.** Important for permanent department stations, but not a blocker — the current Show tab already works on tablets. Lower urgency than OSC and alerts. | Matches CuePilot CueScreen (browser-based) |
 
 **Tier 2 — Competitive advantage (differentiates from CuePilot)**
 
@@ -519,7 +530,31 @@ Timecode Source                    Department Systems
 
 ---
 
-## 10. Emerging Trends (2024-2026)
+## 10. Pricing Strategy & Sustainability
+
+The document describes ShowPulse's pricing as "Free" — but for a business plan, this requires context. Free and open-source is the **competitive weapon**, not the business model.
+
+### Why free is the right price for ShowPulse
+
+1. **Market creation:** The timecode-synced crew alerting category barely exists. CuePilot's enterprise pricing keeps it invisible to 90% of the market. A free tool creates the category by making it accessible to every production, from school theater to festival stages.
+2. **Network effects:** Every crew member who uses ShowPulse on a show becomes a potential advocate. Unlike CuePilot's per-connection licensing, ShowPulse's unlimited connections mean more people touch the product per deployment.
+3. **CuePilot cannot respond on price.** Their hardware/cloud/support cost structure prevents them from offering a free tier. This is a structural advantage, not a temporary one.
+
+### Monetization paths (not yet implemented — for business plan context)
+
+| Model | Description | Risk |
+|---|---|---|
+| **Open core** | Free self-hosted version + paid managed/cloud version with multi-show, team sync, analytics | Splits development focus |
+| **Support & SLA** | Free software, paid support contracts for touring companies and venues | Low revenue ceiling |
+| **Hardware bundle** | Pre-configured ShowPulse appliance (Raspberry Pi or mini-PC) sold as turnkey product | Inventory/logistics overhead |
+| **Integration licensing** | Free standalone, paid integrations (NDI output, console import plugins) | Community backlash risk |
+| **Consulting/deployment** | Free tool, paid production deployment and training services | Doesn't scale |
+
+**Current position:** ShowPulse is pre-revenue. The immediate strategic priority is adoption and production validation, not monetization. The business model question should be revisited after ShowPulse has been deployed on 10+ real productions and the user base provides signal on which paid features would be worth paying for.
+
+---
+
+## 11. Emerging Trends (2024-2026)
 
 | Trend | Impact on ShowPulse |
 |---|---|
@@ -536,7 +571,11 @@ Timecode Source                    Department Systems
 
 ## Appendix: Source List
 
+*All web sources accessed March 2026. Product pages and documentation may change; verify claims against current versions before citing in external presentations.*
+
 - [CuePilot](https://www.cuepilot.com/)
+- [CuePilot Support — Working with Timecode](https://cuepilot.zendesk.com/hc/en-us/articles/360053009651)
+- [CuePilot — MIDI on Vision Cues](https://cuepilot.zendesk.com/hc/en-us/articles/360052624072)
 - [QLab Documentation](https://qlab.app/docs/v5/)
 - [QLab Licenses](https://qlab.app/docs/v5/general/licenses/)
 - [QLab Features by License](https://qlab.app/docs/v5/general/features/)
