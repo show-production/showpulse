@@ -131,7 +131,6 @@ function initDOM() {
   DOM.cueListBody = document.getElementById('cue-list-body');
   DOM.timelineStrip = document.getElementById('timeline-strip');
   DOM.manageDeptFilter = document.getElementById('manage-dept-filter');
-  DOM.deptFilters = document.getElementById('dept-filters');
   DOM.showSidebar = document.getElementById('show-sidebar');
   DOM.sidebarBackdrop = document.getElementById('sidebar-backdrop');
   DOM.loadingOverlay = document.getElementById('loading-overlay');

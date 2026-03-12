@@ -201,6 +201,15 @@ function applyRole() {
     DOM.authUserLabel.style.display = (authEnabled && authName) ? '' : 'none';
   }
 
+  // Pinned sidebar for Manager+ on wide screens
+  const pinSidebar = isAuth && level >= ROLE_LEVELS.manager && window.innerWidth >= 1200;
+  if (DOM.showSidebar) {
+    DOM.showSidebar.classList.toggle('pinned', pinSidebar);
+    if (pinSidebar) DOM.showSidebar.classList.add('open');
+  }
+  const showView = document.getElementById('view-show');
+  if (showView) showView.classList.toggle('has-pinned-sidebar', pinSidebar);
+
   // Viewer/CrewLead: pre-filter departments
   if (isAuth && level <= ROLE_LEVELS.crew_lead && authDepts.length > 0) {
     activeDeptFilters = new Set(authDepts);
@@ -502,10 +511,17 @@ function renderCrewPanel(data) {
     return;
   }
 
-  let html = '';
+  // "All" filter reset
+  let html = `<div class="crew-dept-all ${activeDeptFilters.size === 0 ? 'active' : ''}" onclick="clearDeptFilters()">${t('sidebar.allDepts')}</div>`;
   for (const dept of data.departments) {
-    html += `<div class="crew-dept-group">`;
-    html += `<div class="crew-dept-name"><span class="chip-dot" style="background:${esc(dept.color)}"></span>${esc(dept.name)}</div>`;
+    // Match crew dept name to departments array to get the ID for filtering
+    const match = departments.find(d => d.name === dept.name);
+    const deptId = match ? match.id : '';
+    const isActive = deptId && activeDeptFilters.has(deptId);
+    const dimmed = activeDeptFilters.size > 0 && !isActive;
+    const clickHandler = deptId ? `onclick="toggleDeptFilter('${deptId}')"` : '';
+    html += `<div class="crew-dept-group ${dimmed ? 'crew-dept-dimmed' : ''}">`;
+    html += `<div class="crew-dept-name" ${clickHandler} style="cursor:pointer"><span class="chip-dot" style="background:${esc(dept.color)}"></span>${esc(dept.name)}</div>`;
     for (const m of dept.members) {
       const dotClass = m.online ? 'crew-dot--on' : 'crew-dot--off';
       html += `<div class="crew-member"><span class="crew-dot ${dotClass}"></span>${esc(m.name)}</div>`;

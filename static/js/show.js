@@ -635,13 +635,8 @@ function jumpToCurrent() {
  * Render department filter chips in the sidebar.
  */
 function renderDeptFilters() {
-  let html = `<span class="dept-chip ${activeDeptFilters.size === 0 ? 'active' : ''}" onclick="clearDeptFilters()">${t('sidebar.allDepts')}</span>`;
-  departments.forEach(d => {
-    const active = activeDeptFilters.has(d.id) ? 'active' : '';
-    html += `<span class="dept-chip ${active}" onclick="toggleDeptFilter('${d.id}')">
-      <span class="chip-dot" style="background:${d.color}"></span>${esc(d.name)}</span>`;
-  });
-  DOM.deptFilters.innerHTML = html;
+  // Dept filters now live inside the crew panel — just trigger a crew re-render
+  loadCrewStatus();
 }
 
 /**
