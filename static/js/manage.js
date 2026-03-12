@@ -87,8 +87,14 @@ function renderDeptList() {
 
 // ── Cue List (act-grouped) ─────────────────
 
-/** Set of act IDs collapsed in the editor cue list. */
-const cueListCollapsed = new Set();
+/** Set of act IDs collapsed in the editor cue list. Persisted to localStorage. */
+const cueListCollapsed = new Set(
+  JSON.parse(localStorage.getItem('showpulse-editor-collapsed') || '[]')
+);
+
+function saveEditorCollapsed() {
+  localStorage.setItem('showpulse-editor-collapsed', JSON.stringify([...cueListCollapsed]));
+}
 
 /** Set of selected cue IDs for bulk operations. */
 const selectedCues = new Set();
@@ -222,6 +228,7 @@ function toggleCueActGroup(actId) {
     cueListCollapsed.add(actId);
     group.classList.add('collapsed');
   }
+  saveEditorCollapsed();
 }
 
 /**

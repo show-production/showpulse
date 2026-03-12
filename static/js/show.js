@@ -289,7 +289,7 @@ function diffCueListWithActs(container, cueList) {
   for (const act of actOrder) {
     // Get or create act-group wrapper
     let group = existingGroups[act.actId];
-    const wasCollapsed = group ? group.classList.contains('collapsed') : false;
+    const wasCollapsed = group ? group.classList.contains('collapsed') : showCollapsedActs.has(act.actId);
     if (!group) {
       group = document.createElement('div');
       group.className = 'act-group';
@@ -374,6 +374,15 @@ function diffCueListWithActs(container, cueList) {
 
 // ── Act group collapse/expand ─────────────
 
+/** Set of act IDs collapsed in the Show tab. Persisted to localStorage. */
+const showCollapsedActs = new Set(
+  JSON.parse(localStorage.getItem('showpulse-show-collapsed') || '[]')
+);
+
+function saveShowCollapsed() {
+  localStorage.setItem('showpulse-show-collapsed', JSON.stringify([...showCollapsedActs]));
+}
+
 /**
  * Toggle collapse state of a single act group.
  * @param {HTMLElement} group - The .act-group element.
@@ -382,6 +391,8 @@ function toggleActGroup(group) {
   const collapsed = group.classList.toggle('collapsed');
   const header = group.querySelector('.act-header');
   if (header) header.classList.toggle('collapsed', collapsed);
+  const actId = group.dataset.actId;
+  if (actId) { collapsed ? showCollapsedActs.add(actId) : showCollapsedActs.delete(actId); saveShowCollapsed(); }
 }
 
 /** Collapse all act groups, hiding their cue cards. */
@@ -390,7 +401,9 @@ function collapseAllActs() {
     g.classList.add('collapsed');
     const h = g.querySelector('.act-header');
     if (h) h.classList.add('collapsed');
+    if (g.dataset.actId) showCollapsedActs.add(g.dataset.actId);
   });
+  saveShowCollapsed();
 }
 
 /** Expand all act groups, showing their cue cards. */
@@ -400,6 +413,8 @@ function expandAllActs() {
     const h = g.querySelector('.act-header');
     if (h) h.classList.remove('collapsed');
   });
+  showCollapsedActs.clear();
+  saveShowCollapsed();
 }
 
 /**
