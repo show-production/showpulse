@@ -57,7 +57,7 @@
     padding-top: 1rem;
   }
   .show-sidebar.pinned ~ .sidebar-backdrop { display: none !important; }
-  #view-show.has-pinned-sidebar {
+  #view-show.has-pinned-sidebar.active {
     display: flex;
   }
   #view-show.has-pinned-sidebar .sidebar-toggle { display: none; }
