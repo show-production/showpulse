@@ -563,40 +563,6 @@ function printCueSheet() {
   win.print();
 }
 
-// ── Show import ────────────────────────────
-
-/**
- * Import a full show JSON file (departments + cues), replacing existing data.
- * @param {Event} event - File input change event.
- */
-function importShow(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const data = JSON.parse(e.target.result);
-      const depts = data.departments || [];
-      const importedCues = data.cues || [];
-
-      const result = await api('/show/import', { method: 'POST', body: { departments: depts, cues: importedCues } });
-
-      refreshManageView();
-      let msg;
-      if (result.errors.length > 0) {
-        msg = t('import.showPartial', { depts: depts.length, cues: result.imported, errors: result.errors.length });
-      } else {
-        msg = t('import.showSuccess', { depts: depts.length, cues: result.imported });
-      }
-      showToast(msg, result.errors.length > 0 ? 'info' : 'success');
-    } catch (err) {
-      showToast(t('import.failed', { msg: err.message }), 'error');
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
 // ── CSV parsing (RFC 4180 compliant) ──────
 
 /**
@@ -755,38 +721,47 @@ async function importCues(event) {
   reader.onload = async (e) => {
     try {
       const text = e.target.result;
-      let cuesPayload;
 
       if (file.name.endsWith('.csv')) {
-        cuesPayload = parseCsvToCues(text);
+        // CSV → cue-only import
+        const cuesPayload = parseCsvToCues(text);
+        if (cuesPayload.length === 0) { showToast(t('import.noCues'), 'info'); return; }
+        const endpoint = mode === 'append' ? '/cues/import?mode=append' : '/cues/import';
+        const result = await api(endpoint, { method: 'POST', body: cuesPayload });
+        showImportResult(result);
       } else {
         const parsed = JSON.parse(text);
-        if (Array.isArray(parsed)) {
-          cuesPayload = parsed;
-        } else if (parsed.cues && Array.isArray(parsed.cues)) {
-          cuesPayload = parsed.cues;
+
+        // Full show JSON: has departments array → replace entire show
+        if (parsed.departments && Array.isArray(parsed.departments)) {
+          const depts = parsed.departments;
+          const showCues = parsed.cues || [];
+          const showActs = parsed.acts || [];
+          const body = { departments: depts, cues: showCues };
+          if (showActs.length > 0) body.acts = showActs;
+          if (parsed.show_name) body.show_name = parsed.show_name;
+          const result = await api('/show/import', { method: 'POST', body });
+          await Promise.all([loadDepartments(), loadCues(), loadActs(), loadShowName()]);
+          if (result.errors.length > 0) {
+            showToast(t('import.showPartial', { depts: depts.length, cues: result.imported, errors: result.errors.length }), 'info');
+          } else {
+            showToast(t('import.showSuccess', { depts: depts.length, cues: result.imported }), 'success');
+          }
         } else {
-          throw new Error(t('import.jsonInvalid'));
+          // Cue-only JSON (bare array or { cues: [...] })
+          let cuesPayload;
+          if (Array.isArray(parsed)) {
+            cuesPayload = parsed;
+          } else if (parsed.cues && Array.isArray(parsed.cues)) {
+            cuesPayload = parsed.cues;
+          } else {
+            throw new Error(t('import.jsonInvalid'));
+          }
+          if (cuesPayload.length === 0) { showToast(t('import.noCues'), 'info'); return; }
+          const endpoint = mode === 'append' ? '/cues/import?mode=append' : '/cues/import';
+          const result = await api(endpoint, { method: 'POST', body: cuesPayload });
+          showImportResult(result);
         }
-      }
-
-      if (cuesPayload.length === 0) {
-        showToast(t('import.noCues'), 'info');
-        return;
-      }
-
-      const endpoint = mode === 'append' ? '/cues/import?mode=append' : '/cues/import';
-      const result = await api(endpoint, { method: 'POST', body: cuesPayload });
-
-      const modeLabel = mode === 'append' ? 'appended' : 'imported';
-      if (result.errors.length === 0) {
-        showToast(t('import.cuesSuccess', { count: result.imported }), 'success');
-      } else {
-        showToast(
-          t('import.cuesPartial', { ok: result.imported, fail: result.errors.length, msg: result.errors[0].message }),
-          result.imported > 0 ? 'info' : 'error',
-          5000
-        );
       }
       refreshManageView();
     } catch (err) {
@@ -795,4 +770,17 @@ async function importCues(event) {
   };
   reader.readAsText(file);
   event.target.value = '';
+}
+
+/** Show toast for cue import result. */
+function showImportResult(result) {
+  if (result.errors.length === 0) {
+    showToast(t('import.cuesSuccess', { count: result.imported }), 'success');
+  } else {
+    showToast(
+      t('import.cuesPartial', { ok: result.imported, fail: result.errors.length, msg: result.errors[0].message }),
+      result.imported > 0 ? 'info' : 'error',
+      5000
+    );
+  }
 }

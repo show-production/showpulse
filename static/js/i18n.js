@@ -113,6 +113,9 @@ const I18N = {
     'editor.import': 'Import',
     'editor.importReplace': 'Replace all',
     'editor.importAppend': 'Append',
+    'editor.exportJson': 'Export JSON',
+    'editor.exportCsv': 'Export CSV',
+    'editor.printReport': 'Print Report',
     'editor.add': '+ Add',
 
     // Editor empty states
@@ -289,13 +292,6 @@ const I18N = {
     'settings.serverUrl': 'URL',
     'settings.serverHost': 'Host',
     'settings.serverPort': 'Port',
-
-    // Show data
-    'settings.showData': 'Show Data',
-    'settings.exportJson': 'Export JSON',
-    'settings.importJson': 'Import JSON',
-    'settings.exportCsv': 'Export CSV',
-    'settings.printCueSheet': 'Print Cue Sheet',
 
     // Dashboard
     'dash.connected': 'Connected',
@@ -504,6 +500,9 @@ const I18N = {
     'editor.import': '\u05D9\u05D9\u05D1\u05D5\u05D0',
     'editor.importReplace': '\u05D4\u05D7\u05DC\u05E3 \u05D4\u05DB\u05DC',
     'editor.importAppend': '\u05D4\u05D5\u05E1\u05E3',
+    'editor.exportJson': '\u05D9\u05D9\u05E6\u05D5\u05D0 JSON',
+    'editor.exportCsv': '\u05D9\u05D9\u05E6\u05D5\u05D0 CSV',
+    'editor.printReport': '\u05D4\u05D3\u05E4\u05E1 \u05D3\u05D5\u05D7',
     'editor.add': '+ \u05D4\u05D5\u05E1\u05E3',
 
     // Editor empty states
@@ -665,13 +664,6 @@ const I18N = {
     'settings.serverUrl': 'URL',
     'settings.serverHost': '\u05DB\u05EA\u05D5\u05D1\u05EA',
     'settings.serverPort': '\u05E4\u05D5\u05E8\u05D8',
-
-    // Show data
-    'settings.showData': '\u05E0\u05EA\u05D5\u05E0\u05D9 \u05DE\u05D5\u05E4\u05E2',
-    'settings.exportJson': '\u05D9\u05D9\u05E6\u05D5\u05D0 JSON',
-    'settings.importJson': '\u05D9\u05D9\u05D1\u05D5\u05D0 JSON',
-    'settings.exportCsv': '\u05D9\u05D9\u05E6\u05D5\u05D0 CSV',
-    'settings.printCueSheet': '\u05D4\u05D3\u05E4\u05E1 \u05D3\u05E3 \u05E7\u05D9\u05D5\u05D9\u05DD',
 
     // Dashboard
     'dash.connected': '\u05DE\u05D7\u05D5\u05D1\u05E8\u05D9\u05DD',

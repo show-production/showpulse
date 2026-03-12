@@ -86,6 +86,23 @@ impl CueStore {
         }
     }
 
+    /// Save a backup of current data before destructive operations.
+    /// Writes to `showpulse-backup.json` (same directory as data file).
+    async fn backup(&self) {
+        let backup_path = self.file_path.with_file_name("showpulse-backup.json");
+        let data = self.data.read().await;
+        match serde_json::to_string_pretty(&*data) {
+            Ok(json) => {
+                if let Err(e) = tokio::fs::write(&backup_path, &json).await {
+                    tracing::warn!("Failed to write backup {:?}: {}", backup_path, e);
+                } else {
+                    tracing::info!("Auto-backup saved to {:?}", backup_path);
+                }
+            }
+            Err(e) => tracing::warn!("Failed to serialize backup: {}", e),
+        }
+    }
+
     /// Atomic persist: write to .tmp file then rename to avoid corruption.
     async fn persist(&self) {
         let data = self.data.read().await;
@@ -233,13 +250,14 @@ impl CueStore {
             imported += 1;
         }
 
-        let mut data = self.data.write().await;
         if append {
+            let mut data = self.data.write().await;
             data.cues.extend(valid_cues);
         } else {
+            self.backup().await;
+            let mut data = self.data.write().await;
             data.cues = valid_cues;
         }
-        drop(data);
         self.persist().await;
 
         CueImportResult { imported, errors }
@@ -276,6 +294,7 @@ impl CueStore {
             imported += 1;
         }
 
+        self.backup().await;
         let mut data = self.data.write().await;
         data.departments = sanitized_depts;
         data.cues = valid_cues;

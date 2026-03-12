@@ -163,6 +163,9 @@
           </select>
           <button class="add-btn" onclick="document.getElementById('import-cues-file').click()">&#x21E7; <span data-i18n="editor.import">Import</span></button>
           <input type="file" id="import-cues-file" accept=".json,.csv" class="hidden" onchange="importCues(event)">
+          <button class="add-btn" onclick="exportShow()" data-i18n="editor.exportJson">Export JSON</button>
+          <button class="add-btn" onclick="exportCSV()" data-i18n="editor.exportCsv">Export CSV</button>
+          <button class="add-btn" onclick="printCueSheet()" data-i18n="editor.printReport">Print Report</button>
           <button class="add-btn" onclick="openCueModal()" data-i18n="editor.add">+ Add</button>
         </div>
       </div>
@@ -340,20 +343,6 @@
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-header"><h3 data-i18n="settings.showData">Show Data</h3></div>
-      <div class="panel-body panel-body--padded">
-        <div class="data-actions">
-          <button onclick="exportShow()" data-i18n="settings.exportJson">Export JSON</button>
-          <button onclick="document.getElementById('import-file').click()" data-i18n="settings.importJson">Import JSON</button>
-          <input type="file" id="import-file" accept=".json" class="hidden" onchange="importShow(event)">
-        </div>
-        <div class="data-actions">
-          <button onclick="exportCSV()" data-i18n="settings.exportCsv">Export CSV</button>
-          <button onclick="printCueSheet()" data-i18n="settings.printCueSheet">Print Cue Sheet</button>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
