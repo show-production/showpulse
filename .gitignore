@@ -1,6 +1,13 @@
 /target
 showpulse-data.json
 showpulse-data-backup.json
+showpulse-backup.json
+showpulse.exe
+.env
+data/
+node_modules/
+package-lock.json
+packages/
 .claude/
 *.png
 *.pdf
