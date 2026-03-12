@@ -234,17 +234,22 @@ setInterval(updateTimelinePlayhead, 200);
 
 // ── Server info panel ─────────────────────
 
-function initServerInfo() {
-  const url = location.origin;
-  const host = location.hostname;
-  const port = location.port || (location.protocol === 'https:' ? '443' : '80');
+async function initServerInfo() {
   const urlEl = document.getElementById('server-url');
   const hostEl = document.getElementById('server-host');
   const portEl = document.getElementById('server-port');
   const qrEl = document.getElementById('server-qr');
-  if (urlEl) urlEl.textContent = url;
-  if (hostEl) hostEl.textContent = host;
-  if (portEl) portEl.textContent = port;
+  try {
+    const info = await api('/server-info');
+    if (urlEl) urlEl.textContent = info.url;
+    if (hostEl) hostEl.textContent = info.ip;
+    if (portEl) portEl.textContent = info.port;
+  } catch {
+    // Fallback to browser location if endpoint fails
+    if (urlEl) urlEl.textContent = location.origin;
+    if (hostEl) hostEl.textContent = location.hostname;
+    if (portEl) portEl.textContent = location.port || '80';
+  }
   // Fetch QR code SVG (raw SVG, not JSON)
   if (qrEl) {
     fetch('/api/qr').then(r => r.ok ? r.text() : '').then(svg => {

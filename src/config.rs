@@ -42,6 +42,21 @@ impl Config {
 
         config
     }
+
+    /// Detect the server's LAN IP using the UDP socket trick.
+    /// Connects a UDP socket to 8.8.8.8:80 (no packet sent) and reads the local address.
+    /// Falls back to bind_address if detection fails.
+    pub fn lan_ip(&self) -> std::net::IpAddr {
+        if !self.bind_address.is_unspecified() {
+            return self.bind_address;
+        }
+        std::net::UdpSocket::bind("0.0.0.0:0")
+            .and_then(|s| {
+                s.connect("8.8.8.8:80")?;
+                Ok(s.local_addr()?.ip())
+            })
+            .unwrap_or(self.bind_address)
+    }
 }
 
 impl Default for Config {

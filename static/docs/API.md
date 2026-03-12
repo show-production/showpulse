@@ -375,12 +375,21 @@ Response: 204 No Content
 
 Own lock or Admin override.
 
-## QR Code
+## Server Info & QR Code
+
+### Server info
+```
+GET /server-info
+Response: {ip: "192.168.10.82", port: 4000, url: "http://192.168.10.82:4000"}
+```
+
+Returns the server's detected LAN IP, port, and full URL.
+Used by the Settings panel to show connection info to crew.
 
 ### Generate QR code
 ```
 GET /qr
-Response: SVG image (image/svg+xml) with server URL for crew onboarding
+Response: SVG image (image/svg+xml) encoding the server LAN URL for crew onboarding
 ```
 
 ## WebSocket

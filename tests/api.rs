@@ -6,6 +6,7 @@ use http_body_util::BodyExt;
 use tempfile::NamedTempFile;
 use tower::ServiceExt;
 
+use showpulse::config::Config;
 use showpulse::cue::store::CueStore;
 use showpulse::cue::types::{Cue, CueImportResult, Department};
 use showpulse::timecode::types::Timecode;
@@ -29,6 +30,7 @@ fn test_state() -> (AppState, NamedTempFile) {
         sessions,
         timer_lock,
         login_limiter,
+        config: Arc::new(Config::default()),
     };
     (state, tmp)
 }

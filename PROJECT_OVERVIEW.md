@@ -136,7 +136,7 @@ Single-page app served from `static/index.html` with three tabs (Show, Editor, S
 
 Frontend JS modules (loaded in order): `state.js` -> `i18n.js` -> `api.js` -> `auth.js` -> `show.js` -> `manage.js` -> `timeline.js` -> `settings.js` -> `import-export.js` -> `ui-helpers.js`
 
-## API Endpoints (45 REST + WS)
+## API Endpoints (46 REST + WS)
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
@@ -163,7 +163,7 @@ Frontend JS modules (loaded in order): `state.js` -> `i18n.js` -> `api.js` -> `a
 | POST | `/api/cues` | Create cue (only `department_id` required; `cue_number` auto-generated if empty) |
 | PUT | `/api/cues/:id` | Update cue |
 | DELETE | `/api/cues/:id` | Delete cue |
-| POST | `/api/cues/import` | Bulk import cues — replaces all existing cues (validates department_id, returns `{imported, errors}`) |
+| POST | `/api/cues/import` | Bulk import cues — `?mode=append` to add, default replaces all (auto-backup before replace) |
 | POST | `/api/show/import` | Import full show (departments + cues + acts) — replaces all existing data |
 | GET | `/api/show/name` | Get show name |
 | PUT | `/api/show/name` | Set show name (Manager+) |
@@ -172,7 +172,8 @@ Frontend JS modules (loaded in order): `state.js` -> `i18n.js` -> `api.js` -> `a
 | PUT | `/api/acts/:id` | Update act (Operator+) |
 | DELETE | `/api/acts/:id` | Delete act (Operator+) — cues unassigned, not deleted |
 | POST | `/api/acts/:id/shift` | Shift all cues in act to new start time (Operator+) |
-| GET | `/api/qr` | Generate SVG QR code with server URL for crew onboarding |
+| GET | `/api/server-info` | Server LAN IP, port, and URL (for Settings panel) |
+| GET | `/api/qr` | Generate SVG QR code with server LAN URL for crew onboarding |
 | GET | `/api/users` | List users (Admin only, PINs stripped) |
 | POST | `/api/users` | Create user (Admin only) |
 | PUT | `/api/users/:id` | Update user (Admin only) |

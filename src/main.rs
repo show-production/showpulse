@@ -96,7 +96,7 @@ async fn static_handler(uri: Uri) -> Response {
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let config = showpulse::config::Config::from_env();
+    let config = Arc::new(showpulse::config::Config::from_env());
 
     let store = Arc::new(CueStore::new(PathBuf::from(&config.data_file)));
     store.seed_if_empty().await;
@@ -160,6 +160,7 @@ async fn main() {
         sessions: sessions.clone(),
         timer_lock,
         login_limiter,
+        config: config.clone(),
     };
 
     // CORS: allow any origin (LAN tool — crew connect from various IPs/hostnames)

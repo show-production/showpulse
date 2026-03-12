@@ -1,11 +1,35 @@
-use axum::extract::Host;
+use axum::extract::State;
 use axum::http::header;
 use axum::response::{IntoResponse, Response};
+use axum::Json;
 use qrcode::render::svg;
 use qrcode::QrCode;
+use serde::Serialize;
 
-pub async fn qr_svg(Host(host): Host) -> Response {
-    let url = format!("http://{}", host);
+use crate::AppState;
+
+#[derive(Serialize)]
+pub struct ServerInfo {
+    pub ip: String,
+    pub port: u16,
+    pub url: String,
+}
+
+pub async fn server_info(State(state): State<AppState>) -> Json<ServerInfo> {
+    let config = &state.config;
+    let ip = config.lan_ip().to_string();
+    let url = format!("http://{}:{}", ip, config.port);
+    Json(ServerInfo {
+        ip,
+        port: config.port,
+        url,
+    })
+}
+
+pub async fn qr_svg(State(state): State<AppState>) -> Response {
+    let config = &state.config;
+    let ip = config.lan_ip();
+    let url = format!("http://{}:{}", ip, config.port);
 
     let code = match QrCode::new(url.as_bytes()) {
         Ok(c) => c,

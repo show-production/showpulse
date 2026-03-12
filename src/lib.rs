@@ -13,6 +13,7 @@ use axum::routing::{delete, get, post, put};
 use axum::Router;
 
 use auth::{LoginLimiter, SessionStore, TimerLockState};
+use config::Config;
 use cue::store::CueStore;
 use timecode::TimecodeManager;
 use ws::hub::WsHub;
@@ -25,6 +26,7 @@ pub struct AppState {
     pub sessions: SessionStore,
     pub timer_lock: TimerLockState,
     pub login_limiter: LoginLimiter,
+    pub config: Arc<Config>,
 }
 
 impl FromRef<AppState> for SessionStore {
@@ -71,8 +73,9 @@ pub fn api_router() -> Router<AppState> {
         .route("/api/mtc/devices", get(api::mtc::list_devices))
         .route("/api/mtc/device", put(api::mtc::set_device))
         .route("/api/mtc/stop", post(api::mtc::stop))
-        // QR
+        // QR & server info
         .route("/api/qr", get(api::qr::qr_svg))
+        .route("/api/server-info", get(api::qr::server_info))
         // Users (Admin only — enforced in handlers)
         .route("/api/users", get(api::users::list))
         .route("/api/users", post(api::users::create))
