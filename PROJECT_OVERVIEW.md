@@ -122,7 +122,7 @@ Single-page app served from `static/index.html` with three tabs (Show, Editor, S
 |---------|-------|
 | Multi-show support | Show switching/archiving |
 | Generator presets | Save/load named configs |
-| Print view | CSS `@media print` stylesheet for in-browser show view (analytical report already implemented via `printCueSheet()`) |
+| Print view | CSS `@media print` stylesheet for Show tab. Note: an analytical print report is already implemented via `printCueSheet()` in `import-export.js` — this item is specifically about a styled print layout for the live Show view |
 | Audio/vibration alerts | Warning threshold alerts on crew devices |
 
 ## Codebase Stats

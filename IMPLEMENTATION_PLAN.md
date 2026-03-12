@@ -322,6 +322,6 @@ Results: -501 lines (-18% total JS), zero new features.
 - [x] Manual test: `cargo run` → browser at `http://localhost:8080`
 - [x] LTC: test with LTC audio from a generator app or DAW
 - [x] MTC: test with MIDI loopback or DAW sending MTC
-- [x] CSV import: test with 30-cue show file (`test-import-cues.csv`)
-- [x] JSON import: test with 30-cue show file (`test-import-show.json`)
+- [x] CSV import: tested with 30-cue show file
+- [x] JSON import: tested with 30-cue show file
 - [x] Each phase committed and pushed to GitHub

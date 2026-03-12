@@ -146,13 +146,20 @@ For setting up and editing your show.
 
 ShowPulse supports bulk cue import via the **Import** button in the Editor tab. Importing **replaces** all existing cues (not appends). Full show import from Settings replaces departments, cues, and acts.
 
-**CSV format:** Header row with columns like `timecode`, `label`, `department`, `warn`, `notes`. The parser recognizes common aliases (e.g., "dept" for "department", "tc" for "timecode"). Department names are automatically matched to existing departments.
+**CSV format:** Header row with columns. The parser recognizes these column aliases:
+
+| Field | Accepted column names |
+|-------|----------------------|
+| Label | `label`, `name`, `cue`, `cue_name` |
+| Department | `department`, `dept`, `department_name`, `dept_name` |
+| Department ID | `department_id`, `dept_id` |
+| Timecode | `timecode`, `trigger_tc`, `tc`, `trigger` |
+| Warning | `warn_seconds`, `warn`, `warning`, `lead_time` |
+| Notes | `notes`, `note`, `description` |
+
+Department names are automatically matched to existing departments (case-sensitive).
 
 **JSON format:** Either a bare array `[{...}, {...}]` or wrapped `{ "cues": [{...}, {...}] }`. Each cue needs at minimum a `department_id` (UUID).
-
-Test files are included in the repository:
-- `test-import-show.json` — Full show with 6 departments + 30 cues
-- `test-import-cues.csv` — 30 cues in CSV format with department names
 
 ### Settings Tab
 
@@ -234,6 +241,18 @@ When no PIN is set and no users exist (default), all operations are open — no 
 ### Timer Lock
 
 Managers must acquire the timer lock before controlling transport (Play/Pause/Stop/Goto). Only one Manager can hold the lock at a time. Admins bypass the lock entirely.
+
+### Auto-Login for Kiosk/Headless Clients
+
+Append `?user=Name&pin=1234` to the ShowPulse URL to auto-login without the login screen:
+
+```
+http://192.168.10.82:4000/?user=SoundDesk&pin=1234
+```
+
+This is designed for dedicated crew stations (tablets, backstage monitors) that need unattended login after a browser restart.
+
+**Security note:** The PIN is passed in plaintext as a URL parameter. Only use auto-login on trusted production networks. Do not use this over public WiFi or the open internet.
 
 ### QR Code for Crew Onboarding
 
