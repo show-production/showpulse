@@ -248,6 +248,28 @@ POST /mtc/stop
 Response: 204 No Content
 ```
 
+## Crew
+
+### Get crew status
+```
+GET /crew/status
+Response: {
+  departments: [
+    {
+      name: "Lighting",
+      color: "#ffcc00",
+      members: [
+        {name: "John", online: true},
+        {name: "Jane", online: false}
+      ]
+    },
+    ...
+  ]
+}
+```
+
+Returns non-admin users grouped by their assigned departments with online/offline status. Members sorted online-first, then alphabetically. Accessible to all roles (GET passes through auth). No sensitive data exposed.
+
 ## Admin Dashboard
 
 ### Get active users dashboard (Admin only)

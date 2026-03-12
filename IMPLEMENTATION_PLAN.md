@@ -286,7 +286,7 @@ Results: -501 lines (-18% total JS), zero new features.
 
 **UI Polish:** Reduced checkboxes, timeline scoping to Editor tab, show name centering, sidebar overlap fix, flow controls relocation, auth fix for open-access mode.
 
-**Data Generator:** `gen-rihanna.py` — 106-cue Rihanna concert (5 acts, 8 departments).
+**Data Generator:** A Python script was used during development to generate a 106-cue Rihanna concert dataset (5 acts, 8 departments) for testing. The script is not included in the repository.
 
 ### Phase 21: Hebrew / RTL Internationalization
 

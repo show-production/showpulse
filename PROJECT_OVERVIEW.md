@@ -134,7 +134,7 @@ Single-page app served from `static/index.html` with three tabs (Show, Editor, S
 | JavaScript (`static/js/`) | ~5,010 |
 | CSS (`static/css/`) | ~2,050 |
 
-Frontend JS modules (loaded in order): `state.js` -> `api.js` -> `auth.js` -> `show.js` -> `manage.js` -> `timeline.js` -> `settings.js` -> `import-export.js` -> `ui-helpers.js`
+Frontend JS modules (loaded in order): `state.js` -> `i18n.js` -> `api.js` -> `auth.js` -> `show.js` -> `manage.js` -> `timeline.js` -> `settings.js` -> `import-export.js` -> `ui-helpers.js`
 
 ## API Endpoints (44 REST + WS)
 

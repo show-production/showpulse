@@ -13,6 +13,7 @@
 | `css/settings.css` | Settings grid, groups, radio, slider, speed, user panel, dashboard | 251 |
 | `css/modals.css` | Modal overlay, dialog, form groups, confirm | 233 |
 | `js/state.js` | CONST, global state, DOM cache, shared helpers, CRUD helpers | 341 |
+| `js/i18n.js` | i18n engine: t() lookup, setLanguage(), applyLanguage(), EN/HE dictionaries | ~220 |
 | `js/api.js` | api() wrapper, connectWS(), WS message validation | 77 |
 | `js/auth.js` | Login, role gating, user CRUD, timer lock UI, dashboard | 450 |
 | `js/show.js` | ShowView rendering, sidebar, transport, AutoPulse, act grouping | 664 |
@@ -97,7 +98,7 @@
 Scripts are synchronous `<script>` tags (no modules, no build step):
 
 ```
-state.js -> api.js -> auth.js -> show.js -> manage.js -> settings.js -> import-export.js -> ui-helpers.js
+state.js -> i18n.js -> api.js -> auth.js -> show.js -> manage.js -> timeline.js -> settings.js -> import-export.js -> ui-helpers.js
 ```
 
 `state.js` must be first (defines globals). `auth.js` must be before `show.js` (role checks). `ui-helpers.js` must be last (runs `init()`).
