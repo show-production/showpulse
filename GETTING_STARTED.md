@@ -151,13 +151,21 @@ ShowPulse supports bulk cue import via the **Import** button in the Editor tab. 
 | Field | Accepted column names |
 |-------|----------------------|
 | Label | `label`, `name`, `cue`, `cue_name` |
+| Cue Number | `cue_number`, `cue_no`, `number`, `cue_num`, `cue #`, `q` |
 | Department | `department`, `dept`, `department_name`, `dept_name` |
 | Department ID | `department_id`, `dept_id` |
+| Act | `act`, `act_name`, `section` |
 | Timecode | `timecode`, `trigger_tc`, `tc`, `trigger` |
 | Warning | `warn_seconds`, `warn`, `warning`, `lead_time` |
+| Duration | `duration`, `dur`, `length` |
+| Armed | `armed`, `active`, `enabled` |
+| Continue Mode | `continue_mode`, `continue`, `mode` |
+| Color | `color`, `colour` |
 | Notes | `notes`, `note`, `description` |
 
-Department names are automatically matched to existing departments (case-sensitive).
+Department and act names are automatically matched to existing departments and acts (case-insensitive). The CSV parser is RFC 4180 compliant — quoted fields with commas, quotes, and newlines are handled correctly.
+
+**Import mode:** The Editor's import button has a mode selector — **Replace all** (default, replaces all existing cues) or **Append** (adds imported cues to the existing list).
 
 **JSON format:** Either a bare array `[{...}, {...}]` or wrapped `{ "cues": [{...}, {...}] }`. Each cue needs at minimum a `department_id` (UUID).
 

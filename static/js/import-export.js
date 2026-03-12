@@ -597,27 +597,88 @@ function importShow(event) {
   event.target.value = '';
 }
 
-// ── CSV parsing ────────────────────────────
+// ── CSV parsing (RFC 4180 compliant) ──────
+
+/**
+ * Parse RFC 4180 CSV text into rows of fields.
+ * Handles quoted fields with commas, quotes, and newlines.
+ * @param {string} text - Raw CSV text.
+ * @returns {Array<Array<string>>} Array of rows, each an array of field strings.
+ */
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < text.length && text[i + 1] === '"') {
+          field += '"';
+          i += 2;
+        } else {
+          inQuotes = false;
+          i++;
+        }
+      } else {
+        field += ch;
+        i++;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+        i++;
+      } else if (ch === ',') {
+        row.push(field.trim());
+        field = '';
+        i++;
+      } else if (ch === '\r' || ch === '\n') {
+        row.push(field.trim());
+        field = '';
+        if (ch === '\r' && i + 1 < text.length && text[i + 1] === '\n') i++;
+        i++;
+        if (row.some(f => f !== '')) rows.push(row);
+        row = [];
+      } else {
+        field += ch;
+        i++;
+      }
+    }
+  }
+  // Last field/row
+  row.push(field.trim());
+  if (row.some(f => f !== '')) rows.push(row);
+  return rows;
+}
 
 /**
  * Parse CSV text into an array of cue objects for bulk import.
- * Supports column aliases for flexible CSV formats.
+ * RFC 4180 compliant — handles quoted fields with commas and newlines.
+ * Supports column aliases for flexible CSV formats from various sources.
  * @param {string} csvText - Raw CSV text.
  * @returns {Array<Object>} Array of cue objects ready for API.
  * @throws {Error} If CSV is invalid or department can't be resolved.
  */
 function parseCsvToCues(csvText) {
-  const lines = csvText.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) throw new Error(t('import.csvInvalid'));
+  const rows = parseCSV(csvText);
+  if (rows.length < 2) throw new Error(t('import.csvInvalid'));
 
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const headers = rows[0].map(h => h.toLowerCase());
   const colMap = {};
   const aliases = {
     'label': ['label', 'name', 'cue', 'cue_name'],
+    'cue_number': ['cue_number', 'cue_no', 'number', 'cue_num', 'cue #', 'q'],
     'department_id': ['department_id', 'dept_id'],
     'department': ['department', 'dept', 'department_name', 'dept_name'],
+    'act': ['act', 'act_name', 'section'],
     'timecode': ['timecode', 'trigger_tc', 'tc', 'trigger'],
     'warn_seconds': ['warn_seconds', 'warn', 'warning', 'lead_time'],
+    'duration': ['duration', 'dur', 'length'],
+    'armed': ['armed', 'active', 'enabled'],
+    'continue_mode': ['continue_mode', 'continue', 'mode'],
+    'color': ['color', 'colour'],
     'notes': ['notes', 'note', 'description'],
   };
   for (const [field, names] of Object.entries(aliases)) {
@@ -627,10 +688,12 @@ function parseCsvToCues(csvText) {
 
   const deptByName = {};
   departments.forEach(d => { deptByName[d.name.toLowerCase()] = d.id; });
+  const actByName = {};
+  acts.forEach(a => { actByName[a.name.toLowerCase()] = a.id; });
 
   const cuesOut = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(c => c.trim());
+  for (let i = 1; i < rows.length; i++) {
+    const cols = rows[i];
 
     let deptId = null;
     if (colMap.department_id !== undefined && cols[colMap.department_id]) {
@@ -639,16 +702,37 @@ function parseCsvToCues(csvText) {
       deptId = deptByName[cols[colMap.department].toLowerCase()] || null;
     }
     if (!deptId) {
-      throw new Error(t('import.deptNotFound', { num: i + 1, dept: cols[colMap.department] || cols[colMap.department_id] || '' }));
+      throw new Error(t('import.deptNotFound', { num: i + 1, dept: (colMap.department !== undefined ? cols[colMap.department] : cols[colMap.department_id]) || '' }));
     }
 
     const cue = { department_id: deptId };
     if (colMap.label !== undefined) cue.label = cols[colMap.label] || 'Untitled Cue';
+    if (colMap.cue_number !== undefined && cols[colMap.cue_number]) cue.cue_number = cols[colMap.cue_number];
     if (colMap.timecode !== undefined && cols[colMap.timecode]) {
       cue.trigger_tc = parseTC(cols[colMap.timecode]);
     }
     if (colMap.warn_seconds !== undefined && cols[colMap.warn_seconds]) {
       cue.warn_seconds = parseInt(cols[colMap.warn_seconds]) || CONST.DEFAULT_WARN_SEC;
+    }
+    if (colMap.duration !== undefined && cols[colMap.duration]) {
+      const dur = parseInt(cols[colMap.duration]);
+      if (!isNaN(dur) && dur > 0) cue.duration = dur;
+    }
+    if (colMap.armed !== undefined && cols[colMap.armed]) {
+      const v = cols[colMap.armed].toLowerCase();
+      cue.armed = !(v === 'no' || v === 'false' || v === '0' || v === 'n');
+    }
+    if (colMap.continue_mode !== undefined && cols[colMap.continue_mode]) {
+      const mode = cols[colMap.continue_mode].toLowerCase().replace(/[- ]/g, '_');
+      if (['stop', 'auto_continue', 'auto_follow'].includes(mode)) cue.continue_mode = mode;
+    }
+    if (colMap.color !== undefined && cols[colMap.color]) {
+      const c = cols[colMap.color];
+      if (c.match(/^#[0-9a-fA-F]{3,8}$/)) cue.color = c;
+    }
+    if (colMap.act !== undefined && cols[colMap.act]) {
+      const actId = actByName[cols[colMap.act].toLowerCase()];
+      if (actId) cue.act_id = actId;
     }
     if (colMap.notes !== undefined) cue.notes = cols[colMap.notes] || '';
     cuesOut.push(cue);
@@ -665,6 +749,7 @@ function parseCsvToCues(csvText) {
 async function importCues(event) {
   const file = event.target.files[0];
   if (!file) return;
+  const mode = document.getElementById('import-mode')?.value || 'replace';
 
   const reader = new FileReader();
   reader.onload = async (e) => {
@@ -690,8 +775,10 @@ async function importCues(event) {
         return;
       }
 
-      const result = await api('/cues/import', { method: 'POST', body: cuesPayload });
+      const endpoint = mode === 'append' ? '/cues/import?mode=append' : '/cues/import';
+      const result = await api(endpoint, { method: 'POST', body: cuesPayload });
 
+      const modeLabel = mode === 'append' ? 'appended' : 'imported';
       if (result.errors.length === 0) {
         showToast(t('import.cuesSuccess', { count: result.imported }), 'success');
       } else {

@@ -86,7 +86,7 @@ Single-page app served from `static/index.html` with three tabs (Show, Editor, S
 | Web UI - Branding | `static/index.html`, `static/css/shell.css` | Full: Inline SVG favicon, login/loading logomarks, nav bar horizontal logo (39px), print report logos. All SVGs inlined (offline compatible), system font stack |
 | Web UI - UX polish | `static/index.html` | Full: Toast notifications, confirm modals (replaces native confirm), loading overlay with breathing logo, responsive table scroll, 44px touch targets, favicon, DOM diffing for flicker-free cue updates |
 | Demo seed data | `src/cue/store.rs` | 6 departments, 3 acts, 22 fully populated cues (cue numbers, notes, durations, colors, continue modes, post_wait, act assignments) from 00:00:10 to 00:08:00 |
-| Unit & integration tests | `src/`, `tests/api.rs` | 73 tests: timecode unit tests (34), cue store unit tests (24), REST endpoint integration tests (15) |
+| Unit & integration tests | `src/`, `tests/api.rs` | 74 tests: timecode unit tests (34), cue store unit tests (25), REST endpoint integration tests (15) |
 
 ### Cue Data Model
 

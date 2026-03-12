@@ -86,11 +86,12 @@ Response: 204 No Content
 ### Import cues (bulk)
 ```
 POST /cues/import
-Body: [{department_id, label?, trigger_tc?, warn_seconds?, notes?}, ...]
+POST /cues/import?mode=append
+Body: [{department_id, label?, cue_number?, trigger_tc?, warn_seconds?, duration?, armed?, color?, continue_mode?, act_id?, notes?}, ...]
 Response: {imported: number, errors: [{index, message}, ...]}
 ```
 
-Replaces all existing cues.
+Default: replaces all existing cues. With `?mode=append`: adds to existing cues.
 
 ## Show
 

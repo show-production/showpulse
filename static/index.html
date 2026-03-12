@@ -157,6 +157,10 @@
           <select id="manage-dept-filter" class="filter-select" onchange="renderCueList()">
             <option value="" data-i18n="editor.allDepts">All Departments</option>
           </select>
+          <select id="import-mode" class="filter-select" style="width:auto;min-width:0">
+            <option value="replace" data-i18n="editor.importReplace">Replace all</option>
+            <option value="append" data-i18n="editor.importAppend">Append</option>
+          </select>
           <button class="add-btn" onclick="document.getElementById('import-cues-file').click()">&#x21E7; <span data-i18n="editor.import">Import</span></button>
           <input type="file" id="import-cues-file" accept=".json,.csv" class="hidden" onchange="importCues(event)">
           <button class="add-btn" onclick="openCueModal()" data-i18n="editor.add">+ Add</button>

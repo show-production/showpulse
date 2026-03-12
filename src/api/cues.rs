@@ -41,11 +41,18 @@ pub async fn create(
     (StatusCode::CREATED, Json(created))
 }
 
+#[derive(Deserialize)]
+pub struct ImportMode {
+    pub mode: Option<String>,
+}
+
 pub async fn import(
     State(state): State<AppState>,
+    Query(params): Query<ImportMode>,
     Json(cues): Json<Vec<Cue>>,
 ) -> Json<CueImportResult> {
-    Json(state.store.import_cues(cues).await)
+    let append = params.mode.as_deref() == Some("append");
+    Json(state.store.import_cues(cues, append).await)
 }
 
 pub async fn import_show(

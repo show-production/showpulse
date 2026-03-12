@@ -202,7 +202,7 @@ impl CueStore {
         cue
     }
 
-    pub async fn import_cues(&self, cues: Vec<Cue>) -> CueImportResult {
+    pub async fn import_cues(&self, cues: Vec<Cue>, append: bool) -> CueImportResult {
         let dept_ids: std::collections::HashSet<Uuid> = self
             .data
             .read()
@@ -233,9 +233,12 @@ impl CueStore {
             imported += 1;
         }
 
-        // Always replace — clear old cues even if some/all failed validation
         let mut data = self.data.write().await;
-        data.cues = valid_cues;
+        if append {
+            data.cues.extend(valid_cues);
+        } else {
+            data.cues = valid_cues;
+        }
         drop(data);
         self.persist().await;
 
@@ -946,7 +949,7 @@ mod tests {
             make_cue(dept.id, "New1", Timecode::new(0, 0, 10, 0)),
             make_cue(dept.id, "New2", Timecode::new(0, 0, 20, 0)),
         ];
-        let result = store.import_cues(new_cues).await;
+        let result = store.import_cues(new_cues, false).await;
         assert_eq!(result.imported, 2);
         assert!(result.errors.is_empty());
 
@@ -966,7 +969,7 @@ mod tests {
             make_cue(dept.id, "Valid", Timecode::ZERO),
             make_cue(bad_id, "Invalid", Timecode::ZERO),
         ];
-        let result = store.import_cues(cues).await;
+        let result = store.import_cues(cues, false).await;
         assert_eq!(result.imported, 1);
         assert_eq!(result.errors.len(), 1);
         assert_eq!(result.errors[0].index, 1);
@@ -981,7 +984,7 @@ mod tests {
             make_cue(Uuid::new_v4(), "Bad1", Timecode::ZERO),
             make_cue(Uuid::new_v4(), "Bad2", Timecode::ZERO),
         ];
-        let result = store.import_cues(cues).await;
+        let result = store.import_cues(cues, false).await;
         assert_eq!(result.imported, 0);
         assert_eq!(result.errors.len(), 2);
         assert!(store.list_cues(None).await.is_empty());
@@ -998,10 +1001,36 @@ mod tests {
             .await;
 
         // Import empty list still replaces
-        let result = store.import_cues(Vec::new()).await;
+        let result = store.import_cues(Vec::new(), false).await;
         assert_eq!(result.imported, 0);
         assert!(result.errors.is_empty());
         assert!(store.list_cues(None).await.is_empty());
+    }
+
+    #[tokio::test]
+    async fn import_cues_append_mode() {
+        let store = test_store();
+        let dept = store.create_department(make_dept("Sound")).await;
+
+        // Create initial cue
+        store
+            .create_cue(make_cue(dept.id, "Old", Timecode::ZERO))
+            .await;
+        assert_eq!(store.list_cues(None).await.len(), 1);
+
+        // Append new cues
+        let new_cues = vec![
+            make_cue(dept.id, "New1", Timecode::new(0, 0, 10, 0)),
+            make_cue(dept.id, "New2", Timecode::new(0, 0, 20, 0)),
+        ];
+        let result = store.import_cues(new_cues, true).await;
+        assert_eq!(result.imported, 2);
+        assert!(result.errors.is_empty());
+
+        let cues = store.list_cues(None).await;
+        assert_eq!(cues.len(), 3);
+        // Old cue should still be there
+        assert!(cues.iter().any(|c| c.label == "Old"));
     }
 
     // ── JSON persistence round-trip ──
