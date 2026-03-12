@@ -43,7 +43,7 @@ Single-page app served from `static/index.html` with three tabs (Show, Editor, S
 |-----|---------|
 | **Show** | Clean dashboard: passed cues count badge (click to expand dropdown), active cue strips (compact rows with dept color + checkmark), centered timer with 2-row transport controls (Prev/Play/Pause/Stop/Next + Goto), animated Ready/Go countdown zone (READY stays visible while 3-2-1 digits appear alongside, then GO! with dept name — traffic-light colors, fixed-height layout, pop/flash effects), scrollable coming cues with uniform-size cards (color-only tier differentiation, no layout shifts). Act-grouped cue list with collapsible groups (double-click header or floating controls). Floating controls pill (Now/Auto/Collapse/Expand) at bottom-right. Always-visible T- countdown and T+ elapsed time. Warning entry easing animation. Vivid department colors across all tiers. Click any cue to load TC into Goto. Prev/Next cue navigation. Sidebar with merged crew status + department filter panel (clickable department names toggle cue filtering, online/offline dots per user). Sidebar auto-pins open for Manager+ on wide screens (≥1200px). DOM-diffed cue cards. Frame-accurate timecode display (10Hz). Show name in navbar. Tab state persisted to localStorage |
 | **Editor** | Act-grouped cue list with collapsible headers (cue count + time span), drag-and-drop reordering (grip handle, within/between acts, auto-timecode recalculation), inline quick edit (double-click label/timecode/department/warning time), multi-select with bulk operations (checkbox + shift-click range, floating action bar: move to act/duplicate/delete/arm/disarm), interactive timeline strip (zoom/pan, click-to-scrub, minimap when zoomed, rich tooltips on hover, two-way selection sync with cue list, act regions, department-colored cue markers, green playhead synced at 5Hz), one-click cue duplicate (TC+5s offset, add-cue button on act headers), act duplication (clone all cues with time offset prompt). Department CRUD (left panel), Act CRUD (name + sort order), CSV/JSON bulk import |
-| **Settings** | Timecode source selector (Generator/LTC/MTC) with device selectors, frame rate, generator mode, speed, start TC, show name editor, theme colors (live preview), TC size slider, show data export/import JSON |
+| **Settings** | Timecode source selector (Generator/LTC/MTC) with device selectors, frame rate, generator mode, speed, start TC, show name editor, theme colors (live preview), TC size slider, server info panel (LAN IP, port, QR code) |
 
 | **Auth** | Login overlay (name+PIN), role-based tab gating, timer lock acquire/release for Managers, user management panel for Admins, logout button + user label in navbar |
 
@@ -78,7 +78,7 @@ Single-page app served from `static/index.html` with three tabs (Show, Editor, S
 | Authentication | `src/auth.rs` | Full: User-based auth with 5 roles (Viewer->Admin), `SessionStore` mapping tokens->sessions (persisted to JSON, survive restarts), `require_auth` middleware, `require_role()` + `require_timer_access()` guards, Bearer token or `?token=` query param |
 | User management | `src/api/users.rs` | Full: CRUD (Admin only), PINs stripped from list response, self-delete blocked |
 | Timer lock | `src/api/timer_lock.rs` | Full: Exclusive timer control — acquire (Manager+, 409 if taken), release, status |
-| Server entrypoint | `src/main.rs` | Full: Axum router with 43 API routes + WS, auth middleware, CORS (same-origin), body limit (1MB), concurrency limit (50), security headers, state wiring, user seeding from SHOWPULSE_PIN, seed on startup, static file fallback |
+| Server entrypoint | `src/main.rs` | Full: Axum router with 46 API routes + WS, auth middleware, CORS (same-origin), body limit (1MB), concurrency limit (50), security headers, state wiring, user seeding from SHOWPULSE_PIN, seed on startup, static file fallback |
 | Web UI - Show view | `static/index.html`, `static/js/show.js` | Full: Clean dashboard with centered timer + 2-row transport (Prev/Next/Play/Pause/Stop + GoTo), act-grouped cue list with collapsible groups (double-click header), floating controls pill (Now/Auto/Collapse/Expand), traffic-light countdown colors, always-visible T-/T+ countdown, warning entry easing, vivid dept colors, DOM-diffed cards, sidebar with merged crew status + department filtering (clickable dept names), pinned sidebar for Manager+ on wide screens, disconnection banner. Show name in navbar. Tab persistence via localStorage |
 | Web UI - Editor view | `static/index.html`, `static/js/manage.js`, `static/css/manage.css` | Full: Act-grouped cue list with collapsible headers, drag-and-drop reordering (HTML5 Drag & Drop API with grip handle), inline quick edit (dblclick event delegation), multi-select with bulk ops (floating action bar), visual timeline strip (5Hz playhead, department-colored markers), cue duplicate (TC+5s), act duplicate (with time offset). Department CRUD, Act CRUD, CSV/JSON bulk import |
 | Web UI - Settings view | `static/index.html`, `static/js/settings.js` | Full: Source/FPS/mode config, LTC/MTC device selectors, theme customization (live preview), TC size slider, show name editor, show data export/import |
@@ -129,9 +129,9 @@ Single-page app served from `static/index.html` with three tabs (Show, Editor, S
 
 | Category | Lines |
 |----------|-------|
-| Rust (`src/`) | ~4,640 |
+| Rust (`src/`) | ~4,820 |
 | Rust tests (`tests/`) | ~580 |
-| JavaScript (`static/js/`) | ~5,610 |
+| JavaScript (`static/js/`) | ~5,130 |
 | CSS (`static/css/`) | ~2,075 |
 
 Frontend JS modules (loaded in order): `state.js` -> `i18n.js` -> `api.js` -> `auth.js` -> `show.js` -> `manage.js` -> `timeline.js` -> `settings.js` -> `import-export.js` -> `ui-helpers.js`

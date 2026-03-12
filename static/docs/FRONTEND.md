@@ -4,7 +4,7 @@
 
 | File | Purpose | ~Lines |
 |------|---------|--------|
-| `index.html` | Skeleton HTML (markup only) | 579 |
+| `index.html` | Skeleton HTML (markup only) | 572 |
 | `css/variables.css` | CSS custom properties (design tokens) | 85 |
 | `css/base.css` | Reset, shared patterns (.dot, .dept-bar), utilities | 84 |
 | `css/shell.css` | TopNav, DisconnectBanner, LoginOverlay, LoadingOverlay, Toast, branding logos | 264 |
@@ -13,15 +13,15 @@
 | `css/settings.css` | Settings grid, groups, radio, slider, speed, user panel, dashboard | 295 |
 | `css/modals.css` | Modal overlay, dialog, form groups, confirm | 249 |
 | `js/state.js` | CONST, global state, DOM cache, shared helpers, CRUD helpers | 344 |
-| `js/i18n.js` | i18n engine: t() lookup, setLanguage(), applyLanguage(), EN/HE dictionaries | 785 |
+| `js/i18n.js` | i18n engine: t() lookup, setLanguage(), applyLanguage(), EN/HE dictionaries | 781 |
 | `js/api.js` | api() wrapper, connectWS(), WS message validation | 95 |
 | `js/auth.js` | Login, role gating, user CRUD, timer lock UI, dashboard | 532 |
 | `js/show.js` | ShowView rendering, sidebar, transport, AutoPulse, act grouping | 659 |
 | `js/manage.js` | Editor: act-grouped cue list, drag-drop, inline edit, multi-select, bulk ops | 1051 |
 | `js/timeline.js` | Timeline editor: zoom/pan, scrub, minimap, tooltips, selection sync | 374 |
 | `js/settings.js` | Source, device refresh, generator, theme | 209 |
-| `js/import-export.js` | Show export/import, CSV parsing, cue import, analytical print report | 711 |
-| `js/ui-helpers.js` | Toasts, modals, keyboard, view switching, init | 273 |
+| `js/import-export.js` | Show export, CSV/JSON cue import (replace/append), analytical print report | 786 |
+| `js/ui-helpers.js` | Toasts, modals, keyboard, view switching, server info, init | 278 |
 
 ## Component Terminology
 

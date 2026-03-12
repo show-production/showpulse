@@ -144,7 +144,7 @@ For setting up and editing your show.
 
 ### Importing Cues
 
-ShowPulse supports bulk cue import via the **Import** button in the Editor tab. Importing **replaces** all existing cues (not appends). Full show import from Settings replaces departments, cues, and acts.
+ShowPulse supports bulk cue import via the **Import** button in the Editor tab. The mode selector lets you **Replace all** (default — replaces all existing cues, auto-backup created first) or **Append** (adds to existing cues). Full show JSON import (with `departments` key) always replaces departments, cues, and acts.
 
 **CSV format:** Header row with columns. The parser recognizes these column aliases:
 
@@ -177,7 +177,7 @@ Department and act names are automatically matched to existing departments and a
 - **Start timecode** and **speed** controls
 - **Show name:** Configurable name displayed in the navbar
 - **Theme customization:** Background, accent, and warning colors (live preview); timecode display size
-- **Export/Import:** Save or load your entire show (departments + cues + acts + show name) as a JSON file
+- **Server Info:** LAN IP, port, and QR code for crew onboarding
 
 ## Using LTC (SMPTE Linear Timecode)
 
